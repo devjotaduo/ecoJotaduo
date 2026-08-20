@@ -11,7 +11,9 @@
           }
         },
         "summary": "Liveness do processo",
-        "tags": ["Plataforma — Saúde"]
+        "tags": [
+          "Plataforma — Saúde"
+        ]
       }
     },
     "/health/ready": {
@@ -24,7 +26,9 @@
           }
         },
         "summary": "Readiness (confere o banco)",
-        "tags": ["Plataforma — Saúde"]
+        "tags": [
+          "Plataforma — Saúde"
+        ]
       }
     },
     "/api/v1/auth/login": {
@@ -55,7 +59,11 @@
                     "pattern": "^[a-z0-9-]+$"
                   }
                 },
-                "required": ["email", "password", "tenantSlug"]
+                "required": [
+                  "email",
+                  "password",
+                  "tenantSlug"
+                ]
               }
             }
           }
@@ -99,7 +107,11 @@
                           "type": "string"
                         }
                       },
-                      "required": ["id", "slug", "name"],
+                      "required": [
+                        "id",
+                        "slug",
+                        "name"
+                      ],
                       "additionalProperties": false
                     },
                     "user": {
@@ -117,7 +129,11 @@
                           "type": "string"
                         }
                       },
-                      "required": ["id", "name", "email"],
+                      "required": [
+                        "id",
+                        "name",
+                        "email"
+                      ],
                       "additionalProperties": false
                     },
                     "permissions": {
@@ -182,7 +198,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -190,7 +212,9 @@
           }
         },
         "summary": "Entra em uma empresa",
-        "tags": ["Autenticação"]
+        "tags": [
+          "Autenticação"
+        ]
       }
     },
     "/api/v1/auth/refresh": {
@@ -210,7 +234,9 @@
                     "maxLength": 512
                   }
                 },
-                "required": ["refreshToken"]
+                "required": [
+                  "refreshToken"
+                ]
               }
             }
           }
@@ -299,7 +325,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -307,7 +339,9 @@
           }
         },
         "summary": "Renova a sessão (rotaciona o refresh token)",
-        "tags": ["Autenticação"]
+        "tags": [
+          "Autenticação"
+        ]
       }
     },
     "/api/v1/auth/token": {
@@ -332,7 +366,10 @@
                     "maxLength": 512
                   }
                 },
-                "required": ["clientId", "clientSecret"]
+                "required": [
+                  "clientId",
+                  "clientSecret"
+                ]
               }
             }
           }
@@ -409,7 +446,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -417,7 +460,9 @@
           }
         },
         "summary": "Autentica uma aplicação (client credentials)",
-        "tags": ["Autenticação"]
+        "tags": [
+          "Autenticação"
+        ]
       }
     },
     "/api/v1/auth/me": {
@@ -442,7 +487,11 @@
                       "properties": {
                         "kind": {
                           "type": "string",
-                          "enum": ["user", "service", "system"]
+                          "enum": [
+                            "user",
+                            "service",
+                            "system"
+                          ]
                         },
                         "id": {
                           "type": "string"
@@ -451,7 +500,10 @@
                           "type": "string"
                         }
                       },
-                      "required": ["kind", "id"],
+                      "required": [
+                        "kind",
+                        "id"
+                      ],
                       "additionalProperties": false
                     },
                     "permissions": {
@@ -519,7 +571,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -559,7 +617,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -572,7 +636,9 @@
           }
         ],
         "summary": "Identidade e acesso efetivo do token",
-        "tags": ["Autenticação"]
+        "tags": [
+          "Autenticação"
+        ]
       }
     },
     "/api/v1/auth/my-tenants": {
@@ -604,12 +670,18 @@
                             "type": "string"
                           }
                         },
-                        "required": ["tenantId", "slug", "name"],
+                        "required": [
+                          "tenantId",
+                          "slug",
+                          "name"
+                        ],
                         "additionalProperties": false
                       }
                     }
                   },
-                  "required": ["items"],
+                  "required": [
+                    "items"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -649,7 +721,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -689,7 +767,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -702,7 +786,9 @@
           }
         ],
         "summary": "Empresas em que o usuário tem vínculo",
-        "tags": ["Autenticação"]
+        "tags": [
+          "Autenticação"
+        ]
       }
     },
     "/api/v1/modules": {
@@ -727,7 +813,10 @@
                           },
                           "status": {
                             "type": "string",
-                            "enum": ["active", "suspended"]
+                            "enum": [
+                              "active",
+                              "suspended"
+                            ]
                           },
                           "expiresAt": {
                             "anyOf": [
@@ -742,12 +831,18 @@
                             ]
                           }
                         },
-                        "required": ["moduleId", "status", "expiresAt"],
+                        "required": [
+                          "moduleId",
+                          "status",
+                          "expiresAt"
+                        ],
                         "additionalProperties": false
                       }
                     }
                   },
-                  "required": ["items"],
+                  "required": [
+                    "items"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -787,7 +882,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -827,7 +928,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -840,7 +947,9 @@
           }
         ],
         "summary": "Lista os módulos contratados",
-        "tags": ["Plataforma — Módulos"]
+        "tags": [
+          "Plataforma — Módulos"
+        ]
       },
       "post": {
         "operationId": "platformGrantModule",
@@ -864,7 +973,9 @@
                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                   }
                 },
-                "required": ["moduleId"]
+                "required": [
+                  "moduleId"
+                ]
               }
             }
           }
@@ -882,10 +993,16 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["active", "suspended"]
+                      "enum": [
+                        "active",
+                        "suspended"
+                      ]
                     }
                   },
-                  "required": ["moduleId", "status"],
+                  "required": [
+                    "moduleId",
+                    "status"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -925,7 +1042,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -965,7 +1088,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1005,7 +1134,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1018,7 +1153,9 @@
           }
         ],
         "summary": "Contrata um módulo",
-        "tags": ["Plataforma — Módulos"]
+        "tags": [
+          "Plataforma — Módulos"
+        ]
       }
     },
     "/api/v1/modules/{moduleId}": {
@@ -1069,7 +1206,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1109,7 +1252,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1122,7 +1271,9 @@
           }
         ],
         "summary": "Cancela um módulo",
-        "tags": ["Plataforma — Módulos"]
+        "tags": [
+          "Plataforma — Módulos"
+        ]
       }
     },
     "/api/v1/audit-events": {
@@ -1198,7 +1349,11 @@
                           },
                           "result": {
                             "type": "string",
-                            "enum": ["success", "denied", "error"]
+                            "enum": [
+                              "success",
+                              "denied",
+                              "error"
+                            ]
                           },
                           "resourceType": {
                             "type": "string"
@@ -1252,7 +1407,12 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["items", "total", "limit", "offset"],
+                  "required": [
+                    "items",
+                    "total",
+                    "limit",
+                    "offset"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1292,7 +1452,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1332,7 +1498,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1345,7 +1517,9 @@
           }
         ],
         "summary": "Consulta a trilha de auditoria",
-        "tags": ["Plataforma — Auditoria"]
+        "tags": [
+          "Plataforma — Auditoria"
+        ]
       }
     },
     "/api/v1/crm/customers": {
@@ -1401,7 +1575,9 @@
                     ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               }
             }
           }
@@ -1464,7 +1640,10 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["active", "archived"]
+                      "enum": [
+                        "active",
+                        "archived"
+                      ]
                     },
                     "createdAt": {
                       "type": "string",
@@ -1527,7 +1706,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1567,7 +1752,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1607,7 +1798,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1620,7 +1817,9 @@
           }
         ],
         "summary": "Cadastra um cliente",
-        "tags": ["CRM — Clientes"]
+        "tags": [
+          "CRM — Clientes"
+        ]
       },
       "get": {
         "operationId": "crmSearchCustomers",
@@ -1728,7 +1927,10 @@
                           },
                           "status": {
                             "type": "string",
-                            "enum": ["active", "archived"]
+                            "enum": [
+                              "active",
+                              "archived"
+                            ]
                           },
                           "createdAt": {
                             "type": "string",
@@ -1771,7 +1973,12 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["items", "total", "limit", "offset"],
+                  "required": [
+                    "items",
+                    "total",
+                    "limit",
+                    "offset"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1811,7 +2018,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1851,7 +2064,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -1864,7 +2083,9 @@
           }
         ],
         "summary": "Pesquisa clientes",
-        "tags": ["CRM — Clientes"]
+        "tags": [
+          "CRM — Clientes"
+        ]
       }
     },
     "/api/v1/crm/customers/{customerId}": {
@@ -1938,7 +2159,10 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["active", "archived"]
+                      "enum": [
+                        "active",
+                        "archived"
+                      ]
                     },
                     "createdAt": {
                       "type": "string",
@@ -1957,7 +2181,10 @@
                         "properties": {
                           "kind": {
                             "type": "string",
-                            "enum": ["note", "appointment"]
+                            "enum": [
+                              "note",
+                              "appointment"
+                            ]
                           },
                           "id": {
                             "type": "string",
@@ -2056,7 +2283,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2096,7 +2329,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2109,7 +2348,9 @@
           }
         ],
         "summary": "Obtém cliente com histórico",
-        "tags": ["CRM — Clientes"]
+        "tags": [
+          "CRM — Clientes"
+        ]
       },
       "post": {
         "operationId": "crmUpdateCustomer",
@@ -2234,7 +2475,10 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["active", "archived"]
+                      "enum": [
+                        "active",
+                        "archived"
+                      ]
                     },
                     "createdAt": {
                       "type": "string",
@@ -2297,7 +2541,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2337,7 +2587,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2350,7 +2606,9 @@
           }
         ],
         "summary": "Atualiza um cliente",
-        "tags": ["CRM — Clientes"]
+        "tags": [
+          "CRM — Clientes"
+        ]
       }
     },
     "/api/v1/crm/customers/{customerId}/notes": {
@@ -2379,7 +2637,9 @@
                     "maxLength": 5000
                   }
                 },
-                "required": ["body"]
+                "required": [
+                  "body"
+                ]
               }
             }
           }
@@ -2462,7 +2722,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2502,7 +2768,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2515,7 +2787,9 @@
           }
         ],
         "summary": "Registra nota no histórico",
-        "tags": ["CRM — Clientes"]
+        "tags": [
+          "CRM — Clientes"
+        ]
       },
       "get": {
         "operationId": "crmListCustomerNotes",
@@ -2614,7 +2888,12 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["items", "total", "limit", "offset"],
+                  "required": [
+                    "items",
+                    "total",
+                    "limit",
+                    "offset"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2654,7 +2933,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2694,7 +2979,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2707,7 +2998,9 @@
           }
         ],
         "summary": "Lista notas do cliente",
-        "tags": ["CRM — Clientes"]
+        "tags": [
+          "CRM — Clientes"
+        ]
       }
     },
     "/api/v1/crm/appointments": {
@@ -2814,7 +3107,11 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["scheduled", "done", "canceled"]
+                      "enum": [
+                        "scheduled",
+                        "done",
+                        "canceled"
+                      ]
                     },
                     "outcome": {
                       "anyOf": [
@@ -2877,7 +3174,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2917,7 +3220,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2957,7 +3266,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -2970,7 +3285,9 @@
           }
         ],
         "summary": "Agenda um compromisso",
-        "tags": ["CRM — Agenda"]
+        "tags": [
+          "CRM — Agenda"
+        ]
       },
       "get": {
         "operationId": "crmListAgenda",
@@ -3011,7 +3328,11 @@
             "in": "query",
             "schema": {
               "type": "string",
-              "enum": ["scheduled", "done", "canceled"]
+              "enum": [
+                "scheduled",
+                "done",
+                "canceled"
+              ]
             }
           },
           {
@@ -3092,7 +3413,11 @@
                           },
                           "status": {
                             "type": "string",
-                            "enum": ["scheduled", "done", "canceled"]
+                            "enum": [
+                              "scheduled",
+                              "done",
+                              "canceled"
+                            ]
                           },
                           "outcome": {
                             "anyOf": [
@@ -3135,7 +3460,12 @@
                       "maximum": 9007199254740991
                     }
                   },
-                  "required": ["items", "total", "limit", "offset"],
+                  "required": [
+                    "items",
+                    "total",
+                    "limit",
+                    "offset"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -3175,7 +3505,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -3215,7 +3551,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -3228,7 +3570,9 @@
           }
         ],
         "summary": "Lista a agenda por período",
-        "tags": ["CRM — Agenda"]
+        "tags": [
+          "CRM — Agenda"
+        ]
       }
     },
     "/api/v1/crm/appointments/{appointmentId}/complete": {
@@ -3317,7 +3661,11 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["scheduled", "done", "canceled"]
+                      "enum": [
+                        "scheduled",
+                        "done",
+                        "canceled"
+                      ]
                     },
                     "outcome": {
                       "anyOf": [
@@ -3380,7 +3728,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -3420,7 +3774,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -3433,7 +3793,9 @@
           }
         ],
         "summary": "Conclui um compromisso",
-        "tags": ["CRM — Agenda"]
+        "tags": [
+          "CRM — Agenda"
+        ]
       }
     },
     "/api/v1/crm/appointments/{appointmentId}/cancel": {
@@ -3522,7 +3884,11 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": ["scheduled", "done", "canceled"]
+                      "enum": [
+                        "scheduled",
+                        "done",
+                        "canceled"
+                      ]
                     },
                     "outcome": {
                       "anyOf": [
@@ -3585,7 +3951,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -3625,7 +3997,13 @@
                       }
                     }
                   },
-                  "required": ["type", "title", "status", "detail", "instance"],
+                  "required": [
+                    "type",
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
                   "additionalProperties": false
                 }
               }
@@ -3638,7 +4016,9 @@
           }
         ],
         "summary": "Cancela um compromisso",
-        "tags": ["CRM — Agenda"]
+        "tags": [
+          "CRM — Agenda"
+        ]
       }
     }
   },

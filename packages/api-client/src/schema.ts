@@ -4,1706 +4,1706 @@
  */
 
 export interface paths {
-  '/health': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Liveness do processo */
+        get: operations["healthLiveness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Liveness do processo */
-    get: operations['healthLiveness'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/health/ready': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readiness (confere o banco) */
+        get: operations["healthReadiness"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Readiness (confere o banco) */
-    get: operations['healthReadiness'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/login': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Entra em uma empresa */
+        post: operations["authLogin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Entra em uma empresa */
-    post: operations['authLogin'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/refresh': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Renova a sessão (rotaciona o refresh token) */
+        post: operations["authRefresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Renova a sessão (rotaciona o refresh token) */
-    post: operations['authRefresh'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/token': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Autentica uma aplicação (client credentials) */
+        post: operations["authServiceToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Autentica uma aplicação (client credentials) */
-    post: operations['authServiceToken'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/me': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Identidade e acesso efetivo do token */
+        get: operations["authMe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Identidade e acesso efetivo do token */
-    get: operations['authMe'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/my-tenants': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/my-tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Empresas em que o usuário tem vínculo */
+        get: operations["authMyTenants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Empresas em que o usuário tem vínculo */
-    get: operations['authMyTenants'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/modules': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/modules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista os módulos contratados */
+        get: operations["platformListModules"];
+        put?: never;
+        /** Contrata um módulo */
+        post: operations["platformGrantModule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Lista os módulos contratados */
-    get: operations['platformListModules'];
-    put?: never;
-    /** Contrata um módulo */
-    post: operations['platformGrantModule'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/modules/{moduleId}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/modules/{moduleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Cancela um módulo */
+        delete: operations["platformRevokeModule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /** Cancela um módulo */
-    delete: operations['platformRevokeModule'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/audit-events': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/audit-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consulta a trilha de auditoria */
+        get: operations["platformListAuditEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Consulta a trilha de auditoria */
-    get: operations['platformListAuditEvents'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/crm/customers': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/crm/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Pesquisa clientes */
+        get: operations["crmSearchCustomers"];
+        put?: never;
+        /** Cadastra um cliente */
+        post: operations["crmCreateCustomer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Pesquisa clientes */
-    get: operations['crmSearchCustomers'];
-    put?: never;
-    /** Cadastra um cliente */
-    post: operations['crmCreateCustomer'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/crm/customers/{customerId}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/crm/customers/{customerId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtém cliente com histórico */
+        get: operations["crmGetCustomer"];
+        put?: never;
+        /** Atualiza um cliente */
+        post: operations["crmUpdateCustomer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Obtém cliente com histórico */
-    get: operations['crmGetCustomer'];
-    put?: never;
-    /** Atualiza um cliente */
-    post: operations['crmUpdateCustomer'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/crm/customers/{customerId}/notes': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/crm/customers/{customerId}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista notas do cliente */
+        get: operations["crmListCustomerNotes"];
+        put?: never;
+        /** Registra nota no histórico */
+        post: operations["crmAddCustomerNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Lista notas do cliente */
-    get: operations['crmListCustomerNotes'];
-    put?: never;
-    /** Registra nota no histórico */
-    post: operations['crmAddCustomerNote'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/crm/appointments': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/crm/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista a agenda por período */
+        get: operations["crmListAgenda"];
+        put?: never;
+        /** Agenda um compromisso */
+        post: operations["crmScheduleAppointment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Lista a agenda por período */
-    get: operations['crmListAgenda'];
-    put?: never;
-    /** Agenda um compromisso */
-    post: operations['crmScheduleAppointment'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/crm/appointments/{appointmentId}/complete': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/crm/appointments/{appointmentId}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Conclui um compromisso */
+        post: operations["crmCompleteAppointment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Conclui um compromisso */
-    post: operations['crmCompleteAppointment'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/crm/appointments/{appointmentId}/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/crm/appointments/{appointmentId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancela um compromisso */
+        post: operations["crmCancelAppointment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Cancela um compromisso */
-    post: operations['crmCancelAppointment'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: never;
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    schemas: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  healthLiveness: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
+    healthLiveness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content?: never;
-      };
-    };
-  };
-  healthReadiness: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-    };
-  };
-  authLogin: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          email: string;
-          password: string;
-          tenantSlug: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Sessão criada. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            accessToken: string;
-            /** Format: date-time */
-            accessTokenExpiresAt: string;
-            refreshToken: string;
-            /** Format: date-time */
-            refreshTokenExpiresAt: string;
-            tenant: {
-              /** Format: uuid */
-              id: string;
-              slug: string;
-              name: string;
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
-            user: {
-              /** Format: uuid */
-              id: string;
-              name: string;
-              email: string;
+        };
+    };
+    healthReadiness: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
-            permissions: string[];
-            entitlements: string[];
-          };
         };
-      };
-      /** @description Credenciais inválidas. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  authRefresh: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          refreshToken: string;
+    authLogin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
-    };
-    responses: {
-      /** @description Sessão renovada. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            accessToken: string;
-            /** Format: date-time */
-            accessTokenExpiresAt: string;
-            refreshToken: string;
-            /** Format: date-time */
-            refreshTokenExpiresAt: string;
-            permissions: string[];
-            entitlements: string[];
-          };
-        };
-      };
-      /** @description Refresh token inválido ou já usado. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  authServiceToken: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          clientId: string;
-          clientSecret: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Token emitido. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            accessToken: string;
-            /** Format: date-time */
-            expiresAt: string;
-            /** @constant */
-            tokenType: 'Bearer';
-            scopes: string[];
-          };
-        };
-      };
-      /** @description Credenciais inválidas. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  authMe: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Contexto autenticado. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            tenantId: string;
-            actor: {
-              /** @enum {string} */
-              kind: 'user' | 'service' | 'system';
-              id: string;
-              label?: string;
+        requestBody: {
+            content: {
+                "application/json": {
+                    email: string;
+                    password: string;
+                    tenantSlug: string;
+                };
             };
-            permissions: string[];
-            scopes: string[];
-            entitlements: string[];
-          };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description Sessão criada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        accessToken: string;
+                        /** Format: date-time */
+                        accessTokenExpiresAt: string;
+                        refreshToken: string;
+                        /** Format: date-time */
+                        refreshTokenExpiresAt: string;
+                        tenant: {
+                            /** Format: uuid */
+                            id: string;
+                            slug: string;
+                            name: string;
+                        };
+                        user: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            email: string;
+                        };
+                        permissions: string[];
+                        entitlements: string[];
+                    };
+                };
+            };
+            /** @description Credenciais inválidas. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  authMyTenants: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    authRefresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    refreshToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Sessão renovada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        accessToken: string;
+                        /** Format: date-time */
+                        accessTokenExpiresAt: string;
+                        refreshToken: string;
+                        /** Format: date-time */
+                        refreshTokenExpiresAt: string;
+                        permissions: string[];
+                        entitlements: string[];
+                    };
+                };
+            };
+            /** @description Refresh token inválido ou já usado. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Empresas do usuário. */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    authServiceToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              tenantId: string;
-              slug: string;
-              name: string;
-            }[];
-          };
+        requestBody: {
+            content: {
+                "application/json": {
+                    clientId: string;
+                    clientSecret: string;
+                };
+            };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description Token emitido. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        accessToken: string;
+                        /** Format: date-time */
+                        expiresAt: string;
+                        /** @constant */
+                        tokenType: "Bearer";
+                        scopes: string[];
+                    };
+                };
+            };
+            /** @description Credenciais inválidas. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  platformListModules: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    authMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contexto autenticado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        tenantId: string;
+                        actor: {
+                            /** @enum {string} */
+                            kind: "user" | "service" | "system";
+                            id: string;
+                            label?: string;
+                        };
+                        permissions: string[];
+                        scopes: string[];
+                        entitlements: string[];
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Módulos ativos da empresa. */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    authMyTenants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            items: {
-              moduleId: string;
-              /** @enum {string} */
-              status: 'active' | 'suspended';
-              expiresAt: string | null;
-            }[];
-          };
+        requestBody?: never;
+        responses: {
+            /** @description Empresas do usuário. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            tenantId: string;
+                            slug: string;
+                            name: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  platformGrantModule: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    platformListModules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Módulos ativos da empresa. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            moduleId: string;
+                            /** @enum {string} */
+                            status: "active" | "suspended";
+                            expiresAt: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        'application/json': {
-          moduleId: string;
-          /** Format: date-time */
-          expiresAt?: string;
+    platformGrantModule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
+        requestBody: {
+            content: {
+                "application/json": {
+                    moduleId: string;
+                    /** Format: date-time */
+                    expiresAt?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Módulo contratado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        moduleId: string;
+                        /** @enum {string} */
+                        status: "active" | "suspended";
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Módulo já contratado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Módulo contratado. */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    platformRevokeModule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                moduleId: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            moduleId: string;
-            /** @enum {string} */
-            status: 'active' | 'suspended';
-          };
+        requestBody?: never;
+        responses: {
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Módulo já contratado. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  platformRevokeModule: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        moduleId: string;
-      };
-      cookie?: never;
+    platformListAuditEvents: {
+        parameters: {
+            query?: {
+                action?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de eventos auditados. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            tenantId: string;
+                            actorKind: string;
+                            actorId: string;
+                            channel: string;
+                            action: string;
+                            /** @enum {string} */
+                            result: "success" | "denied" | "error";
+                            resourceType?: string;
+                            resourceId?: string;
+                            durationMs?: number;
+                            /** Format: uuid */
+                            correlationId: string;
+                            /** Format: date-time */
+                            occurredAt: string;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
+    crmSearchCustomers: {
+        parameters: {
+            query?: {
+                termo?: string;
+                apenasAtivos?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
+        requestBody?: never;
+        responses: {
+            /** @description Página de clientes. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            document: string | null;
+                            documentFormatted: string | null;
+                            email: string | null;
+                            phone: string | null;
+                            /** @enum {string} */
+                            status: "active" | "archived";
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  platformListAuditEvents: {
-    parameters: {
-      query?: {
-        action?: string;
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    crmCreateCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name: string;
+                    document?: string | null;
+                    email?: string | null;
+                    phone?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Cliente cadastrado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        document: string | null;
+                        documentFormatted: string | null;
+                        email: string | null;
+                        phone: string | null;
+                        /** @enum {string} */
+                        status: "active" | "archived";
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Documento já cadastrado nesta empresa. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Página de eventos auditados. */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    crmGetCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customerId: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              tenantId: string;
-              actorKind: string;
-              actorId: string;
-              channel: string;
-              action: string;
-              /** @enum {string} */
-              result: 'success' | 'denied' | 'error';
-              resourceType?: string;
-              resourceId?: string;
-              durationMs?: number;
-              /** Format: uuid */
-              correlationId: string;
-              /** Format: date-time */
-              occurredAt: string;
-            }[];
-            total: number;
-            limit: number;
-            offset: number;
-          };
+        requestBody?: never;
+        responses: {
+            /** @description Cliente e linha do tempo. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        document: string | null;
+                        documentFormatted: string | null;
+                        email: string | null;
+                        phone: string | null;
+                        /** @enum {string} */
+                        status: "active" | "archived";
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        timeline: {
+                            /** @enum {string} */
+                            kind: "note" | "appointment";
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: date-time */
+                            occurredAt: string;
+                            summary: string;
+                            detail: string | null;
+                            status: string | null;
+                        }[];
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  crmSearchCustomers: {
-    parameters: {
-      query?: {
-        termo?: string;
-        apenasAtivos?: string;
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
+    crmUpdateCustomer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    document?: string | null;
+                    email?: string | null;
+                    phone?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Cliente atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        document: string | null;
+                        documentFormatted: string | null;
+                        email: string | null;
+                        phone: string | null;
+                        /** @enum {string} */
+                        status: "active" | "archived";
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Página de clientes. */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    crmListCustomerNotes: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                customerId: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              name: string;
-              document: string | null;
-              documentFormatted: string | null;
-              email: string | null;
-              phone: string | null;
-              /** @enum {string} */
-              status: 'active' | 'archived';
-              /** Format: date-time */
-              createdAt: string;
-              /** Format: date-time */
-              updatedAt: string;
-            }[];
-            total: number;
-            limit: number;
-            offset: number;
-          };
+        requestBody?: never;
+        responses: {
+            /** @description Página de notas. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            customerId: string;
+                            body: string;
+                            /** Format: uuid */
+                            authorId: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  crmCreateCustomer: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    crmAddCustomerNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                customerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    body: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Nota registrada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        body: string;
+                        /** Format: uuid */
+                        authorId: string;
+                        /** Format: date-time */
+                        createdAt: string;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody: {
-      content: {
-        'application/json': {
-          name: string;
-          document?: string | null;
-          email?: string | null;
-          phone?: string | null;
+    crmListAgenda: {
+        parameters: {
+            query: {
+                from: string;
+                to: string;
+                assignedToId?: string;
+                status?: "scheduled" | "done" | "canceled";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-      };
+        requestBody?: never;
+        responses: {
+            /** @description Página de compromissos. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            customerId: string;
+                            title: string;
+                            /** Format: date-time */
+                            scheduledFor: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            durationMinutes: number;
+                            assignedToId: string | null;
+                            /** @enum {string} */
+                            status: "scheduled" | "done" | "canceled";
+                            outcome: string | null;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    responses: {
-      /** @description Cliente cadastrado. */
-      201: {
-        headers: {
-          [name: string]: unknown;
+    crmScheduleAppointment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            document: string | null;
-            documentFormatted: string | null;
-            email: string | null;
-            phone: string | null;
-            /** @enum {string} */
-            status: 'active' | 'archived';
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-          };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    customerId: string;
+                    title: string;
+                    /** Format: date-time */
+                    scheduledFor: string;
+                    durationMinutes: number;
+                    assignedToId?: string | null;
+                };
+            };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description Compromisso agendado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        title: string;
+                        /** Format: date-time */
+                        scheduledFor: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        durationMinutes: number;
+                        assignedToId: string | null;
+                        /** @enum {string} */
+                        status: "scheduled" | "done" | "canceled";
+                        outcome: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Conflito com a agenda do responsável. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Documento já cadastrado nesta empresa. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  crmGetCustomer: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        customerId: string;
-      };
-      cookie?: never;
+    crmCompleteAppointment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appointmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    outcome?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Compromisso concluído. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        title: string;
+                        /** Format: date-time */
+                        scheduledFor: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        durationMinutes: number;
+                        assignedToId: string | null;
+                        /** @enum {string} */
+                        status: "scheduled" | "done" | "canceled";
+                        outcome: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
     };
-    requestBody?: never;
-    responses: {
-      /** @description Cliente e linha do tempo. */
-      200: {
-        headers: {
-          [name: string]: unknown;
+    crmCancelAppointment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                appointmentId: string;
+            };
+            cookie?: never;
         };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            document: string | null;
-            documentFormatted: string | null;
-            email: string | null;
-            phone: string | null;
-            /** @enum {string} */
-            status: 'active' | 'archived';
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-            timeline: {
-              /** @enum {string} */
-              kind: 'note' | 'appointment';
-              /** Format: uuid */
-              id: string;
-              /** Format: date-time */
-              occurredAt: string;
-              summary: string;
-              detail: string | null;
-              status: string | null;
-            }[];
-          };
+        requestBody: {
+            content: {
+                "application/json": {
+                    outcome?: string | null;
+                };
+            };
         };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
+        responses: {
+            /** @description Compromisso cancelado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        title: string;
+                        /** Format: date-time */
+                        scheduledFor: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        durationMinutes: number;
+                        assignedToId: string | null;
+                        /** @enum {string} */
+                        status: "scheduled" | "done" | "canceled";
+                        outcome: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
         };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
     };
-  };
-  crmUpdateCustomer: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        customerId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          name?: string;
-          document?: string | null;
-          email?: string | null;
-          phone?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Cliente atualizado. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            document: string | null;
-            documentFormatted: string | null;
-            email: string | null;
-            phone: string | null;
-            /** @enum {string} */
-            status: 'active' | 'archived';
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-          };
-        };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  crmListCustomerNotes: {
-    parameters: {
-      query?: {
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path: {
-        customerId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Página de notas. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              customerId: string;
-              body: string;
-              /** Format: uuid */
-              authorId: string;
-              /** Format: date-time */
-              createdAt: string;
-            }[];
-            total: number;
-            limit: number;
-            offset: number;
-          };
-        };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  crmAddCustomerNote: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        customerId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          body: string;
-        };
-      };
-    };
-    responses: {
-      /** @description Nota registrada. */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            customerId: string;
-            body: string;
-            /** Format: uuid */
-            authorId: string;
-            /** Format: date-time */
-            createdAt: string;
-          };
-        };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  crmListAgenda: {
-    parameters: {
-      query: {
-        from: string;
-        to: string;
-        assignedToId?: string;
-        status?: 'scheduled' | 'done' | 'canceled';
-        limit?: number;
-        offset?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Página de compromissos. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            items: {
-              /** Format: uuid */
-              id: string;
-              /** Format: uuid */
-              customerId: string;
-              title: string;
-              /** Format: date-time */
-              scheduledFor: string;
-              /** Format: date-time */
-              endsAt: string;
-              durationMinutes: number;
-              assignedToId: string | null;
-              /** @enum {string} */
-              status: 'scheduled' | 'done' | 'canceled';
-              outcome: string | null;
-            }[];
-            total: number;
-            limit: number;
-            offset: number;
-          };
-        };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  crmScheduleAppointment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          /** Format: uuid */
-          customerId: string;
-          title: string;
-          /** Format: date-time */
-          scheduledFor: string;
-          durationMinutes: number;
-          assignedToId?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Compromisso agendado. */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            customerId: string;
-            title: string;
-            /** Format: date-time */
-            scheduledFor: string;
-            /** Format: date-time */
-            endsAt: string;
-            durationMinutes: number;
-            assignedToId: string | null;
-            /** @enum {string} */
-            status: 'scheduled' | 'done' | 'canceled';
-            outcome: string | null;
-          };
-        };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Conflito com a agenda do responsável. */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  crmCompleteAppointment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        appointmentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          outcome?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Compromisso concluído. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            customerId: string;
-            title: string;
-            /** Format: date-time */
-            scheduledFor: string;
-            /** Format: date-time */
-            endsAt: string;
-            durationMinutes: number;
-            assignedToId: string | null;
-            /** @enum {string} */
-            status: 'scheduled' | 'done' | 'canceled';
-            outcome: string | null;
-          };
-        };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
-  crmCancelAppointment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        appointmentId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': {
-          outcome?: string | null;
-        };
-      };
-    };
-    responses: {
-      /** @description Compromisso cancelado. */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            customerId: string;
-            title: string;
-            /** Format: date-time */
-            scheduledFor: string;
-            /** Format: date-time */
-            endsAt: string;
-            durationMinutes: number;
-            assignedToId: string | null;
-            /** @enum {string} */
-            status: 'scheduled' | 'done' | 'canceled';
-            outcome: string | null;
-          };
-        };
-      };
-      /** @description Não autenticado ou sessão expirada. */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-      /** @description Sem permissão, ou módulo não contratado pela empresa. */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            type: string;
-            title: string;
-            status: number;
-            detail: string;
-            instance: string;
-            correlationId?: string;
-            errors?: string[];
-          };
-        };
-      };
-    };
-  };
 }

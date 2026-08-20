@@ -2,3 +2,8 @@ pnpm-lock.yaml
 dist/
 .turbo/
 coverage/
+
+# Artefatos gerados: o formato e o do proprio emissor. Reformata-los faz o
+# arquivo versionado divergir do que o CI regenera (deriva falsa).
+docs/api/openapi.json
+packages/api-client/src/schema.ts
