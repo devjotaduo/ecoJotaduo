@@ -67,3 +67,17 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      # O contrato publicado e o SDK são versionados. Regenerar e comparar
+      # garante que nunca fiquem atrás do código — e faz toda mudança de
+      # contrato aparecer no diff do PR, onde dá para avaliar se quebra alguém.
+      - name: Contrato OpenAPI e SDK em dia
+        run: |
+          pnpm --filter @ecojotaduo/api openapi
+          pnpm --filter @ecojotaduo/api-client generate
+          if ! git diff --exit-code -- docs/api/openapi.json packages/api-client/src/schema.ts; then
+            echo "::error::O contrato mudou mas nao foi regenerado. Rode:"
+            echo "::error::  pnpm --filter @ecojotaduo/api openapi"
+            echo "::error::  pnpm --filter @ecojotaduo/api-client generate"
+            exit 1
+          fi

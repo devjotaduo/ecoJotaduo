@@ -11,7 +11,8 @@
     "dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env --enable-source-maps dist/main.js",
     "start": "node --enable-source-maps dist/main.js",
     "migrate": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/migrate.js",
-    "seed:dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/seed-dev.js"
+    "seed:dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/seed-dev.js",
+    "openapi": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/emit-openapi.js"
   },
   "dependencies": {
     "@ecojotaduo/audit": "workspace:*",
@@ -28,6 +29,7 @@
     "@nestjs/common": "^11.2.1",
     "@nestjs/core": "^11.2.1",
     "@nestjs/platform-fastify": "^11.2.1",
+    "@nestjs/swagger": "^11.4.7",
     "fastify": "^5.12.1",
     "postgres": "^3.4.9",
     "reflect-metadata": "^0.2.2",
@@ -35,6 +37,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@ecojotaduo/api-client": "workspace:*",
     "@ecojotaduo/eslint-config": "workspace:*",
     "@ecojotaduo/test-support": "workspace:*",
     "@ecojotaduo/tsconfig": "workspace:*",

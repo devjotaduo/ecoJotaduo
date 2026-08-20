@@ -1,10 +1,18 @@
 import type { AuditLogger } from '@ecojotaduo/audit';
 import { Controller, Get, Inject, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 
+import { auditoriaPaginadaResposta } from '../auth/auth.responses';
+
 import { AUDIT_LOGGER } from '../bootstrap/tokens';
-import { RequirePermissions } from '@ecojotaduo/http-kit';
-import { ZodValidationPipe } from '@ecojotaduo/http-kit';
+import {
+  ApiErrosPadrao,
+  ApiZodQuery,
+  ApiZodResponse,
+  RequirePermissions,
+  ZodValidationPipe,
+} from '@ecojotaduo/http-kit';
 
 const consultaSchema = z.object({
   action: z.string().max(128).optional(),
@@ -13,12 +21,25 @@ const consultaSchema = z.object({
 });
 
 /** Consulta da trilha de auditoria da própria empresa (RLS garante o escopo). */
+@ApiTags('Plataforma — Auditoria')
+@ApiBearerAuth()
 @Controller('api/v1/audit-events')
 export class AuditController {
   constructor(@Inject(AUDIT_LOGGER) private readonly audit: AuditLogger) {}
 
   @Get()
   @RequirePermissions('platform.audit.read')
+  @ApiOperation({
+    operationId: 'platformListAuditEvents',
+    summary: 'Consulta a trilha de auditoria',
+  })
+  @ApiZodQuery(consultaSchema)
+  @ApiZodResponse(
+    200,
+    auditoriaPaginadaResposta,
+    'Página de eventos auditados.',
+  )
+  @ApiErrosPadrao()
   async list(
     @Query(new ZodValidationPipe(consultaSchema))
     consulta: z.infer<typeof consultaSchema>,

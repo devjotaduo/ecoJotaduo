@@ -1,8 +1,8 @@
 {
-  "name": "@ecojotaduo/http-kit",
-  "version": "0.0.0",
+  "name": "@ecojotaduo/api-client",
+  "version": "0.1.0",
   "private": true,
-  "description": "Cola HTTP compartilhada pelos adaptadores REST dos módulos (decorators de permissão e validação)",
+  "description": "SDK TypeScript da API, com tipos gerados do OpenAPI e sessão gerenciada",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -18,18 +18,18 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "generate": "openapi-typescript ../../docs/api/openapi.json --output src/schema.ts"
   },
   "dependencies": {
-    "@nestjs/common": "^11.2.1",
-    "@nestjs/swagger": "^11.4.7",
-    "zod": "^4.4.3"
+    "openapi-fetch": "^0.17.0"
   },
   "devDependencies": {
     "@ecojotaduo/eslint-config": "workspace:*",
     "@ecojotaduo/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
     "eslint": "^10.8.1",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"
   }

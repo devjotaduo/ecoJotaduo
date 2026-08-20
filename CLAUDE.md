@@ -13,6 +13,14 @@ pnpm build
 pnpm format        # Prettier (format:check no CI)
 ```
 
+Mexeu em rota, DTO ou schema de resposta? Regenere o contrato e o SDK — o CI
+falha se ficarem para trás:
+
+```bash
+pnpm --filter @ecojotaduo/api openapi        # docs/api/openapi.json
+pnpm --filter @ecojotaduo/api-client generate # packages/api-client/src/schema.ts
+```
+
 Um único arquivo de teste, ou um teste específico por nome:
 
 ```bash
@@ -113,6 +121,19 @@ errada, usuário inexistente e empresa inexistente); o motivo real vai só para 
 Erro de domínio novo deve estender `DomainError` (`@ecojotaduo/platform-kernel`) e
 declarar seu `kind` (`invalid-request`, `not-found`, `conflict`, `forbidden`). O
 filtro traduz para status HTTP sozinho — **não** adicione `instanceof` novo lá.
+
+### Contrato da API (OpenAPI 3.1) e SDK
+
+Rotas se documentam com os **mesmos** schemas Zod que validam a entrada, via
+`ApiZodBody`/`ApiZodQuery`/`ApiZodResponse` do `@ecojotaduo/http-kit` — não
+existe schema separado só para documentar. Toda rota declara `operationId`
+explícito: ele vira nome de método no SDK, então renomear é breaking change
+(ver `docs/api/versioning.md`).
+
+`docs/api/openapi.json` e `packages/api-client/src/schema.ts` são versionados e
+o CI falha se estiverem desatualizados. O schema é gerado como `.ts`, não
+`.d.ts`: o `tsc` não copia `.d.ts` de `src/` para `dist/`, e o consumidor
+receberia `any` em silêncio — há uma trava de tipo no teste do SDK contra isso.
 
 ### Migrações
 

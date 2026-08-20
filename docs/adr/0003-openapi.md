@@ -1,6 +1,6 @@
 # ADR-0003 — REST + OpenAPI como contrato de API
 
-- **Status**: aceito
+- **Status**: aceito (versão do formato **superada** pelo [ADR-0008](0008-openapi-31-e-sdk.md))
 - **Data**: 2026-08-20
 
 ## Problema
@@ -27,10 +27,10 @@ Adotar **REST + OpenAPI** (alternativa 3):
   ordenação convencionados; idempotência via `Idempotency-Key` em mutações críticas.
 - O documento OpenAPI é **gerado a partir do código** (`@nestjs/swagger` 11.4.x) no
   CI; breaking changes são detectados por diff de contrato antes do merge.
-- **Versão do formato**: OpenAPI **3.0**, que é o formato emitido nativamente pela
-  cadeia escolhida (@nestjs/swagger) e aceito por todos os geradores/validadores do
-  pipeline. Migraremos para 3.1 quando toda a cadeia (emissor, diff, gerador de SDK)
-  a suportar de ponta a ponta — decisão a reavaliar na Fase 4.
+- **Versão do formato**: OpenAPI 3.0 na Fase 0. **Revisto na Fase 4**: a cadeia
+  inteira passou a suportar 3.1 e a plataforma migrou — ver
+  [ADR-0008](0008-openapi-31-e-sdk.md). O restante deste ADR (REST como contrato,
+  operationId estável, Problem Details, SDK único) permanece válido.
 - SDK TypeScript gerado em `packages/api-client`, único ponto de consumo HTTP do
   frontend (cliente central com auth, renovação de token, correlação, tratamento de
   erro, retries seguros). A escolha da ferramenta de geração será registrada em ADR

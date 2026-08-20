@@ -1,3 +1,5 @@
+export * from './openapi';
+
 import {
   BadRequestException,
   SetMetadata,

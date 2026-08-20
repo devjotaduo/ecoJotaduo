@@ -8,6 +8,7 @@ import {
 
 import { DATABASE } from '../bootstrap/tokens';
 import { Public } from '@ecojotaduo/http-kit';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 export interface HealthStatus {
   status: 'ok';
@@ -20,6 +21,7 @@ export interface ReadinessStatus {
   checks: { database: 'ok' };
 }
 
+@ApiTags('Plataforma — Saúde')
 @Controller('health')
 export class HealthController {
   constructor(@Inject(DATABASE) private readonly database: DatabaseHandle) {}
@@ -27,6 +29,10 @@ export class HealthController {
   /** Liveness: o processo está de pé. Não toca em dependências externas. */
   @Public()
   @Get()
+  @ApiOperation({
+    operationId: 'healthLiveness',
+    summary: 'Liveness do processo',
+  })
   check(): HealthStatus {
     return {
       status: 'ok',
@@ -41,6 +47,10 @@ export class HealthController {
    */
   @Public()
   @Get('ready')
+  @ApiOperation({
+    operationId: 'healthReadiness',
+    summary: 'Readiness (confere o banco)',
+  })
   async ready(): Promise<ReadinessStatus> {
     try {
       await this.database.sql`select 1`;

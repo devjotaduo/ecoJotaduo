@@ -10,11 +10,23 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
 
+import {
+  entitlementResposta,
+  entitlementsResposta,
+} from '../auth/auth.responses';
+
 import { MANAGE_ENTITLEMENTS_USE_CASE } from '../bootstrap/tokens';
-import { RequirePermissions } from '@ecojotaduo/http-kit';
-import { ZodValidationPipe } from '@ecojotaduo/http-kit';
+import {
+  ApiErrosPadrao,
+  ApiZodBody,
+  ApiZodResponse,
+  problemaSchema,
+  RequirePermissions,
+  ZodValidationPipe,
+} from '@ecojotaduo/http-kit';
 
 const MODULE_ID = /^[a-z][a-z0-9-]*$/;
 
@@ -36,6 +48,8 @@ const grantSchema = z.object({
  * tenant nestas rotas, então nem um cliente malicioso nem um agente de IA
  * conseguem contratar módulo para outra empresa.
  */
+@ApiTags('Plataforma — Módulos')
+@ApiBearerAuth()
 @Controller('api/v1/modules')
 export class EntitlementsController {
   constructor(
@@ -45,6 +59,12 @@ export class EntitlementsController {
 
   @Get()
   @RequirePermissions('platform.tenant.read')
+  @ApiOperation({
+    operationId: 'platformListModules',
+    summary: 'Lista os módulos contratados',
+  })
+  @ApiZodResponse(200, entitlementsResposta, 'Módulos ativos da empresa.')
+  @ApiErrosPadrao()
   async list() {
     const { tenantId } = requireAuth();
     const items = await this.entitlements.list(tenantId);
@@ -54,6 +74,18 @@ export class EntitlementsController {
   @Post()
   @HttpCode(201)
   @RequirePermissions('platform.module.manage')
+  @ApiOperation({
+    operationId: 'platformGrantModule',
+    summary: 'Contrata um módulo',
+  })
+  @ApiZodBody(grantSchema)
+  @ApiZodResponse(
+    201,
+    entitlementResposta.pick({ moduleId: true, status: true }),
+    'Módulo contratado.',
+  )
+  @ApiZodResponse(409, problemaSchema, 'Módulo já contratado.')
+  @ApiErrosPadrao()
   async grant(
     @Body(new ZodValidationPipe(grantSchema))
     corpo: z.infer<typeof grantSchema>,
@@ -70,6 +102,11 @@ export class EntitlementsController {
   @Delete(':moduleId')
   @HttpCode(204)
   @RequirePermissions('platform.module.manage')
+  @ApiOperation({
+    operationId: 'platformRevokeModule',
+    summary: 'Cancela um módulo',
+  })
+  @ApiErrosPadrao()
   async revoke(
     @Param('moduleId', new ZodValidationPipe(moduleIdSchema)) moduleId: string,
   ) {

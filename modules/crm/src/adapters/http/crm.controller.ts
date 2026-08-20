@@ -1,4 +1,12 @@
-import { RequirePermissions, ZodValidationPipe } from '@ecojotaduo/http-kit';
+import {
+  ApiErrosPadrao,
+  ApiZodBody,
+  ApiZodQuery,
+  ApiZodResponse,
+  problemaSchema,
+  RequirePermissions,
+  ZodValidationPipe,
+} from '@ecojotaduo/http-kit';
 import { requireAuth } from '@ecojotaduo/tenant-context';
 import {
   Body,
@@ -11,6 +19,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { z } from 'zod';
 
 import type {
@@ -40,6 +49,13 @@ import {
   pesquisarClientesSchema,
 } from './dto';
 import { clienteJson, historicoJson, notaJson } from './presenters';
+import {
+  clienteComHistoricoResposta,
+  clienteResposta,
+  clientesPaginados,
+  notaResposta,
+  notasPaginadas,
+} from './responses';
 
 /**
  * Borda REST do CRM.
@@ -48,6 +64,8 @@ import { clienteJson, historicoJson, notaJson } from './presenters';
  * contexto autenticado e delega ao caso de uso — o mesmo que o adaptador MCP
  * chama. É o que sustenta o critério "REST e MCP executam o mesmo caso de uso".
  */
+@ApiTags('CRM — Clientes')
+@ApiBearerAuth()
 @Controller('api/v1/crm/customers')
 export class CrmCustomersController {
   constructor(
@@ -66,6 +84,14 @@ export class CrmCustomersController {
   @Post()
   @HttpCode(201)
   @RequirePermissions('crm.customer.create')
+  @ApiOperation({
+    operationId: 'crmCreateCustomer',
+    summary: 'Cadastra um cliente',
+  })
+  @ApiZodBody(criarClienteSchema)
+  @ApiZodResponse(201, clienteResposta, 'Cliente cadastrado.')
+  @ApiZodResponse(409, problemaSchema, 'Documento já cadastrado nesta empresa.')
+  @ApiErrosPadrao()
   async criarCliente(
     @Body(new ZodValidationPipe(criarClienteSchema))
     corpo: z.infer<typeof criarClienteSchema>,
@@ -77,6 +103,13 @@ export class CrmCustomersController {
 
   @Get()
   @RequirePermissions('crm.customer.read')
+  @ApiOperation({
+    operationId: 'crmSearchCustomers',
+    summary: 'Pesquisa clientes',
+  })
+  @ApiZodQuery(pesquisarClientesSchema)
+  @ApiZodResponse(200, clientesPaginados, 'Página de clientes.')
+  @ApiErrosPadrao()
   async pesquisarClientes(
     @Query(new ZodValidationPipe(pesquisarClientesSchema))
     consulta: z.infer<typeof pesquisarClientesSchema>,
@@ -94,6 +127,12 @@ export class CrmCustomersController {
 
   @Get(':customerId')
   @RequirePermissions('crm.customer.read')
+  @ApiOperation({
+    operationId: 'crmGetCustomer',
+    summary: 'Obtém cliente com histórico',
+  })
+  @ApiZodResponse(200, clienteComHistoricoResposta, 'Cliente e linha do tempo.')
+  @ApiErrosPadrao()
   async obterCliente(@Param('customerId', ParseUUIDPipe) customerId: string) {
     const { tenantId } = requireAuth();
     const { customer, timeline } = await this.obter.execute({
@@ -106,6 +145,13 @@ export class CrmCustomersController {
 
   @Post(':customerId')
   @RequirePermissions('crm.customer.update')
+  @ApiOperation({
+    operationId: 'crmUpdateCustomer',
+    summary: 'Atualiza um cliente',
+  })
+  @ApiZodBody(atualizarClienteSchema)
+  @ApiZodResponse(200, clienteResposta, 'Cliente atualizado.')
+  @ApiErrosPadrao()
   async atualizarCliente(
     @Param('customerId', ParseUUIDPipe) customerId: string,
     @Body(new ZodValidationPipe(atualizarClienteSchema))
@@ -123,6 +169,13 @@ export class CrmCustomersController {
   @Post(':customerId/notes')
   @HttpCode(201)
   @RequirePermissions('crm.note.create')
+  @ApiOperation({
+    operationId: 'crmAddCustomerNote',
+    summary: 'Registra nota no histórico',
+  })
+  @ApiZodBody(adicionarNotaSchema)
+  @ApiZodResponse(201, notaResposta, 'Nota registrada.')
+  @ApiErrosPadrao()
   async criarNota(
     @Param('customerId', ParseUUIDPipe) customerId: string,
     @Body(new ZodValidationPipe(adicionarNotaSchema))
@@ -140,6 +193,13 @@ export class CrmCustomersController {
 
   @Get(':customerId/notes')
   @RequirePermissions('crm.customer.read')
+  @ApiOperation({
+    operationId: 'crmListCustomerNotes',
+    summary: 'Lista notas do cliente',
+  })
+  @ApiZodQuery(paginaSchema)
+  @ApiZodResponse(200, notasPaginadas, 'Página de notas.')
+  @ApiErrosPadrao()
   async listarNotasDoCliente(
     @Param('customerId', ParseUUIDPipe) customerId: string,
     @Query(new ZodValidationPipe(paginaSchema))

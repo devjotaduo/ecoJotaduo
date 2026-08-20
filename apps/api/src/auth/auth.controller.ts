@@ -7,7 +7,16 @@ import type {
 } from '@ecojotaduo/tenancy';
 import { requireAuth } from '@ecojotaduo/tenant-context';
 import { Body, Controller, Get, HttpCode, Inject, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { z } from 'zod';
+
+import {
+  meResposta,
+  minhasEmpresasResposta,
+  sessaoRenovadaResposta,
+  sessaoResposta,
+  tokenDeServicoResposta,
+} from './auth.responses';
 
 import {
   AUDIT_LOGGER,
@@ -16,8 +25,14 @@ import {
   SIGN_IN_USE_CASE,
   TENANCY_API,
 } from '../bootstrap/tokens';
-import { Public } from '@ecojotaduo/http-kit';
-import { ZodValidationPipe } from '@ecojotaduo/http-kit';
+import {
+  ApiErrosPadrao,
+  ApiZodBody,
+  ApiZodResponse,
+  problemaSchema,
+  Public,
+  ZodValidationPipe,
+} from '@ecojotaduo/http-kit';
 
 const loginSchema = z.object({
   email: z.string().min(3).max(254),
@@ -41,6 +56,7 @@ const serviceTokenSchema = z.object({
   clientSecret: z.string().min(1).max(512),
 });
 
+@ApiTags('Autenticação')
 @Controller('api/v1/auth')
 export class AuthController {
   constructor(
@@ -56,6 +72,10 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(200)
+  @ApiOperation({ operationId: 'authLogin', summary: 'Entra em uma empresa' })
+  @ApiZodBody(loginSchema)
+  @ApiZodResponse(200, sessaoResposta, 'Sessão criada.')
+  @ApiZodResponse(401, problemaSchema, 'Credenciais inválidas.')
   async login(
     @Body(new ZodValidationPipe(loginSchema))
     corpo: z.infer<typeof loginSchema>,
@@ -77,6 +97,13 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(200)
+  @ApiOperation({
+    operationId: 'authRefresh',
+    summary: 'Renova a sessão (rotaciona o refresh token)',
+  })
+  @ApiZodBody(refreshSchema)
+  @ApiZodResponse(200, sessaoRenovadaResposta, 'Sessão renovada.')
+  @ApiZodResponse(401, problemaSchema, 'Refresh token inválido ou já usado.')
   async refresh(
     @Body(new ZodValidationPipe(refreshSchema))
     corpo: z.infer<typeof refreshSchema>,
@@ -97,6 +124,13 @@ export class AuthController {
   @Public()
   @Post('token')
   @HttpCode(200)
+  @ApiOperation({
+    operationId: 'authServiceToken',
+    summary: 'Autentica uma aplicação (client credentials)',
+  })
+  @ApiZodBody(serviceTokenSchema)
+  @ApiZodResponse(200, tokenDeServicoResposta, 'Token emitido.')
+  @ApiZodResponse(401, problemaSchema, 'Credenciais inválidas.')
   async token(
     @Body(new ZodValidationPipe(serviceTokenSchema))
     corpo: z.infer<typeof serviceTokenSchema>,
@@ -113,6 +147,13 @@ export class AuthController {
 
   /** Identidade e acesso efetivo do portador do token. */
   @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({
+    operationId: 'authMe',
+    summary: 'Identidade e acesso efetivo do token',
+  })
+  @ApiZodResponse(200, meResposta, 'Contexto autenticado.')
+  @ApiErrosPadrao()
   me() {
     const auth = requireAuth();
     return {
@@ -126,6 +167,13 @@ export class AuthController {
 
   /** Empresas em que o usuário autenticado tem vínculo ativo. */
   @Get('my-tenants')
+  @ApiBearerAuth()
+  @ApiOperation({
+    operationId: 'authMyTenants',
+    summary: 'Empresas em que o usuário tem vínculo',
+  })
+  @ApiZodResponse(200, minhasEmpresasResposta, 'Empresas do usuário.')
+  @ApiErrosPadrao()
   async myTenants() {
     const auth = requireAuth();
     if (!auth.userId) {

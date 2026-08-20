@@ -1,4 +1,12 @@
-import { RequirePermissions, ZodValidationPipe } from '@ecojotaduo/http-kit';
+import {
+  ApiErrosPadrao,
+  ApiZodBody,
+  ApiZodQuery,
+  ApiZodResponse,
+  problemaSchema,
+  RequirePermissions,
+  ZodValidationPipe,
+} from '@ecojotaduo/http-kit';
 import { requireAuth } from '@ecojotaduo/tenant-context';
 import {
   Body,
@@ -11,6 +19,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { z } from 'zod';
 
 import type {
@@ -26,8 +35,11 @@ import {
 
 import { agendaSchema, agendarSchema, encerrarAgendamentoSchema } from './dto';
 import { agendamentoJson } from './presenters';
+import { agendamentoResposta, agendamentosPaginados } from './responses';
 
 /** Agenda do CRM: marcar, concluir, cancelar e consultar por período. */
+@ApiTags('CRM — Agenda')
+@ApiBearerAuth()
 @Controller('api/v1/crm/appointments')
 export class CrmAppointmentsController {
   constructor(
@@ -41,6 +53,14 @@ export class CrmAppointmentsController {
   @Post()
   @HttpCode(201)
   @RequirePermissions('crm.appointment.schedule')
+  @ApiOperation({
+    operationId: 'crmScheduleAppointment',
+    summary: 'Agenda um compromisso',
+  })
+  @ApiZodBody(agendarSchema)
+  @ApiZodResponse(201, agendamentoResposta, 'Compromisso agendado.')
+  @ApiZodResponse(409, problemaSchema, 'Conflito com a agenda do responsável.')
+  @ApiErrosPadrao()
   async marcar(
     @Body(new ZodValidationPipe(agendarSchema))
     corpo: z.infer<typeof agendarSchema>,
@@ -59,6 +79,13 @@ export class CrmAppointmentsController {
 
   @Get()
   @RequirePermissions('crm.appointment.read')
+  @ApiOperation({
+    operationId: 'crmListAgenda',
+    summary: 'Lista a agenda por período',
+  })
+  @ApiZodQuery(agendaSchema)
+  @ApiZodResponse(200, agendamentosPaginados, 'Página de compromissos.')
+  @ApiErrosPadrao()
   async listar(
     @Query(new ZodValidationPipe(agendaSchema))
     consulta: z.infer<typeof agendaSchema>,
@@ -85,6 +112,13 @@ export class CrmAppointmentsController {
   @Post(':appointmentId/complete')
   @HttpCode(200)
   @RequirePermissions('crm.appointment.update')
+  @ApiOperation({
+    operationId: 'crmCompleteAppointment',
+    summary: 'Conclui um compromisso',
+  })
+  @ApiZodBody(encerrarAgendamentoSchema)
+  @ApiZodResponse(200, agendamentoResposta, 'Compromisso concluído.')
+  @ApiErrosPadrao()
   async concluir(
     @Param('appointmentId', ParseUUIDPipe) appointmentId: string,
     @Body(new ZodValidationPipe(encerrarAgendamentoSchema))
@@ -102,6 +136,13 @@ export class CrmAppointmentsController {
   @Post(':appointmentId/cancel')
   @HttpCode(200)
   @RequirePermissions('crm.appointment.update')
+  @ApiOperation({
+    operationId: 'crmCancelAppointment',
+    summary: 'Cancela um compromisso',
+  })
+  @ApiZodBody(encerrarAgendamentoSchema)
+  @ApiZodResponse(200, agendamentoResposta, 'Compromisso cancelado.')
+  @ApiErrosPadrao()
   async cancelar(
     @Param('appointmentId', ParseUUIDPipe) appointmentId: string,
     @Body(new ZodValidationPipe(encerrarAgendamentoSchema))
