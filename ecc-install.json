@@ -1,0 +1,16 @@
+{
+  "$comment": "Intenção ECC deste projeto, lida por /project-init e pelos scripts de instalação. Versionado para que todo mundo do time receba a mesma superfície.",
+  "target": "claude",
+  "profile": "developer",
+  "skills": [
+    "coding-standards",
+    "verification-loop",
+    "tdd-workflow",
+    "architecture-decision-records",
+    "backend-patterns",
+    "api-design",
+    "database-migrations",
+    "postgres-patterns",
+    "security-review"
+  ]
+}

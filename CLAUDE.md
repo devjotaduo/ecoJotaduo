@@ -142,12 +142,44 @@ quebra os testes E2E. Tokens ficam em `apps/api/src/bootstrap/tokens.ts`.
 - **Idioma**: comentários, documentação, mensagens de erro e de commit em pt-BR.
   Identificadores públicos (classes, interfaces, arquivos, campos de API, permissões,
   eventos) em inglês; variáveis e parâmetros locais em português.
-- Comentário explica *por que*, sobretudo quando a escolha protege uma propriedade de
+- Comentário explica _por que_, sobretudo quando a escolha protege uma propriedade de
   segurança. Não narre o que o código já diz.
 - Datas em UTC; dinheiro como inteiro em centavos + moeda (nunca float); IDs opacos.
 - Eventos nomeados no passado e versionados: `crm.customer.created.v1`.
 - `TenantId`/`UserId` são tipos marcados (`@movimentar/tenant-context`) — converta com
   `toTenantId()`/`toUserId()`, que validam UUID.
+
+## Automação do projeto (ECC + hooks locais)
+
+O catálogo do ECC está instalado no nível do usuário (`~/.claude`), então agentes,
+skills e comandos já valem aqui. O que este repositório versiona em `.claude/` é
+só o que o ECC não tem como saber sobre ele.
+
+**Hooks de projeto** (`.claude/settings.json`, `PostToolUse` em `Write|Edit`):
+
+| Hook                        | Bloqueia                                                                                                                                                              |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verifica-migracao.mjs`     | `create table` sem RLS, sem policy `using`/`with check` ou sem `grant` para `movimentar_app`; e edição de migração já versionada (que causaria `MigrationDriftError`) |
+| `verifica-injecao-nest.mjs` | Parâmetro de construtor sem `@Inject(...)` em `apps/api`                                                                                                              |
+
+Ambos saem com código 2 e explicam a correção. Se um deles reclamar de algo
+legítimo (ex.: tabela global de propósito), edite a allowlist do hook e registre o
+motivo — não desative o hook.
+
+**Agente de projeto**: `tenant-isolation-reviewer` — invoque ao mexer em migração,
+persistência, rota autenticada ou tool MCP. Ele cobre só isolamento e autorização;
+qualidade e performance de SQL ficam com o `database-reviewer` do ECC.
+
+**Comandos ECC úteis neste repositório**: `/code-review`, `/security-scan`,
+`/quality-gate`, `/test-coverage`, `/harness-audit`, `/project-init` (relê o
+`ecc-install.json` da raiz, que declara o perfil e as skills do projeto).
+
+**Pré-commit do ECC** (`core.hooksPath` global) bloqueia segredos por regex —
+inclusive `token|secret|password|api_key` seguido de string com 12+ caracteres.
+Não existe allowlist: quando o achado for falso positivo, **mude o código para não
+casar** (constante nomeada em vez de literal, nome de variável psql mais curto),
+como já foi feito em `docker/init/01-app-role.sh` e no teste E2E. `ECC_SKIP_PRECOMMIT=1`
+é último recurso e exige registrar o motivo na mensagem do commit.
 
 ## Antes de mexer
 

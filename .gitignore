@@ -10,5 +10,8 @@ coverage/
 !.env.example
 !.env.test.example
 
+# Config pessoal do Claude Code; .claude/settings.json (do time) é versionado.
+.claude/settings.local.json
+
 .DS_Store
 Thumbs.db

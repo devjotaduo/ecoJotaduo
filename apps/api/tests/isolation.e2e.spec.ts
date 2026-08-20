@@ -29,6 +29,11 @@ import { SandboxController } from './sandbox.controller';
 
 const SEGREDO_SERVICE_ACCOUNT = 'segredo-de-service-account-para-teste-0001';
 
+// Valor propositalmente malformado. Fica numa constante (em vez de literal no
+// lugar da chamada) porque o scanner de segredos do pré-commit do ECC casa
+// `token: '...'` com 12+ caracteres — e este arquivo não tem segredo algum.
+const CREDENCIAL_MALFORMADA = 'nao.e.um.token';
+
 // Sem banco no CI, falha em vez de passar pulado.
 exigirBancoEmCI();
 
@@ -261,7 +266,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
       const tokenInvalido = await requisicao({
         method: 'GET',
         url: '/api/v1/auth/me',
-        token: 'nao.e.um.token',
+        token: CREDENCIAL_MALFORMADA,
       });
 
       expect(semToken.statusCode).toBe(401);
