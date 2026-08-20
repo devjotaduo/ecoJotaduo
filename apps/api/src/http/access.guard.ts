@@ -1,12 +1,12 @@
-import { TokenService, type AccessTokenClaims } from '@movimentar/auth';
-import { assertAllAllowed } from '@movimentar/permissions';
-import type { TenancyPublicApi } from '@movimentar/tenancy';
+import { TokenService, type AccessTokenClaims } from '@ecojotaduo/auth';
+import { assertAllAllowed } from '@ecojotaduo/permissions';
+import type { TenancyPublicApi } from '@ecojotaduo/tenancy';
 import {
   authenticateContext,
   requireContext,
   toTenantId,
   toUserId,
-} from '@movimentar/tenant-context';
+} from '@ecojotaduo/tenant-context';
 import {
   CanActivate,
   ExecutionContext,

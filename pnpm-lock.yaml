@@ -20,31 +20,31 @@ importers:
 
   apps/api:
     dependencies:
-      '@movimentar/audit':
+      '@ecojotaduo/audit':
         specifier: workspace:*
         version: link:../../packages/audit
-      '@movimentar/auth':
+      '@ecojotaduo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@movimentar/config':
+      '@ecojotaduo/config':
         specifier: workspace:*
         version: link:../../packages/config
-      '@movimentar/database':
+      '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@movimentar/identity':
+      '@ecojotaduo/identity':
         specifier: workspace:*
         version: link:../../modules/identity
-      '@movimentar/permissions':
+      '@ecojotaduo/permissions':
         specifier: workspace:*
         version: link:../../packages/permissions
-      '@movimentar/platform-kernel':
+      '@ecojotaduo/platform-kernel':
         specifier: workspace:*
         version: link:../../packages/platform-kernel
-      '@movimentar/tenancy':
+      '@ecojotaduo/tenancy':
         specifier: workspace:*
         version: link:../../modules/tenancy
-      '@movimentar/tenant-context':
+      '@ecojotaduo/tenant-context':
         specifier: workspace:*
         version: link:../../packages/tenant-context
       '@nestjs/common':
@@ -72,13 +72,13 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@movimentar/test-support':
+      '@ecojotaduo/test-support':
         specifier: workspace:*
         version: link:../../tooling/test-support
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@nestjs/testing':
@@ -99,29 +99,29 @@ importers:
 
   modules/identity:
     dependencies:
-      '@movimentar/auth':
+      '@ecojotaduo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
-      '@movimentar/database':
+      '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@movimentar/permissions':
+      '@ecojotaduo/permissions':
         specifier: workspace:*
         version: link:../../packages/permissions
-      '@movimentar/platform-kernel':
+      '@ecojotaduo/platform-kernel':
         specifier: workspace:*
         version: link:../../packages/platform-kernel
-      '@movimentar/tenant-context':
+      '@ecojotaduo/tenant-context':
         specifier: workspace:*
         version: link:../../packages/tenant-context
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(postgres@3.4.9)
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/node':
@@ -139,32 +139,32 @@ importers:
 
   modules/tenancy:
     dependencies:
-      '@movimentar/audit':
+      '@ecojotaduo/audit':
         specifier: workspace:*
         version: link:../../packages/audit
-      '@movimentar/database':
+      '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
-      '@movimentar/identity':
+      '@ecojotaduo/identity':
         specifier: workspace:*
         version: link:../identity
-      '@movimentar/permissions':
+      '@ecojotaduo/permissions':
         specifier: workspace:*
         version: link:../../packages/permissions
-      '@movimentar/platform-kernel':
+      '@ecojotaduo/platform-kernel':
         specifier: workspace:*
         version: link:../../packages/platform-kernel
-      '@movimentar/tenant-context':
+      '@ecojotaduo/tenant-context':
         specifier: workspace:*
         version: link:../../packages/tenant-context
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(postgres@3.4.9)
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/node':
@@ -182,23 +182,23 @@ importers:
 
   packages/audit:
     dependencies:
-      '@movimentar/database':
+      '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../database
-      '@movimentar/tenant-context':
+      '@ecojotaduo/tenant-context':
         specifier: workspace:*
         version: link:../tenant-context
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(postgres@3.4.9)
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@movimentar/test-support':
+      '@ecojotaduo/test-support':
         specifier: workspace:*
         version: link:../../tooling/test-support
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -219,10 +219,10 @@ importers:
 
   packages/auth:
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -244,10 +244,10 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -265,7 +265,7 @@ importers:
 
   packages/database:
     dependencies:
-      '@movimentar/tenant-context':
+      '@ecojotaduo/tenant-context':
         specifier: workspace:*
         version: link:../tenant-context
       drizzle-orm:
@@ -275,13 +275,13 @@ importers:
         specifier: ^3.4.9
         version: 3.4.9
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@movimentar/test-support':
+      '@ecojotaduo/test-support':
         specifier: workspace:*
         version: link:../../tooling/test-support
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -311,10 +311,10 @@ importers:
 
   packages/permissions:
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -332,14 +332,14 @@ importers:
 
   packages/platform-kernel:
     dependencies:
-      '@movimentar/permissions':
+      '@ecojotaduo/permissions':
         specifier: workspace:*
         version: link:../permissions
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -357,10 +357,10 @@ importers:
 
   packages/tenant-context:
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
       '@types/node':
@@ -380,17 +380,17 @@ importers:
 
   tooling/test-support:
     dependencies:
-      '@movimentar/auth':
+      '@ecojotaduo/auth':
         specifier: workspace:*
         version: link:../../packages/auth
       postgres:
         specifier: ^3.4.9
         version: 3.4.9
     devDependencies:
-      '@movimentar/eslint-config':
+      '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@movimentar/tsconfig':
+      '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
       '@types/node':

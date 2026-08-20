@@ -1,5 +1,5 @@
 {
-  "name": "@movimentar/platform-kernel",
+  "name": "@ecojotaduo/platform-kernel",
   "version": "0.0.0",
   "private": true,
   "description": "Contrato dos módulos da plataforma: manifesto, contribuições e registry",
@@ -21,11 +21,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@movimentar/permissions": "workspace:*"
+    "@ecojotaduo/permissions": "workspace:*"
   },
   "devDependencies": {
-    "@movimentar/eslint-config": "workspace:*",
-    "@movimentar/tsconfig": "workspace:*",
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
     "eslint": "^10.8.1",
     "typescript": "^5.9.3",

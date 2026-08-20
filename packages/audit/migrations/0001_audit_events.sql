@@ -32,4 +32,4 @@ create policy audit_events_tenant_isolation on audit_events
   with check (tenant_id = nullif(current_setting('app.tenant_id', true), '')::uuid);
 
 -- A aplicação nunca altera nem apaga auditoria: trilha é append-only.
-grant select, insert on audit_events to movimentar_app;
+grant select, insert on audit_events to ecojotaduo_app;

@@ -1,4 +1,4 @@
-import type { IdentityPublicApi } from '@movimentar/identity';
+import type { IdentityPublicApi } from '@ecojotaduo/identity';
 
 import { TenantNotFoundError } from '../domain/errors';
 import type {

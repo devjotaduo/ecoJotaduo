@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.spec.ts', 'tests/**/*.spec.ts'],
-    setupFiles: ['@movimentar/test-support/vitest-setup'],
+    setupFiles: ['@ecojotaduo/test-support/vitest-setup'],
     // Testes de integração compartilham o mesmo banco: sem paralelismo entre
     // arquivos, o truncate de um não derruba os dados do outro.
     fileParallelism: false,

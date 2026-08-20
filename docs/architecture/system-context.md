@@ -1,6 +1,6 @@
 # Visão C4 — Nível 1: Contexto do sistema
 
-A Movimentar Platform é um ERP modular multi-tenant que serve pessoas (operação
+A ecoJotaduo é um ERP modular multi-tenant que serve pessoas (operação
 interna das empresas clientes), sistemas de terceiros e agentes de IA.
 
 ```mermaid
@@ -16,7 +16,7 @@ flowchart TB
         PROVIDERS["Provedores<br/>(e-mail, WhatsApp, storage, pagamento)"]
     end
 
-    PLATFORM["Movimentar Platform<br/>ERP modular multi-tenant<br/>REST + OpenAPI + MCP + eventos"]
+    PLATFORM["ecoJotaduo<br/>ERP modular multi-tenant<br/>REST + OpenAPI + MCP + eventos"]
 
     OPERATOR -->|"Web app (React)"| PLATFORM
     PLATFORMADMIN -->|"Admin de módulos e plugins"| PLATFORM

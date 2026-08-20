@@ -16,14 +16,14 @@ export const envSchema = z.object({
   DATABASE_URL: z.url(),
   /** Conexão do dono das tabelas; usada apenas pelo comando de migração. */
   DATABASE_ADMIN_URL: z.url().optional(),
-  DATABASE_APP_ROLE: z.string().min(1).default('movimentar_app'),
+  DATABASE_APP_ROLE: z.string().min(1).default('ecojotaduo_app'),
 
   /** Segredo de assinatura dos access tokens (mínimo 32 bytes). */
   JWT_SECRET: z
     .string()
     .min(32, 'JWT_SECRET precisa de pelo menos 32 caracteres'),
-  JWT_ISSUER: z.string().min(1).default('movimentar-platform'),
-  JWT_AUDIENCE: z.string().min(1).default('movimentar-api'),
+  JWT_ISSUER: z.string().min(1).default('ecojotaduo-platform'),
+  JWT_AUDIENCE: z.string().min(1).default('ecojotaduo-api'),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce
     .number()
     .int()

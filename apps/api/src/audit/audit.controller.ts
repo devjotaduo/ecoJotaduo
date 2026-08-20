@@ -1,4 +1,4 @@
-import type { AuditLogger } from '@movimentar/audit';
+import type { AuditLogger } from '@ecojotaduo/audit';
 import { Controller, Get, Inject, Query } from '@nestjs/common';
 import { z } from 'zod';
 

@@ -1,4 +1,4 @@
-import type { ModuleManifest } from '@movimentar/platform-kernel';
+import type { ModuleManifest } from '@ecojotaduo/platform-kernel';
 
 export const TENANCY_MODULE_ID = 'tenancy';
 
@@ -34,5 +34,5 @@ export const tenancyManifest: ModuleManifest = {
     },
   ],
   minimumPlatformVersion: '0.1.0',
-  migrations: { packageName: '@movimentar/tenancy' },
+  migrations: { packageName: '@ecojotaduo/tenancy' },
 };

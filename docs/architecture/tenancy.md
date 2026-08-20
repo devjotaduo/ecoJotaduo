@@ -52,7 +52,7 @@ flowchart LR
 
 | Conexão              | Papel                       | Uso                       |
 | -------------------- | --------------------------- | ------------------------- |
-| `DATABASE_URL`       | `movimentar_app` (restrito) | API, MCP gateway e worker |
+| `DATABASE_URL`       | `ecojotaduo_app` (restrito) | API, MCP gateway e worker |
 | `DATABASE_ADMIN_URL` | dono das tabelas            | Somente migrações e seed  |
 
 Cada tabela com escopo de tenant recebe policy do tipo:

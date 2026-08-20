@@ -1,6 +1,6 @@
-import { NoopAuditLogger } from '@movimentar/audit';
-import type { IdentityPublicApi } from '@movimentar/identity';
-import { authorize } from '@movimentar/permissions';
+import { NoopAuditLogger } from '@ecojotaduo/audit';
+import type { IdentityPublicApi } from '@ecojotaduo/identity';
+import { authorize } from '@ecojotaduo/permissions';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {

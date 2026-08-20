@@ -1,3 +1,3 @@
-import config from '@movimentar/eslint-config';
+import config from '@ecojotaduo/eslint-config';
 
 export default config;

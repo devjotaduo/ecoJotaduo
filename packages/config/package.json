@@ -1,5 +1,5 @@
 {
-  "name": "@movimentar/config",
+  "name": "@ecojotaduo/config",
   "version": "0.0.0",
   "private": true,
   "description": "Carregamento e validação fail-fast das variáveis de ambiente",
@@ -24,8 +24,8 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@movimentar/eslint-config": "workspace:*",
-    "@movimentar/tsconfig": "workspace:*",
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
     "eslint": "^10.8.1",
     "typescript": "^5.9.3",

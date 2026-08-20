@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import type { AuditLogger } from '@movimentar/audit';
-import { DrizzleAuditLogger } from '@movimentar/audit/drizzle';
+import type { AuditLogger } from '@ecojotaduo/audit';
+import { DrizzleAuditLogger } from '@ecojotaduo/audit/drizzle';
 import {
   createOpaqueToken,
   hashOpaqueToken,
@@ -9,9 +9,9 @@ import {
   opaqueTokenMatches,
   TokenService,
   verifyPassword,
-} from '@movimentar/auth';
-import type { Env } from '@movimentar/config';
-import { createDatabase, type DatabaseHandle } from '@movimentar/database';
+} from '@ecojotaduo/auth';
+import type { Env } from '@ecojotaduo/config';
+import { createDatabase, type DatabaseHandle } from '@ecojotaduo/database';
 import {
   DrizzleRefreshTokenRepository,
   DrizzleServiceAccountRepository,
@@ -23,8 +23,8 @@ import {
   type IdentityPublicApi,
   type PasswordHasher,
   type SecretHasher,
-} from '@movimentar/identity';
-import type { ResolvedModules } from '@movimentar/platform-kernel';
+} from '@ecojotaduo/identity';
+import type { ResolvedModules } from '@ecojotaduo/platform-kernel';
 import {
   DrizzleEntitlementRepository,
   DrizzleMembershipRepository,
@@ -37,7 +37,7 @@ import {
   TenancyService,
   type AccessTokenIssuer,
   type TenancyPublicApi,
-} from '@movimentar/tenancy';
+} from '@ecojotaduo/tenancy';
 
 import { catalogoDeModulos } from './modules';
 

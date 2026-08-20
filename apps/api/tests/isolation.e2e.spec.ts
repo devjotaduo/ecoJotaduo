@@ -1,5 +1,5 @@
-import { hashOpaqueToken } from '@movimentar/auth';
-import { runMigrations } from '@movimentar/database';
+import { hashOpaqueToken } from '@ecojotaduo/auth';
+import { runMigrations } from '@ecojotaduo/database';
 import {
   conexaoDoDono,
   diretorioDeMigracoes,
@@ -12,7 +12,7 @@ import {
   temBancoDeTeste,
   urlDaAplicacao,
   type TenantSemeado,
-} from '@movimentar/test-support';
+} from '@ecojotaduo/test-support';
 import {
   FastifyAdapter,
   type NestFastifyApplication,
@@ -433,7 +433,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
 
       expect(resposta.statusCode).toBe(403);
       expect(corpo<Problema>(resposta).type).toBe(
-        'https://movimentar.dev/errors/forbidden',
+        'https://jotaduo.com/ecojotaduo/errors/forbidden',
       );
     });
 
@@ -448,7 +448,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
       });
       expect(semContrato.statusCode).toBe(403);
       expect(corpo<Problema>(semContrato).type).toBe(
-        'https://movimentar.dev/errors/module-not-entitled',
+        'https://jotaduo.com/ecojotaduo/errors/module-not-entitled',
       );
 
       // 2. Contratado o módulo, o MESMO token passa a valer — o acesso é

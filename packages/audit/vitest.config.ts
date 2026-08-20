@@ -4,6 +4,6 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.spec.ts'],
-    setupFiles: ['@movimentar/test-support/vitest-setup'],
+    setupFiles: ['@ecojotaduo/test-support/vitest-setup'],
   },
 });

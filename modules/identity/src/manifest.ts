@@ -1,4 +1,4 @@
-import type { ModuleManifest } from '@movimentar/platform-kernel';
+import type { ModuleManifest } from '@ecojotaduo/platform-kernel';
 
 export const IDENTITY_MODULE_ID = 'identity';
 
@@ -26,5 +26,5 @@ export const identityManifest: ModuleManifest = {
     },
   ],
   minimumPlatformVersion: '0.1.0',
-  migrations: { packageName: '@movimentar/identity' },
+  migrations: { packageName: '@ecojotaduo/identity' },
 };

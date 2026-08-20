@@ -2,7 +2,7 @@
  * Superfície pública do módulo tenancy — o que outros módulos e os
  * composition roots podem usar.
  */
-import type { AccessGrant } from '@movimentar/permissions';
+import type { AccessGrant } from '@ecojotaduo/permissions';
 
 export interface TenantView {
   readonly tenantId: string;
@@ -26,4 +26,4 @@ export interface TenancyPublicApi {
   listTenantsOfUser(userId: string): Promise<TenantView[]>;
 }
 
-export const TENANCY_PUBLIC_API = Symbol.for('movimentar.tenancy.publicApi');
+export const TENANCY_PUBLIC_API = Symbol.for('ecojotaduo.tenancy.publicApi');

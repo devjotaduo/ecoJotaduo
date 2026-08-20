@@ -1,4 +1,4 @@
 {
-  "extends": "@movimentar/tsconfig/node.json",
+  "extends": "@ecojotaduo/tsconfig/node.json",
   "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
 }

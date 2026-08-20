@@ -1,4 +1,4 @@
-import type { DatabaseHandle } from '@movimentar/database';
+import type { DatabaseHandle } from '@ecojotaduo/database';
 import { Inject, Injectable, type OnApplicationShutdown } from '@nestjs/common';
 
 import { DATABASE } from './tokens';

@@ -13,13 +13,13 @@ jobs:
       postgres:
         image: postgres:18-alpine
         env:
-          POSTGRES_USER: movimentar
-          POSTGRES_PASSWORD: movimentar
-          POSTGRES_DB: movimentar
+          POSTGRES_USER: ecojotaduo
+          POSTGRES_PASSWORD: ecojotaduo
+          POSTGRES_DB: ecojotaduo
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U movimentar"
+          --health-cmd "pg_isready -U ecojotaduo"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -41,14 +41,14 @@ jobs:
       # tabelas, então sem ele os testes de isolamento seriam falso-positivos.
       - name: Preparar banco de testes
         env:
-          PGPASSWORD: movimentar
+          PGPASSWORD: ecojotaduo
         run: |
-          psql -h localhost -U movimentar -d movimentar -v ON_ERROR_STOP=1 \
-            -c "create role movimentar_app with login password 'movimentar_app'"
-          createdb -h localhost -U movimentar movimentar_test
-          psql -h localhost -U movimentar -d movimentar_test -v ON_ERROR_STOP=1 \
-            -c "grant connect on database movimentar_test to movimentar_app" \
-            -c "grant usage on schema public to movimentar_app"
+          psql -h localhost -U ecojotaduo -d ecojotaduo -v ON_ERROR_STOP=1 \
+            -c "create role ecojotaduo_app with login password 'ecojotaduo_app'"
+          createdb -h localhost -U ecojotaduo ecojotaduo_test
+          psql -h localhost -U ecojotaduo -d ecojotaduo_test -v ON_ERROR_STOP=1 \
+            -c "grant connect on database ecojotaduo_test to ecojotaduo_app" \
+            -c "grant usage on schema public to ecojotaduo_app"
           cp .env.test.example .env.test
 
       - name: Formatação

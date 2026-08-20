@@ -1,4 +1,4 @@
-import type { DatabaseHandle } from '@movimentar/database';
+import type { DatabaseHandle } from '@ecojotaduo/database';
 import { ServiceUnavailableException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 

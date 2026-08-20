@@ -7,7 +7,7 @@ import {
   exigirBancoEmCI,
   reservarBancoDeTestes,
   temBancoDeTeste,
-} from '@movimentar/test-support';
+} from '@ecojotaduo/test-support';
 import type postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -34,7 +34,7 @@ describe.skipIf(!temBancoDeTeste)('runMigrations (PostgreSQL real)', () => {
     // Serializa com as demais suítes de integração (banco compartilhado).
     liberarBanco = await reservarBancoDeTestes();
     sql = conexaoDoDono();
-    diretorio = await mkdtemp(join(tmpdir(), 'movimentar-migracoes-'));
+    diretorio = await mkdtemp(join(tmpdir(), 'ecojotaduo-migracoes-'));
     await sql`drop table if exists exemplo_migrator`;
     await sql`delete from platform_migrations where module_id = 'exemplo'`.catch(
       () => undefined,
@@ -94,7 +94,7 @@ describe.skipIf(!temBancoDeTeste)('runMigrations (PostgreSQL real)', () => {
 
   it('confirma a existência do papel de aplicação (pré-requisito da RLS)', async () => {
     await expect(
-      assertAppRoleExists(sql, 'movimentar_app'),
+      assertAppRoleExists(sql, 'ecojotaduo_app'),
     ).resolves.toBeUndefined();
     await expect(
       assertAppRoleExists(sql, 'papel_que_nao_existe'),

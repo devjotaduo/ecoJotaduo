@@ -38,7 +38,7 @@ frontend).
   "id": "whatsapp",
   "name": "Integração WhatsApp",
   "version": "1.0.0",
-  "publisher": "Movimentar",
+  "publisher": "ecoJotaduo",
   "type": "remote",
   "platformVersion": "^1.0.0",
   "permissions": ["crm.customer.read", "notifications.send"],

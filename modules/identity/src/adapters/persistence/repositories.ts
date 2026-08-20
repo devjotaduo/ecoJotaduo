@@ -1,4 +1,4 @@
-import type { Database } from '@movimentar/database';
+import type { Database } from '@ecojotaduo/database';
 import { eq, isNull, and } from 'drizzle-orm';
 
 import { Email } from '../../domain/email';

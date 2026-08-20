@@ -18,7 +18,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-const PAPEL_DA_APLICACAO = 'movimentar_app';
+const PAPEL_DA_APLICACAO = 'ecojotaduo_app';
 
 // Tabelas globais por natureza (login acontece antes de existir tenant).
 // Ver docs/architecture/tenancy.md — "Tabelas de plataforma".

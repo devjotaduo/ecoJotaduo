@@ -1,6 +1,6 @@
 /**
  * Porta de auditoria. Casos de uso dependem apenas deste arquivo — o
- * adaptador PostgreSQL vive em `@movimentar/audit/drizzle`.
+ * adaptador PostgreSQL vive em `@ecojotaduo/audit/drizzle`.
  */
 
 export type AuditResult = 'success' | 'denied' | 'error';

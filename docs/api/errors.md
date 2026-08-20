@@ -5,7 +5,7 @@ Todas as respostas de erro usam **Problem Details (RFC 9457)**, com
 
 ```jsonc
 {
-  "type": "https://movimentar.dev/errors/module-not-entitled",
+  "type": "https://jotaduo.com/ecojotaduo/errors/module-not-entitled",
   "title": "Módulo não contratado",
   "status": 403,
   "detail": "Módulo \"crm\" não está contratado por este tenant.",

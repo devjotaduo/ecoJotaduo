@@ -1,4 +1,4 @@
-import type { TenantId, UserId } from '@movimentar/tenant-context';
+import type { TenantId, UserId } from '@ecojotaduo/tenant-context';
 import { sql } from 'drizzle-orm';
 
 import type { Database, TenantTransaction } from './client';

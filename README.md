@@ -1,4 +1,4 @@
-# Movimentar Platform
+# ecoJotaduo
 
 ERP modular multi-tenant: backend NestJS + Fastify com contrato OpenAPI, gateway MCP
 para agentes de IA, workers assíncronos e plataforma de plugins — construído como
@@ -32,15 +32,15 @@ pnpm format      # formatar com Prettier
 cp docker/.env.example docker/.env && docker compose -f docker/docker-compose.yml up -d
 ```
 
-O container cria, na primeira subida, o papel restrito `movimentar_app` (é ele que
+O container cria, na primeira subida, o papel restrito `ecojotaduo_app` (é ele que
 sofre a Row Level Security — ver [ADR-0007](docs/adr/0007-auth-and-rls-enforcement.md))
 e o banco de testes.
 
 ```bash
 cp .env.example .env                          # configuração da aplicação
-pnpm --filter @movimentar/api migrate         # aplica as migrações (como dono)
-pnpm --filter @movimentar/api seed:dev        # cria a empresa "demo" e um usuário
-pnpm --filter @movimentar/api dev             # sobe em http://127.0.0.1:3000
+pnpm --filter @ecojotaduo/api migrate         # aplica as migrações (como dono)
+pnpm --filter @ecojotaduo/api seed:dev        # cria a empresa "demo" e um usuário
+pnpm --filter @ecojotaduo/api dev             # sobe em http://127.0.0.1:3000
 ```
 
 Primeiro login:

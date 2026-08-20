@@ -18,7 +18,7 @@ set -e
 
 : "${APP_DB_USER:?defina APP_DB_USER em docker/.env}"
 : "${APP_DB_PASSWORD:?defina APP_DB_PASSWORD em docker/.env}"
-: "${TEST_DB_NAME:=movimentar_test}"
+: "${TEST_DB_NAME:=ecojotaduo_test}"
 
 psql -v ON_ERROR_STOP=1 \
   --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \

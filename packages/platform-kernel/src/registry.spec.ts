@@ -91,18 +91,18 @@ describe('resolveModules', () => {
   it('deriva as fontes de migração na ordem de dependência', () => {
     const identity: ModuleManifest = {
       ...manifesto('identity'),
-      migrations: { packageName: '@movimentar/identity' },
+      migrations: { packageName: '@ecojotaduo/identity' },
     };
     const tenancy: ModuleManifest = {
       ...manifesto('tenancy', ['identity']),
-      migrations: { packageName: '@movimentar/tenancy' },
+      migrations: { packageName: '@ecojotaduo/tenancy' },
     };
 
     const resolvido = resolveModules([tenancy, identity]);
 
     expect(resolvido.migrationSources).toEqual([
-      { moduleId: 'identity', packageName: '@movimentar/identity' },
-      { moduleId: 'tenancy', packageName: '@movimentar/tenancy' },
+      { moduleId: 'identity', packageName: '@ecojotaduo/identity' },
+      { moduleId: 'tenancy', packageName: '@ecojotaduo/tenancy' },
     ]);
   });
 

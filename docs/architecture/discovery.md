@@ -8,12 +8,14 @@ Data: 2026-08-20
   projeto (greenfield). Não há código legado a preservar nem repositório git prévio.
 - Ambiente local verificado: Node 24.13.0, pnpm 10.28.2, git 2.55.0, Docker 29.6.2
   (Windows 11).
-- Decisão: este diretório é a raiz do monorepo `movimentar-platform`.
+- Decisão: este diretório é a raiz do monorepo `ecojotaduo-platform`.
 
 ## 2. Mapa do domínio (resumo)
 
-ERP para empresa de **locação de equipamentos e serviços** (nome "Movimentar" e a
-tríade Locações/Equipamentos/Manutenção indicam o setor). Bounded contexts e suas
+ERP para empresa de **locação de equipamentos e serviços** — a tríade
+Locações/Equipamentos/Manutenção no briefing indica o setor. (O projeto nasceu com
+o nome provisório "Movimentar", que também apontava para movimentação de
+equipamentos; foi renomeado para ecoJotaduo em 2026-08-20, sem mudança de escopo.) Bounded contexts e suas
 relações estão em [module-map.md](module-map.md). Núcleo de valor: ciclo
 **CRM → Proposta → Contrato → Locação/Operação → Faturamento → Financeiro**, apoiado
 por Ativos, Estoque, Manutenção, Documentos e Notificações.
@@ -70,8 +72,8 @@ tabela + CRUD).
 ## 6. Suposições assumidas (não informadas no enunciado)
 
 1. **Greenfield**: não há sistema legado nem dados a migrar.
-2. **Raiz do projeto** é o diretório atual (`erp/`); o nome do produto permanece
-   `movimentar-platform` no `package.json`.
+2. **Raiz do projeto** é o diretório atual (`erp/`); o produto se chama
+   `ecojotaduo-platform` no `package.json` e o escopo npm é `@ecojotaduo/*`.
 3. **Idioma**: produto e documentação em pt-BR; identificadores de código, nomes de
    arquivos e permissões em inglês (convenção estabelecida pelos exemplos do briefing).
 4. **Moeda**: BRL como padrão; valores monetários em centavos (inteiro) + código de moeda.

@@ -40,7 +40,7 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['@movimentar/*/src/*'],
+              group: ['@ecojotaduo/*/src/*'],
               message:
                 'Importe apenas os exports públicos do pacote (contracts/), nunca o interior src/**.',
             },

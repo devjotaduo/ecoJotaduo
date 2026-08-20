@@ -1,4 +1,4 @@
-import { loadEnv, type Env } from '@movimentar/config';
+import { loadEnv, type Env } from '@ecojotaduo/config';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 

@@ -1,4 +1,4 @@
-import type { DatabaseHandle } from '@movimentar/database';
+import type { DatabaseHandle } from '@ecojotaduo/database';
 import {
   Controller,
   Get,

@@ -1,4 +1,4 @@
-import type { AccessGrant } from '@movimentar/permissions';
+import type { AccessGrant } from '@ecojotaduo/permissions';
 
 import { entitlementIsValid } from '../domain/tenant';
 import { NoActiveMembershipError, TenantNotFoundError } from '../domain/errors';

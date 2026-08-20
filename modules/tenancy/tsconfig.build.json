@@ -1,5 +1,5 @@
 {
-  "extends": "@movimentar/tsconfig/node.json",
+  "extends": "@ecojotaduo/tsconfig/node.json",
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "dist"

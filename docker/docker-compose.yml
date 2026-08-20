@@ -2,7 +2,7 @@
 # 1. cp docker/.env.example docker/.env   (ajuste se quiser)
 # 2. docker compose -f docker/docker-compose.yml up -d
 # As credenciais vêm do docker/.env (gitignored); nada de segredo neste arquivo.
-name: movimentar-platform
+name: ecojotaduo-platform
 
 services:
   postgres:
@@ -13,7 +13,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?defina em docker/.env}
       APP_DB_USER: ${APP_DB_USER:?defina em docker/.env}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:?defina em docker/.env}
-      TEST_DB_NAME: ${TEST_DB_NAME:-movimentar_test}
+      TEST_DB_NAME: ${TEST_DB_NAME:-ecojotaduo_test}
     ports:
       - '5432:5432'
     volumes:

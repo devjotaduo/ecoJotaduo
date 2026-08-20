@@ -54,4 +54,4 @@ export interface IdentityPublicApi {
 }
 
 /** Token de injeção usado pelo composition root (evita acoplar em classe). */
-export const IDENTITY_PUBLIC_API = Symbol.for('movimentar.identity.publicApi');
+export const IDENTITY_PUBLIC_API = Symbol.for('ecojotaduo.identity.publicApi');

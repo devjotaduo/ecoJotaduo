@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { InvalidEnvError, loadEnv } from './index';
 
 const MINIMO = {
-  DATABASE_URL: 'postgresql://app:pwd@localhost:5432/movimentar',
+  DATABASE_URL: 'postgresql://app:pwd@localhost:5432/ecojotaduo',
   JWT_SECRET: 'x'.repeat(32),
 };
 
@@ -13,9 +13,9 @@ describe('loadEnv', () => {
 
     expect(env.NODE_ENV).toBe('development');
     expect(env.PORT).toBe(3000);
-    expect(env.DATABASE_APP_ROLE).toBe('movimentar_app');
+    expect(env.DATABASE_APP_ROLE).toBe('ecojotaduo_app');
     expect(env.ACCESS_TOKEN_TTL_SECONDS).toBe(900);
-    expect(env.JWT_ISSUER).toBe('movimentar-platform');
+    expect(env.JWT_ISSUER).toBe('ecojotaduo-platform');
   });
 
   it('falha cedo listando TODAS as variáveis faltantes', () => {
@@ -62,7 +62,7 @@ describe('loadEnv', () => {
     const env = loadEnv({
       ...MINIMO,
       NODE_ENV: 'production',
-      DATABASE_ADMIN_URL: 'postgresql://owner:pwd@localhost:5432/movimentar',
+      DATABASE_ADMIN_URL: 'postgresql://owner:pwd@localhost:5432/ecojotaduo',
       REDIS_URL: 'redis://localhost:6379',
       REFRESH_TOKEN_TTL_DAYS: '7',
     });

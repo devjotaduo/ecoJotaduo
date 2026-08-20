@@ -1,5 +1,5 @@
 {
-  "name": "@movimentar/audit",
+  "name": "@ecojotaduo/audit",
   "version": "0.0.0",
   "private": true,
   "description": "Trilha de auditoria: porta pura (raiz) e adaptador PostgreSQL (subpath /drizzle)",
@@ -27,14 +27,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@movimentar/database": "workspace:*",
-    "@movimentar/tenant-context": "workspace:*",
+    "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/tenant-context": "workspace:*",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
-    "@movimentar/eslint-config": "workspace:*",
-    "@movimentar/test-support": "workspace:*",
-    "@movimentar/tsconfig": "workspace:*",
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/test-support": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
     "eslint": "^10.8.1",
     "postgres": "^3.4.9",

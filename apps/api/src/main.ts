@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { loadEnv } from '@movimentar/config';
+import { loadEnv } from '@ecojotaduo/config';
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {

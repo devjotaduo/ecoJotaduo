@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
-import type { Database } from '@movimentar/database';
-import { withTenant } from '@movimentar/database';
-import { requireAuth, requireContext } from '@movimentar/tenant-context';
+import type { Database } from '@ecojotaduo/database';
+import { withTenant } from '@ecojotaduo/database';
+import { requireAuth, requireContext } from '@ecojotaduo/tenant-context';
 import { and, count, desc, eq } from 'drizzle-orm';
 
 import type { AuditEntry, AuditLogger, AuditQuery, AuditRecord } from './index';

@@ -6,7 +6,7 @@
 -- (ver packages/database/src/tenant-scope.ts).
 --
 -- IMPORTANTE: a RLS não se aplica ao dono da tabela nem a superusuários. Por
--- isso a aplicação conecta com o papel `movimentar_app`, que só recebe os
+-- isso a aplicação conecta com o papel `ecojotaduo_app`, que só recebe os
 -- grants abaixo.
 
 create table if not exists tenancy_organizations (
@@ -148,10 +148,10 @@ create policy tenancy_module_entitlements_isolation on tenancy_module_entitlemen
 -- ---------------------------------------------------------------------------
 -- Privilégios do papel da aplicação (sem DDL, sem DELETE em dado histórico)
 -- ---------------------------------------------------------------------------
-grant select on tenancy_organizations to movimentar_app;
-grant select on tenancy_tenants to movimentar_app;
-grant select on tenancy_memberships to movimentar_app;
-grant select on tenancy_roles to movimentar_app;
-grant select on tenancy_role_permissions to movimentar_app;
-grant select on tenancy_membership_roles to movimentar_app;
-grant select, insert, update, delete on tenancy_module_entitlements to movimentar_app;
+grant select on tenancy_organizations to ecojotaduo_app;
+grant select on tenancy_tenants to ecojotaduo_app;
+grant select on tenancy_memberships to ecojotaduo_app;
+grant select on tenancy_roles to ecojotaduo_app;
+grant select on tenancy_role_permissions to ecojotaduo_app;
+grant select on tenancy_membership_roles to ecojotaduo_app;
+grant select, insert, update, delete on tenancy_module_entitlements to ecojotaduo_app;

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 
-import { hashPassword } from '@movimentar/auth';
+import { hashPassword } from '@ecojotaduo/auth';
 import postgres from 'postgres';
 
 /**

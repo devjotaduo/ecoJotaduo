@@ -1,18 +1,18 @@
-import { InvalidTokenError } from '@movimentar/auth';
+import { InvalidTokenError } from '@ecojotaduo/auth';
 import {
   InvalidCredentialsError,
   UserNotActiveError,
   RefreshTokenInvalidError,
-} from '@movimentar/identity';
-import { ForbiddenError } from '@movimentar/permissions';
+} from '@ecojotaduo/identity';
+import { ForbiddenError } from '@ecojotaduo/permissions';
 import {
   ModuleAlreadyEntitledError,
   NoActiveMembershipError,
   TenantNotActiveError,
   TenantNotFoundError,
   UnknownModuleError,
-} from '@movimentar/tenancy';
-import { getContext } from '@movimentar/tenant-context';
+} from '@ecojotaduo/tenancy';
+import { getContext } from '@ecojotaduo/tenant-context';
 import {
   ArgumentsHost,
   Catch,
@@ -22,7 +22,7 @@ import {
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
-const BASE = 'https://movimentar.dev/errors';
+const BASE = 'https://jotaduo.com/ecojotaduo/errors';
 
 interface ProblemDetails {
   type: string;

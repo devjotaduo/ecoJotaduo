@@ -1,5 +1,5 @@
 {
-  "name": "@movimentar/auth",
+  "name": "@ecojotaduo/auth",
   "version": "0.0.0",
   "private": true,
   "description": "Primitivas de autenticação: hash de senha (scrypt), tokens de acesso e tokens opacos",
@@ -21,8 +21,8 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@movimentar/eslint-config": "workspace:*",
-    "@movimentar/tsconfig": "workspace:*",
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
     "eslint": "^10.8.1",
     "typescript": "^5.9.3",

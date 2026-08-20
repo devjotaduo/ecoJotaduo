@@ -1,4 +1,4 @@
-import type { AccessGrant } from '@movimentar/permissions';
+import type { AccessGrant } from '@ecojotaduo/permissions';
 
 import type { ResolveAccessGrantUseCase } from './application/resolve-access-grant.use-case';
 import type { TenancyPublicApi, TenantView } from './contracts/public-api';

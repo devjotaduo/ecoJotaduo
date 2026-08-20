@@ -2,7 +2,7 @@ import {
   createDatabase,
   runMigrations,
   type DatabaseHandle,
-} from '@movimentar/database';
+} from '@ecojotaduo/database';
 import {
   codigoPostgres,
   conexaoDoDono,
@@ -15,14 +15,14 @@ import {
   temBancoDeTeste,
   urlDaAplicacao,
   type TenantSemeado,
-} from '@movimentar/test-support';
+} from '@ecojotaduo/test-support';
 import {
   authenticateContext,
   createContext,
   runWithContext,
   toTenantId,
   toUserId,
-} from '@movimentar/tenant-context';
+} from '@ecojotaduo/tenant-context';
 import type postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
@@ -150,7 +150,7 @@ describe.skipIf(!temBancoDeTeste)(
 
       // Simula um bug: SELECT direto na tabela, sem where de tenant.
       const vistosPelaB = await comoUsuario(empresaB, async () => {
-        const { withTenant } = await import('@movimentar/database');
+        const { withTenant } = await import('@ecojotaduo/database');
         return withTenant(
           handle.db,
           { tenantId: toTenantId(empresaB.tenantId) },
@@ -163,7 +163,7 @@ describe.skipIf(!temBancoDeTeste)(
     });
 
     it('não permite gravar auditoria em nome de outro tenant (with check)', async () => {
-      const { withTenant } = await import('@movimentar/database');
+      const { withTenant } = await import('@ecojotaduo/database');
       const { randomUUID } = await import('node:crypto');
 
       // Tentativa explícita de forjar: contexto da B, tenant_id da A na linha.

@@ -5,7 +5,7 @@
 
 ## Problema
 
-A Movimentar Platform precisa entregar um ERP multi-tenant com mais de uma dezena de
+A ecoJotaduo precisa entregar um ERP multi-tenant com mais de uma dezena de
 domínios de negócio (CRM, comercial, contratos, operação, faturamento, financeiro,
 ativos, manutenção…), servindo web, mobile, integrações de terceiros e agentes de IA —
 com uma equipe pequena e um prazo de MVP curto. É necessário começar simples sem

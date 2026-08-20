@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
-import type { Database } from '@movimentar/database';
-import { withTenant, withUserOnly } from '@movimentar/database';
-import type { TenantId, UserId } from '@movimentar/tenant-context';
+import type { Database } from '@ecojotaduo/database';
+import { withTenant, withUserOnly } from '@ecojotaduo/database';
+import type { TenantId, UserId } from '@ecojotaduo/tenant-context';
 import { and, eq, inArray } from 'drizzle-orm';
 
 import type {

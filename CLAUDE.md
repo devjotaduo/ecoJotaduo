@@ -16,8 +16,8 @@ pnpm format        # Prettier (format:check no CI)
 Um único arquivo de teste, ou um teste específico por nome:
 
 ```bash
-pnpm --filter @movimentar/auth exec vitest run src/access-token.spec.ts
-pnpm --filter @movimentar/auth exec vitest run src/access-token.spec.ts -t "alg"
+pnpm --filter @ecojotaduo/auth exec vitest run src/access-token.spec.ts
+pnpm --filter @ecojotaduo/auth exec vitest run src/access-token.spec.ts -t "alg"
 ```
 
 Ambiente local (necessário para os testes de integração):
@@ -25,13 +25,13 @@ Ambiente local (necessário para os testes de integração):
 ```bash
 cp docker/.env.example docker/.env && docker compose -f docker/docker-compose.yml up -d
 cp .env.example .env && cp .env.test.example .env.test
-pnpm --filter @movimentar/api migrate    # aplica migrações (conecta como dono)
-pnpm --filter @movimentar/api seed:dev   # empresa "demo" + admin@demo.local
-pnpm --filter @movimentar/api dev        # http://127.0.0.1:3000
+pnpm --filter @ecojotaduo/api migrate    # aplica migrações (conecta como dono)
+pnpm --filter @ecojotaduo/api seed:dev   # empresa "demo" + admin@demo.local
+pnpm --filter @ecojotaduo/api dev        # http://127.0.0.1:3000
 ```
 
-O init do container só roda com o volume vazio. Se o papel `movimentar_app` ou o banco
-`movimentar_test` sumirem, recrie com `docker compose -f docker/docker-compose.yml down -v`
+O init do container só roda com o volume vazio. Se o papel `ecojotaduo_app` ou o banco
+`ecojotaduo_test` sumirem, recrie com `docker compose -f docker/docker-compose.yml down -v`
 seguido de `up -d`.
 
 ## Arquitetura
@@ -58,7 +58,7 @@ uso primeiro e depois plugue os adaptadores — nunca lógica em controller ou t
 - `src/domain/**` importa NestJS, Drizzle, HTTP, MCP, Redis, React, **zod**, ou
   qualquer coisa de `application/`, `ports/` ou `adapters/`;
 - `src/application/**` importa infraestrutura ou `adapters/` (só fala com `ports/`);
-- qualquer arquivo importa `@movimentar/*/src/*` — módulos só enxergam a superfície
+- qualquer arquivo importa `@ecojotaduo/*/src/*` — módulos só enxergam a superfície
   pública (`contracts/`, reexportada pelo `index.ts` do pacote).
 
 Um teste que exercita domínio **e** aplicação vai em `modules/<x>/tests/`, nunca em
@@ -71,7 +71,7 @@ ele conhece vínculo, papéis e módulos contratados).
 ### Isolamento entre tenants — os dois pontos que quebram tudo se ignorados
 
 1. **A aplicação conecta com um papel PostgreSQL restrito** (`DATABASE_URL` →
-   `movimentar_app`), separado do dono das tabelas (`DATABASE_ADMIN_URL`, usado só por
+   `ecojotaduo_app`), separado do dono das tabelas (`DATABASE_ADMIN_URL`, usado só por
    `migrate` e `seed:dev`). O PostgreSQL **não aplica RLS ao dono nem a superusuários** —
    sem essa separação todas as policies viram decoração. O runner de migrações recusa
    iniciar se o papel não existir.
@@ -84,7 +84,7 @@ ele conhece vínculo, papéis e módulos contratados).
    consulta, jamais afrouxar a policy.
 
 Toda tabela de negócio nova precisa de `tenant_id NOT NULL`, `enable row level security`,
-policy com `using` **e** `with check`, e `grant` explícito para `movimentar_app`
+policy com `using` **e** `with check`, e `grant` explícito para `ecojotaduo_app`
 (o papel não herda nada). Use `nullif(current_setting('app.tenant_id', true), '')::uuid`
 — o parâmetro pode estar vazio.
 
@@ -146,7 +146,7 @@ quebra os testes E2E. Tokens ficam em `apps/api/src/bootstrap/tokens.ts`.
   segurança. Não narre o que o código já diz.
 - Datas em UTC; dinheiro como inteiro em centavos + moeda (nunca float); IDs opacos.
 - Eventos nomeados no passado e versionados: `crm.customer.created.v1`.
-- `TenantId`/`UserId` são tipos marcados (`@movimentar/tenant-context`) — converta com
+- `TenantId`/`UserId` são tipos marcados (`@ecojotaduo/tenant-context`) — converta com
   `toTenantId()`/`toUserId()`, que validam UUID.
 
 ## Automação do projeto (ECC + hooks locais)
@@ -159,7 +159,7 @@ só o que o ECC não tem como saber sobre ele.
 
 | Hook                        | Bloqueia                                                                                                                                                              |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `verifica-migracao.mjs`     | `create table` sem RLS, sem policy `using`/`with check` ou sem `grant` para `movimentar_app`; e edição de migração já versionada (que causaria `MigrationDriftError`) |
+| `verifica-migracao.mjs`     | `create table` sem RLS, sem policy `using`/`with check` ou sem `grant` para `ecojotaduo_app`; e edição de migração já versionada (que causaria `MigrationDriftError`) |
 | `verifica-injecao-nest.mjs` | Parâmetro de construtor sem `@Inject(...)` em `apps/api`                                                                                                              |
 
 Ambos saem com código 2 e explicam a correção. Se um deles reclamar de algo

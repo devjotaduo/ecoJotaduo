@@ -1,5 +1,5 @@
 {
-  "name": "@movimentar/tenancy",
+  "name": "@ecojotaduo/tenancy",
   "version": "0.1.0",
   "private": true,
   "description": "Módulo de tenancy: organizações, tenants, vínculos, papéis e contratação de módulos",
@@ -23,17 +23,17 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@movimentar/audit": "workspace:*",
-    "@movimentar/database": "workspace:*",
-    "@movimentar/identity": "workspace:*",
-    "@movimentar/permissions": "workspace:*",
-    "@movimentar/platform-kernel": "workspace:*",
-    "@movimentar/tenant-context": "workspace:*",
+    "@ecojotaduo/audit": "workspace:*",
+    "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/identity": "workspace:*",
+    "@ecojotaduo/permissions": "workspace:*",
+    "@ecojotaduo/platform-kernel": "workspace:*",
+    "@ecojotaduo/tenant-context": "workspace:*",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
-    "@movimentar/eslint-config": "workspace:*",
-    "@movimentar/tsconfig": "workspace:*",
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
     "eslint": "^10.8.1",
     "typescript": "^5.9.3",

@@ -1,4 +1,4 @@
-import type { AuditLogger } from '@movimentar/audit';
+import type { AuditLogger } from '@ecojotaduo/audit';
 
 import { entitlementIsValid, type Entitlement } from '../domain/tenant';
 import {

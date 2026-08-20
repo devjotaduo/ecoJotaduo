@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { hashPassword } from '@movimentar/auth';
-import { loadEnv } from '@movimentar/config';
+import { hashPassword } from '@ecojotaduo/auth';
+import { loadEnv } from '@ecojotaduo/config';
 import postgres from 'postgres';
 
 /**

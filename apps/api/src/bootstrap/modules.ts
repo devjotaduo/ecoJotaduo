@@ -1,9 +1,9 @@
-import { identityManifest } from '@movimentar/identity';
+import { identityManifest } from '@ecojotaduo/identity';
 import {
   resolveModules,
   type ResolvedModules,
-} from '@movimentar/platform-kernel';
-import { tenancyManifest } from '@movimentar/tenancy';
+} from '@ecojotaduo/platform-kernel';
+import { tenancyManifest } from '@ecojotaduo/tenancy';
 
 /**
  * Módulos internos confiáveis desta instalação.

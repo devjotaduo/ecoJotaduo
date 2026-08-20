@@ -5,7 +5,7 @@
 -- várias empresas. Nenhum dado de negócio mora aqui — os vínculos e permissões
 -- ficam no módulo tenancy, esses sim protegidos por RLS.
 --
--- Os grants referenciam o papel de aplicação `movimentar_app`, criado pelo
+-- Os grants referenciam o papel de aplicação `ecojotaduo_app`, criado pelo
 -- init do container (docker/init) ou pelo DBA em produção.
 
 create table if not exists identity_users (
@@ -48,6 +48,6 @@ create table if not exists identity_refresh_tokens (
 create index if not exists identity_refresh_tokens_user_idx
   on identity_refresh_tokens (user_id) where revoked_at is null;
 
-grant select on identity_users to movimentar_app;
-grant select on identity_service_accounts to movimentar_app;
-grant select, insert, update on identity_refresh_tokens to movimentar_app;
+grant select on identity_users to ecojotaduo_app;
+grant select on identity_service_accounts to ecojotaduo_app;
+grant select, insert, update on identity_refresh_tokens to ecojotaduo_app;

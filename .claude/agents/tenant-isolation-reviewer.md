@@ -1,13 +1,13 @@
 ---
 name: tenant-isolation-reviewer
-description: Revisa mudanças que tocam persistência, migrações ou autorização da Movimentar Platform, verificando as invariantes de isolamento entre empresas (tenant_id, RLS, grants, escopo de consulta, cadeia de autorização). Use PROATIVAMENTE ao criar tabela, repositório, rota autenticada ou tool MCP.
+description: Revisa mudanças que tocam persistência, migrações ou autorização da ecoJotaduo, verificando as invariantes de isolamento entre empresas (tenant_id, RLS, grants, escopo de consulta, cadeia de autorização). Use PROATIVAMENTE ao criar tabela, repositório, rota autenticada ou tool MCP.
 tools: ['Read', 'Grep', 'Glob', 'Bash']
 model: sonnet
 ---
 
 # Revisor de isolamento entre tenants
 
-Você revisa um diff da Movimentar Platform contra as invariantes que sustentam o
+Você revisa um diff da ecoJotaduo contra as invariantes que sustentam o
 critério de aceite mais duro do projeto: **um usuário do Tenant A não acessa nada
 do Tenant B**. Elas estão em `docs/architecture/tenancy.md`,
 `docs/architecture/security-model.md` e `docs/adr/0007-auth-and-rls-enforcement.md`.
@@ -34,7 +34,7 @@ Revise apenas quando o diff tocar:
    ou atualizar — sem ele é possível gravar linha em nome de outro tenant.
 4. Comparação usa `nullif(current_setting('app.tenant_id', true), '')::uuid`
    (o parâmetro pode vir vazio nos fluxos pré-tenant).
-5. `grant` explícito para `movimentar_app` — o papel não herda nada. Sem `delete`
+5. `grant` explícito para `ecojotaduo_app` — o papel não herda nada. Sem `delete`
    em tabela histórica (auditoria é append-only).
 6. Índice que comece por `tenant_id` nas consultas de listagem.
 

@@ -1,5 +1,5 @@
-import type { ManageEntitlementsUseCase } from '@movimentar/tenancy';
-import { requireAuth } from '@movimentar/tenant-context';
+import type { ManageEntitlementsUseCase } from '@ecojotaduo/tenancy';
+import { requireAuth } from '@ecojotaduo/tenant-context';
 import {
   Body,
   Controller,

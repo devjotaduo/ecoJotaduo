@@ -56,7 +56,7 @@ Portanto:
 
 | Conexão              | Papel            | Uso                          | Privilégios                                                  |
 | -------------------- | ---------------- | ---------------------------- | ------------------------------------------------------------ |
-| `DATABASE_URL`       | `movimentar_app` | Aplicação (API, MCP, worker) | Apenas os `GRANT` de cada migração; sem DDL, sem `BYPASSRLS` |
+| `DATABASE_URL`       | `ecojotaduo_app` | Aplicação (API, MCP, worker) | Apenas os `GRANT` de cada migração; sem DDL, sem `BYPASSRLS` |
 | `DATABASE_ADMIN_URL` | dono das tabelas | Migrações e seed             | DDL completo                                                 |
 
 O runner de migrações **recusa iniciar** se o papel de aplicação não existir

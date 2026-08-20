@@ -1,10 +1,10 @@
-import { loadEnv } from '@movimentar/config';
+import { loadEnv } from '@ecojotaduo/config';
 import {
   assertAppRoleExists,
   resolveMigrationsDirectory,
   runMigrations,
   type MigrationSource,
-} from '@movimentar/database';
+} from '@ecojotaduo/database';
 import postgres from 'postgres';
 
 import { catalogoDeModulos } from '../bootstrap/modules';
@@ -30,7 +30,7 @@ export async function migrar(): Promise<void> {
   const fontes: MigrationSource[] = [
     {
       moduleId: 'audit',
-      directory: resolveMigrationsDirectory(require, '@movimentar/audit'),
+      directory: resolveMigrationsDirectory(require, '@ecojotaduo/audit'),
     },
     ...catalogo.migrationSources.map((fonte) => ({
       moduleId: fonte.moduleId,

@@ -1,7 +1,7 @@
 import { SetMetadata } from '@nestjs/common';
 
-export const PUBLIC_KEY = 'movimentar:public';
-export const PERMISSIONS_KEY = 'movimentar:permissions';
+export const PUBLIC_KEY = 'ecojotaduo:public';
+export const PERMISSIONS_KEY = 'ecojotaduo:permissions';
 
 /** Marca a rota como aberta (login, health). Tudo o mais exige token. */
 export const Public = () => SetMetadata(PUBLIC_KEY, true);

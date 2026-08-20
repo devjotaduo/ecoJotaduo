@@ -1,5 +1,5 @@
 {
-  "name": "@movimentar/eslint-config",
+  "name": "@ecojotaduo/eslint-config",
   "version": "0.0.0",
   "private": true,
   "description": "ESLint flat config compartilhado, com regras de camadas hexagonais",

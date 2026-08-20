@@ -9,8 +9,8 @@ const OUTRO_SEGREDO = 'outro-segredo-de-teste-com-32-bytes!!!!';
 
 const servico = new TokenService({
   secret: SEGREDO,
-  issuer: 'movimentar',
-  audience: 'movimentar-api',
+  issuer: 'ecojotaduo',
+  audience: 'ecojotaduo-api',
   accessTokenTtlSeconds: 900,
 });
 
@@ -54,8 +54,8 @@ describe('TokenService', () => {
   it('rejeita token com assinatura de outro segredo', () => {
     const invasor = new TokenService({
       secret: OUTRO_SEGREDO,
-      issuer: 'movimentar',
-      audience: 'movimentar-api',
+      issuer: 'ecojotaduo',
+      audience: 'ecojotaduo-api',
       accessTokenTtlSeconds: 900,
     });
     const { token } = invasor.issue({
@@ -97,8 +97,8 @@ describe('TokenService', () => {
       jti: randomUUID(),
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 900,
-      iss: 'movimentar',
-      aud: 'movimentar-api',
+      iss: 'ecojotaduo',
+      aud: 'ecojotaduo-api',
     });
     const semAssinatura = `${base64url({ alg: 'none', typ: 'JWT' })}.${payload}.`;
 
@@ -117,8 +117,8 @@ describe('TokenService', () => {
       jti: randomUUID(),
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 900,
-      iss: 'movimentar',
-      aud: 'movimentar-api',
+      iss: 'ecojotaduo',
+      aud: 'ecojotaduo-api',
     });
     const assinatura = createHmac('sha256', SEGREDO)
       .update(`${cabecalho}.${payload}`)
@@ -147,7 +147,7 @@ describe('TokenService', () => {
     const outroEmissor = new TokenService({
       secret: SEGREDO,
       issuer: 'outro-sistema',
-      audience: 'movimentar-api',
+      audience: 'ecojotaduo-api',
       accessTokenTtlSeconds: 900,
     });
     const { token } = outroEmissor.issue({

@@ -1,5 +1,5 @@
 {
-  "name": "@movimentar/tsconfig",
+  "name": "@ecojotaduo/tsconfig",
   "version": "0.0.0",
   "private": true,
   "description": "Configurações TypeScript compartilhadas do monorepo"

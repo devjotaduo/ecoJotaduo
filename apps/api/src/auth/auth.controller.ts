@@ -1,11 +1,11 @@
-import type { AuditLogger } from '@movimentar/audit';
+import type { AuditLogger } from '@ecojotaduo/audit';
 import type {
   IssueServiceTokenUseCase,
   RefreshSessionUseCase,
   SignInUseCase,
   TenancyPublicApi,
-} from '@movimentar/tenancy';
-import { requireAuth } from '@movimentar/tenant-context';
+} from '@ecojotaduo/tenancy';
+import { requireAuth } from '@ecojotaduo/tenant-context';
 import { Body, Controller, Get, HttpCode, Inject, Post } from '@nestjs/common';
 import { z } from 'zod';
 

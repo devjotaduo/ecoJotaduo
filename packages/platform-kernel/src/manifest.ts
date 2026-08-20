@@ -1,4 +1,4 @@
-import type { PermissionDefinition } from '@movimentar/permissions';
+import type { PermissionDefinition } from '@ecojotaduo/permissions';
 
 export interface ModuleDependency {
   readonly moduleId: string;

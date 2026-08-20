@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { createContext, runWithContext } from '@movimentar/tenant-context';
+import { createContext, runWithContext } from '@ecojotaduo/tenant-context';
 import type { FastifyInstance } from 'fastify';
 
 const CORRELATION_HEADER = 'x-correlation-id';

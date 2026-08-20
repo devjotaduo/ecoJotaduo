@@ -1,5 +1,5 @@
 {
-  "name": "movimentar-platform",
+  "name": "ecojotaduo-platform",
   "version": "0.1.0",
   "private": true,
   "description": "ERP modular multi-tenant com REST/OpenAPI, MCP e plugins",
