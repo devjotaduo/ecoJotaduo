@@ -50,7 +50,7 @@ implementadas no MVP.
 
 - Vazamento por bug de aplicação — mitigado por tripla camada (repositório tipado +
   RLS + testes de isolamento).
-- *Noisy neighbor* — mitigado por rate limiting por tenant e, se necessário, extração
+- _Noisy neighbor_ — mitigado por rate limiting por tenant e, se necessário, extração
   seletiva ou banco dedicado no futuro.
 
 ## Impacto da migração

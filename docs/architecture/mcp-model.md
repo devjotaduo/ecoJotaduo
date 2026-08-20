@@ -4,11 +4,11 @@ Decisão registrada no [ADR-0004](../adr/0004-mcp-gateway.md).
 
 ## MCP × OpenAPI — papéis distintos, casos de uso únicos
 
-| Use MCP para | Use OpenAPI para |
-|---|---|
-| Descoberta de capacidades por agentes | Aplicações tradicionais e SDKs |
+| Use MCP para                                            | Use OpenAPI para                              |
+| ------------------------------------------------------- | --------------------------------------------- |
+| Descoberta de capacidades por agentes                   | Aplicações tradicionais e SDKs                |
 | Consulta de contexto e execução de intenções de negócio | Integrações determinísticas sistema-a-sistema |
-| Workflows guiados, prompts, resources, MCP Apps | Webhooks e automações |
+| Workflows guiados, prompts, resources, MCP Apps         | Webhooks e automações                         |
 
 Ambos chamam **os mesmos casos de uso** — regra de negócio única (ADR-0001).
 
@@ -64,13 +64,13 @@ compatibilidade no CI da Fase 5).
 
 ## Catálogo inicial (Fase 5 — módulo CRM)
 
-| name | purpose | input | output | requiredScopes | R/W | idempotente | useCase |
-|---|---|---|---|---|---|---|---|
-| `crm.customer.search` | Pesquisar clientes por texto/filtros | query, filtros, page | lista paginada resumida | `crm.customer.read` | R | sim | SearchCustomersUseCase |
-| `crm.customer.get` | Obter cliente por id | customerId | cliente completo | `crm.customer.read` | R | sim | GetCustomerUseCase |
-| `crm.customer.create` | Cadastrar cliente | dados do cliente + idempotencyKey | cliente criado | `crm.customer.create` | W | por chave | CreateCustomerUseCase |
-| `crm.customer.update` | Atualizar cliente | customerId + campos | cliente atualizado | `crm.customer.update` | W | sim (last-write) | UpdateCustomerUseCase |
-| `crm.customer.history` | Histórico de interações | customerId, page | eventos paginados | `crm.customer.read` | R | sim | GetCustomerHistoryUseCase |
+| name                   | purpose                              | input                             | output                  | requiredScopes        | R/W | idempotente      | useCase                   |
+| ---------------------- | ------------------------------------ | --------------------------------- | ----------------------- | --------------------- | --- | ---------------- | ------------------------- |
+| `crm.customer.search`  | Pesquisar clientes por texto/filtros | query, filtros, page              | lista paginada resumida | `crm.customer.read`   | R   | sim              | SearchCustomersUseCase    |
+| `crm.customer.get`     | Obter cliente por id                 | customerId                        | cliente completo        | `crm.customer.read`   | R   | sim              | GetCustomerUseCase        |
+| `crm.customer.create`  | Cadastrar cliente                    | dados do cliente + idempotencyKey | cliente criado          | `crm.customer.create` | W   | por chave        | CreateCustomerUseCase     |
+| `crm.customer.update`  | Atualizar cliente                    | customerId + campos               | cliente atualizado      | `crm.customer.update` | W   | sim (last-write) | UpdateCustomerUseCase     |
+| `crm.customer.history` | Histórico de interações              | customerId, page                  | eventos paginados       | `crm.customer.read`   | R   | sim              | GetCustomerHistoryUseCase |
 
 Resources: `crm://customers/{id}`, `crm://customers/{id}/history`.
 Prompt: `crm.customer.analysis` (análise de relacionamento com dados do tenant).

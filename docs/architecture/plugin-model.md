@@ -4,14 +4,14 @@ Decisão registrada no [ADR-0005](../adr/0005-plugin-isolation.md).
 
 ## Três categorias
 
-| | Módulo interno | Plugin first-party | Plugin externo |
-|---|---|---|---|
-| Quem escreve | Equipe da plataforma | Equipe da plataforma | Terceiros |
-| Onde executa | In-process (mesmo deploy) | In-process, pacote confiável do monorepo | **Fora do processo** (container/serviço remoto) |
-| Ativação | Entitlement por tenant | Instalação + configuração por tenant | Instalação + permissões + gateway |
-| Exemplos | CRM, Finance, Operations | WhatsApp, Google Workspace, GitHub | Integrações de parceiros |
-| Registro | Build/bootstrap controlado | Plugin Registry | Plugin Registry + Plugin Gateway |
-| UI | App web principal | Compilada junto ao app web | iframe sandbox + CSP + postMessage validado |
+|              | Módulo interno             | Plugin first-party                       | Plugin externo                                  |
+| ------------ | -------------------------- | ---------------------------------------- | ----------------------------------------------- |
+| Quem escreve | Equipe da plataforma       | Equipe da plataforma                     | Terceiros                                       |
+| Onde executa | In-process (mesmo deploy)  | In-process, pacote confiável do monorepo | **Fora do processo** (container/serviço remoto) |
+| Ativação     | Entitlement por tenant     | Instalação + configuração por tenant     | Instalação + permissões + gateway               |
+| Exemplos     | CRM, Finance, Operations   | WhatsApp, Google Workspace, GitHub       | Integrações de parceiros                        |
+| Registro     | Build/bootstrap controlado | Plugin Registry                          | Plugin Registry + Plugin Gateway                |
+| UI           | App web principal          | Compilada junto ao app web               | iframe sandbox + CSP + postMessage validado     |
 
 ```mermaid
 flowchart LR

@@ -27,7 +27,7 @@ Adotar o **monólito modular** (alternativa 3):
 - Cada domínio vive em `modules/<nome>` como pacote pnpm independente, organizado em
   arquitetura hexagonal (`domain`, `application`, `ports`, `adapters`, `contracts`).
 - As fronteiras são impostas estruturalmente: um módulo só enxerga outro pacote se o
-  declarar como dependência no `package.json`, e só pode importar os *exports públicos*
+  declarar como dependência no `package.json`, e só pode importar os _exports públicos_
   (`contracts/`), nunca o interior (`src/**`). Regras de lint reforçam as camadas.
 - Três composition roots reutilizam os mesmos módulos: `apps/api` (REST),
   `apps/mcp-gateway` (MCP) e `apps/worker` (jobs/eventos).

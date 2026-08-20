@@ -60,19 +60,19 @@ bibliotecas de UI. Proibido também: importar `src/**` interno de outro módulo
 
 ## Componentes do kernel (packages/*)
 
-| Pacote | Componente | Papel |
-|---|---|---|
-| `platform-kernel` | ModuleRegistry, PluginRegistry | Carrega manifestos, resolve dependências entre módulos, monta contribuições por app |
-| `tenant-context` | TenantContext (AsyncLocalStorage) | Propaga `{ tenantId, userId, correlationId }` da borda à persistência |
-| `auth` | AuthN, emissão/validação de tokens | Identidade de usuários, service accounts e clients |
-| `permissions` | PolicyEngine (RBAC + ABAC + scopes) | Decisão de autorização server-side, única para REST/MCP/jobs |
-| `database` | Drizzle client, RLS session, migrations runner | Conexão com `SET app.tenant_id`, repositórios base |
-| `event-bus` / `outbox` | Publisher transacional, dispatcher | Eventos internos e de integração com exactly-once-ish |
-| `observability` | OTel setup, logger estruturado | Trace/log/métrica com tenant + correlation ID |
-| `config` | Env schema (zod) | Configuração validada no boot; boot falha cedo |
-| `validation` | Schemas compartilhados | Validação de borda |
-| `api-client` | SDK gerado do OpenAPI | Único cliente HTTP do frontend |
-| `plugin-sdk` / `mcp-sdk` | Contratos de extensão | Superfícies para plugins e contribuições MCP |
+| Pacote                   | Componente                                     | Papel                                                                               |
+| ------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `platform-kernel`        | ModuleRegistry, PluginRegistry                 | Carrega manifestos, resolve dependências entre módulos, monta contribuições por app |
+| `tenant-context`         | TenantContext (AsyncLocalStorage)              | Propaga `{ tenantId, userId, correlationId }` da borda à persistência               |
+| `auth`                   | AuthN, emissão/validação de tokens             | Identidade de usuários, service accounts e clients                                  |
+| `permissions`            | PolicyEngine (RBAC + ABAC + scopes)            | Decisão de autorização server-side, única para REST/MCP/jobs                        |
+| `database`               | Drizzle client, RLS session, migrations runner | Conexão com `SET app.tenant_id`, repositórios base                                  |
+| `event-bus` / `outbox`   | Publisher transacional, dispatcher             | Eventos internos e de integração com exactly-once-ish                               |
+| `observability`          | OTel setup, logger estruturado                 | Trace/log/métrica com tenant + correlation ID                                       |
+| `config`                 | Env schema (zod)                               | Configuração validada no boot; boot falha cedo                                      |
+| `validation`             | Schemas compartilhados                         | Validação de borda                                                                  |
+| `api-client`             | SDK gerado do OpenAPI                          | Único cliente HTTP do frontend                                                      |
+| `plugin-sdk` / `mcp-sdk` | Contratos de extensão                          | Superfícies para plugins e contribuições MCP                                        |
 
 ## Composition roots
 

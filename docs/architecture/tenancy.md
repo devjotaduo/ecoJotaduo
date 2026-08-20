@@ -58,11 +58,11 @@ cruza tenants.
 
 ## Evolução preparada (não implementar no MVP)
 
-| Estratégia | Quando | O que muda |
-|---|---|---|
-| Schema por tenant | Cliente grande com exigência contratual | Resolver de conexão passa a mapear tenant → schema; migrations por schema |
-| Banco por tenant | Cliente regulado / soberania de dados | Resolver mapeia tenant → connection string dedicada |
-| Tenant dedicado (deploy) | Requisito extremo | Composição atual já permite deploy isolado com um único tenant |
+| Estratégia               | Quando                                  | O que muda                                                                |
+| ------------------------ | --------------------------------------- | ------------------------------------------------------------------------- |
+| Schema por tenant        | Cliente grande com exigência contratual | Resolver de conexão passa a mapear tenant → schema; migrations por schema |
+| Banco por tenant         | Cliente regulado / soberania de dados   | Resolver mapeia tenant → connection string dedicada                       |
+| Tenant dedicado (deploy) | Requisito extremo                       | Composição atual já permite deploy isolado com um único tenant            |
 
 A abstração de resolução de conexão em `packages/database` é o único ponto que muda;
 domínio, casos de uso e adapters permanecem intactos.

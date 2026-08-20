@@ -46,20 +46,20 @@ apropriado, modo de pré-visualização/confirmação.
 
 ## Threat model inicial (STRIDE por superfície)
 
-| Superfície | Ameaça principal | Contramedida |
-|---|---|---|
-| REST API | IDOR / elevação (S, E) | Authz por registro no caso de uso; IDs opacos (UUIDv7); testes de IDOR |
-| REST API | Injeção (T) | Drizzle parametrizado; validação zod na borda; sem SQL dinâmico |
-| MCP | Prompt injection induz ação indevida (E) | Tools de intenção com escopo mínimo; confirmação/preview p/ ações destrutivas; auditoria; nunca tools genéricas |
-| MCP | Tenant hopping pelo modelo (S) | Tenant vem do token, jamais de parâmetro da tool |
-| Webhooks entrada | Spoofing/replay (S, R) | Assinatura HMAC + timestamp + janela anti-replay + idempotência |
-| Filas/jobs | Reprocessamento duplo (T) | Idempotency key por job; handlers idempotentes; DLQ |
-| Plugins externos | Código malicioso (E, I) | Out-of-process sempre; permissões explícitas; contratos assinados; circuit breaker |
-| UI de plugin | Exfiltração via iframe (I) | Sandbox + CSP + protocolo de mensagens validado; sem tokens internos no iframe |
-| Cache | Vazamento entre tenants (I) | Chaves prefixadas por tenant; testes de isolamento de cache |
-| Logs/traces | Vazamento de dados sensíveis (I) | Scrub de segredos/PII; tenant sem payload sensível |
-| Credenciais de integração | Roubo de tokens (I) | Cifrados at-rest (AES-GCM, chave em secret manager); nunca retornados ao modelo/logs; token de um serviço nunca usado em outro |
-| Infra | DoS (D) | Rate limit por tenant/cliente; timeouts; paginação obrigatória |
+| Superfície                | Ameaça principal                         | Contramedida                                                                                                                   |
+| ------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| REST API                  | IDOR / elevação (S, E)                   | Authz por registro no caso de uso; IDs opacos (UUIDv7); testes de IDOR                                                         |
+| REST API                  | Injeção (T)                              | Drizzle parametrizado; validação zod na borda; sem SQL dinâmico                                                                |
+| MCP                       | Prompt injection induz ação indevida (E) | Tools de intenção com escopo mínimo; confirmação/preview p/ ações destrutivas; auditoria; nunca tools genéricas                |
+| MCP                       | Tenant hopping pelo modelo (S)           | Tenant vem do token, jamais de parâmetro da tool                                                                               |
+| Webhooks entrada          | Spoofing/replay (S, R)                   | Assinatura HMAC + timestamp + janela anti-replay + idempotência                                                                |
+| Filas/jobs                | Reprocessamento duplo (T)                | Idempotency key por job; handlers idempotentes; DLQ                                                                            |
+| Plugins externos          | Código malicioso (E, I)                  | Out-of-process sempre; permissões explícitas; contratos assinados; circuit breaker                                             |
+| UI de plugin              | Exfiltração via iframe (I)               | Sandbox + CSP + protocolo de mensagens validado; sem tokens internos no iframe                                                 |
+| Cache                     | Vazamento entre tenants (I)              | Chaves prefixadas por tenant; testes de isolamento de cache                                                                    |
+| Logs/traces               | Vazamento de dados sensíveis (I)         | Scrub de segredos/PII; tenant sem payload sensível                                                                             |
+| Credenciais de integração | Roubo de tokens (I)                      | Cifrados at-rest (AES-GCM, chave em secret manager); nunca retornados ao modelo/logs; token de um serviço nunca usado em outro |
+| Infra                     | DoS (D)                                  | Rate limit por tenant/cliente; timeouts; paginação obrigatória                                                                 |
 
 ## Auditoria
 

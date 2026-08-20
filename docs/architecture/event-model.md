@@ -30,14 +30,14 @@ transação principal nem derruba a API.
 
 ```jsonc
 {
-  "id": "uuid v7",              // id único do evento
+  "id": "uuid v7", // id único do evento
   "type": "crm.customer.created.v1",
   "occurredAt": "2026-08-20T12:00:00Z", // UTC
   "tenantId": "uuid",
-  "correlationId": "uuid",      // atravessa toda a cadeia
-  "causationId": "uuid",        // evento/comando que causou este
+  "correlationId": "uuid", // atravessa toda a cadeia
+  "causationId": "uuid", // evento/comando que causou este
   "actor": { "kind": "user|service|system", "id": "…" },
-  "payload": { }                // schema versionado por type
+  "payload": {}, // schema versionado por type
 }
 ```
 
@@ -71,14 +71,14 @@ CREATE INDEX ON outbox_events (processed_at, next_retry_at) WHERE processed_at I
 
 ## Garantias de processamento
 
-| Requisito | Implementação |
-|---|---|
-| Idempotência | Handlers registram `(handler, event_id)` processados; reentrega é no-op |
-| Retries | Backoff exponencial com jitter; máximo de tentativas por handler |
-| DLQ | Esgotadas as tentativas ⇒ dead-letter com payload + erro, alarme e replay controlado |
-| Ordem | Garantida apenas por agregado quando necessário (partição por chave); consumidores não assumem ordem global |
-| Duplicação | Publisher marca `processed_at` com lock (`FOR UPDATE SKIP LOCKED`); consumidores idempotentes cobrem o resto |
-| Observabilidade | Cada hop propaga correlation/causation + tenant para logs e traces |
+| Requisito       | Implementação                                                                                                |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| Idempotência    | Handlers registram `(handler, event_id)` processados; reentrega é no-op                                      |
+| Retries         | Backoff exponencial com jitter; máximo de tentativas por handler                                             |
+| DLQ             | Esgotadas as tentativas ⇒ dead-letter com payload + erro, alarme e replay controlado                         |
+| Ordem           | Garantida apenas por agregado quando necessário (partição por chave); consumidores não assumem ordem global  |
+| Duplicação      | Publisher marca `processed_at` com lock (`FOR UPDATE SKIP LOCKED`); consumidores idempotentes cobrem o resto |
+| Observabilidade | Cada hop propaga correlation/causation + tenant para logs e traces                                           |
 
 ## Catálogo inicial de eventos
 

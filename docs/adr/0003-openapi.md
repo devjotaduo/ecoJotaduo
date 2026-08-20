@@ -50,5 +50,5 @@ Adotar **REST + OpenAPI** (alternativa 3):
 
 ## Impacto da migração
 
-GraphQL ou tRPC poderiam ser adicionados futuramente como *camadas adicionais* sobre
+GraphQL ou tRPC poderiam ser adicionados futuramente como _camadas adicionais_ sobre
 os mesmos casos de uso, sem tocar domínio ou aplicação.

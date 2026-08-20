@@ -21,11 +21,11 @@ comprometer o núcleo, os dados ou o isolamento entre tenants.
 
 Adotar o modelo em **três categorias** (alternativa 3):
 
-| Categoria | Exemplos | Execução | Registro |
-|---|---|---|---|
-| **Módulo interno** | CRM, Financeiro, Operação | In-process, mesmo deploy | Build/bootstrap controlado |
-| **Plugin próprio (first-party)** | WhatsApp, Google Workspace, GitHub | Pacote confiável do monorepo (`plugins/first-party/*`), ativável por tenant | Manifesto + ciclo de vida + permissões |
-| **Plugin externo** | Código de terceiros | **Sempre out-of-process**: container/processo/serviço remoto atrás do Plugin Gateway | Manifesto + contratos controlados |
+| Categoria                        | Exemplos                           | Execução                                                                             | Registro                               |
+| -------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------- |
+| **Módulo interno**               | CRM, Financeiro, Operação          | In-process, mesmo deploy                                                             | Build/bootstrap controlado             |
+| **Plugin próprio (first-party)** | WhatsApp, Google Workspace, GitHub | Pacote confiável do monorepo (`plugins/first-party/*`), ativável por tenant          | Manifesto + ciclo de vida + permissões |
+| **Plugin externo**               | Código de terceiros                | **Sempre out-of-process**: container/processo/serviço remoto atrás do Plugin Gateway | Manifesto + contratos controlados      |
 
 Regras:
 
@@ -36,7 +36,7 @@ Regras:
 - Manifesto versionado validado por JSON Schema (`manifestVersion`, permissões,
   capacidades, eventos consumidos/publicados, faixa de versão de plataforma).
 - Ciclo de vida explícito por tenant: `available → installed → configured → enabled →
-  healthy → disabled → uninstalled`, com auditoria, health check e versão registrados.
+healthy → disabled → uninstalled`, com auditoria, health check e versão registrados.
 - Permissões de plugin são **concedidas explicitamente na instalação** e verificadas
   server-side em cada chamada, como qualquer outro cliente.
 - UI de plugin externo somente em iframe com sandbox, CSP e protocolo de mensagens

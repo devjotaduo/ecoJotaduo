@@ -13,52 +13,52 @@ entre si, e registrar por que algumas "latest" foram deliberadamente evitadas.
 
 ### Runtime e workspace
 
-| Ferramenta | Versão | Observação |
-|---|---|---|
-| Node.js | 24.x (local: 24.13.0) | LTS atual; `engines >= 24` |
-| pnpm | 10.28.2 | fixado em `packageManager` |
-| Turborepo | 2.10.11 | `turbo.json` com `tasks` (formato v2) |
-| TypeScript | **5.9.3** | ver "decisão relevante" abaixo |
+| Ferramenta | Versão                | Observação                            |
+| ---------- | --------------------- | ------------------------------------- |
+| Node.js    | 24.x (local: 24.13.0) | LTS atual; `engines >= 24`            |
+| pnpm       | 10.28.2               | fixado em `packageManager`            |
+| Turborepo  | 2.10.11               | `turbo.json` com `tasks` (formato v2) |
+| TypeScript | **5.9.3**             | ver "decisão relevante" abaixo        |
 
 ### Backend (em uso a partir da Fase 1)
 
-| Pacote | Versão |
-|---|---|
+| Pacote                                   | Versão |
+| ---------------------------------------- | ------ |
 | @nestjs/core / common / platform-fastify | 11.2.1 |
-| fastify (transitivo do adapter) | 5.12.1 |
-| reflect-metadata | 0.2.2 |
-| rxjs | 7.8.2 |
-| zod | 4.4.3 |
+| fastify (transitivo do adapter)          | 5.12.1 |
+| reflect-metadata                         | 0.2.2  |
+| rxjs                                     | 7.8.2  |
+| zod                                      | 4.4.3  |
 
 ### Qualidade
 
-| Pacote | Versão |
-|---|---|
-| ESLint | 10.8.1 |
+| Pacote            | Versão                                                            |
+| ----------------- | ----------------------------------------------------------------- |
+| ESLint            | 10.8.1                                                            |
 | typescript-eslint | 8.67.0 (peer: eslint ^8.57 ‖ ^9 ‖ ^10; typescript >=4.8.4 <6.1.0) |
-| @eslint/js | 10.0.1 |
-| Prettier | 3.9.6 |
-| Vitest | 4.1.11 |
+| @eslint/js        | 10.0.1                                                            |
+| Prettier          | 3.9.6                                                             |
+| Vitest            | 4.1.11                                                            |
 
 ### Planejados para fases seguintes (versões verificadas na mesma data)
 
-| Pacote | Versão | Fase |
-|---|---|---|
-| drizzle-orm / drizzle-kit | 0.45.2 / 0.31.10 | 2–3 |
-| @nestjs/swagger | 11.4.7 | 3–4 |
-| @modelcontextprotocol/sdk | 1.30.0 | 5 |
-| react / react-dom | 19.2.8 | 3 |
-| vite | 8.2.2 | 3 |
-| tailwindcss | 4.3.3 | 3 |
-| bullmq | 6.1.2 | 8 |
-| postgres (driver) | 3.4.9 | 2–3 |
+| Pacote                    | Versão           | Fase |
+| ------------------------- | ---------------- | ---- |
+| drizzle-orm / drizzle-kit | 0.45.2 / 0.31.10 | 2–3  |
+| @nestjs/swagger           | 11.4.7           | 3–4  |
+| @modelcontextprotocol/sdk | 1.30.0           | 5    |
+| react / react-dom         | 19.2.8           | 3    |
+| vite                      | 8.2.2            | 3    |
+| tailwindcss               | 4.3.3            | 3    |
+| bullmq                    | 6.1.2            | 8    |
+| postgres (driver)         | 3.4.9            | 2–3  |
 
 ### Infraestrutura (imagens Docker)
 
-| Imagem | Tag |
-|---|---|
+| Imagem     | Tag                  |
+| ---------- | -------------------- |
 | PostgreSQL | `postgres:18-alpine` |
-| Redis | `redis:8-alpine` |
+| Redis      | `redis:8-alpine`     |
 
 ## Decisão relevante: TypeScript 5.9.x, não 7.x
 

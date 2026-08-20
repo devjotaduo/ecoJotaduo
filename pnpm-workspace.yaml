@@ -1,0 +1,8 @@
+# Pastas de pacotes do monorepo. Globs sem correspondência são ignorados,
+# então os diretórios futuros (modules/*, plugins/*) já ficam declarados.
+packages:
+  - apps/*
+  - packages/*
+  - modules/*
+  - plugins/first-party/*
+  - tooling/*

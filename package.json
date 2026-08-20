@@ -1,0 +1,22 @@
+{
+  "name": "movimentar-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ERP modular multi-tenant com REST/OpenAPI, MCP e plugins",
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.11"
+  }
+}

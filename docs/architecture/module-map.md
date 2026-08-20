@@ -58,23 +58,23 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 
 ## Responsabilidades, eventos e permissões
 
-| Módulo | Depende de | Eventos publicados (exemplos) | Permissões (exemplos) |
-|---|---|---|---|
-| **Identity** | — | `identity.user.created.v1` | `platform.user.manage` |
-| **Tenancy** | Identity | `tenancy.tenant.created.v1`, `tenancy.entitlement.granted.v1` | `platform.module.manage` |
-| **Employees** | Identity | `employees.employee.hired.v1` | `employees.employee.read/create` |
-| **CRM** | — | `crm.customer.created.v1`, `crm.customer.updated.v1` | `crm.customer.read/create/update` |
-| **Catalog** | — | `catalog.item.published.v1` | `catalog.item.read/manage` |
-| **Commercial** | CRM, Catalog | `commercial.proposal.approved.v1` | `commercial.proposal.create/approve` |
-| **Contracts** | Commercial | `contracts.contract.activated.v1` | `commercial.contract.approve` |
-| **Assets** | — | `assets.asset.registered.v1`, `assets.asset.unavailable.v1` | `assets.asset.read/manage` |
-| **Inventory** | Catalog | `inventory.stock.adjusted.v1` | `inventory.stock.read/adjust` |
-| **Operations** | Contracts, Assets | `operations.rental.started.v1`, `operations.rental.finished.v1` | `operations.rental.create`, `operations.schedule.manage` |
-| **Maintenance** | Assets, Inventory | `maintenance.work-order.completed.v1` | `maintenance.work-order.schedule` |
-| **Billing** | Contracts, Operations | `billing.invoice.issued.v1` | `finance.invoice.read`, `billing.invoice.issue` |
-| **Finance** | (eventos) | `finance.payment.received.v1` | `finance.payment.approve` |
-| **Documents** | (transversal, por contrato genérico) | `documents.document.attached.v1` | `documents.document.read/attach` |
-| **Notifications** | (eventos) | `notifications.message.sent.v1` | `notifications.channel.manage` |
+| Módulo            | Depende de                           | Eventos publicados (exemplos)                                   | Permissões (exemplos)                                    |
+| ----------------- | ------------------------------------ | --------------------------------------------------------------- | -------------------------------------------------------- |
+| **Identity**      | —                                    | `identity.user.created.v1`                                      | `platform.user.manage`                                   |
+| **Tenancy**       | Identity                             | `tenancy.tenant.created.v1`, `tenancy.entitlement.granted.v1`   | `platform.module.manage`                                 |
+| **Employees**     | Identity                             | `employees.employee.hired.v1`                                   | `employees.employee.read/create`                         |
+| **CRM**           | —                                    | `crm.customer.created.v1`, `crm.customer.updated.v1`            | `crm.customer.read/create/update`                        |
+| **Catalog**       | —                                    | `catalog.item.published.v1`                                     | `catalog.item.read/manage`                               |
+| **Commercial**    | CRM, Catalog                         | `commercial.proposal.approved.v1`                               | `commercial.proposal.create/approve`                     |
+| **Contracts**     | Commercial                           | `contracts.contract.activated.v1`                               | `commercial.contract.approve`                            |
+| **Assets**        | —                                    | `assets.asset.registered.v1`, `assets.asset.unavailable.v1`     | `assets.asset.read/manage`                               |
+| **Inventory**     | Catalog                              | `inventory.stock.adjusted.v1`                                   | `inventory.stock.read/adjust`                            |
+| **Operations**    | Contracts, Assets                    | `operations.rental.started.v1`, `operations.rental.finished.v1` | `operations.rental.create`, `operations.schedule.manage` |
+| **Maintenance**   | Assets, Inventory                    | `maintenance.work-order.completed.v1`                           | `maintenance.work-order.schedule`                        |
+| **Billing**       | Contracts, Operations                | `billing.invoice.issued.v1`                                     | `finance.invoice.read`, `billing.invoice.issue`          |
+| **Finance**       | (eventos)                            | `finance.payment.received.v1`                                   | `finance.payment.approve`                                |
+| **Documents**     | (transversal, por contrato genérico) | `documents.document.attached.v1`                                | `documents.document.read/attach`                         |
+| **Notifications** | (eventos)                            | `notifications.message.sent.v1`                                 | `notifications.channel.manage`                           |
 
 ## Regras de comunicação entre módulos
 
