@@ -164,6 +164,9 @@ importers:
       '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@ecojotaduo/test-support':
+        specifier: workspace:*
+        version: link:../../tooling/test-support
       '@ecojotaduo/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
@@ -173,6 +176,9 @@ importers:
       eslint:
         specifier: ^10.8.1
         version: 10.8.1
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

@@ -13,5 +13,8 @@ coverage/
 # Config pessoal do Claude Code; .claude/settings.json (do time) é versionado.
 .claude/settings.local.json
 
+# Índice binário do MCP codebase-memory: cache gerado, refeito por index_repository.
+.codebase-memory/
+
 .DS_Store
 Thumbs.db
