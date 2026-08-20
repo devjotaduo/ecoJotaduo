@@ -2,9 +2,9 @@ import { criarClienteDaApi, ouFalhar, ApiError } from '@ecojotaduo/api-client';
 import { runMigrations } from '@ecojotaduo/database';
 import {
   conexaoDoDono,
-  diretorioDeMigracoes,
   exigirBancoEmCI,
   limparDados,
+  migracoesDaPlataforma,
   reservarBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
@@ -51,18 +51,7 @@ describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
   beforeAll(async () => {
     liberarBanco = await reservarBancoDeTestes();
     dono = conexaoDoDono();
-    await runMigrations(dono, [
-      { moduleId: 'audit', directory: diretorioDeMigracoes('packages/audit') },
-      {
-        moduleId: 'identity',
-        directory: diretorioDeMigracoes('modules/identity'),
-      },
-      {
-        moduleId: 'tenancy',
-        directory: diretorioDeMigracoes('modules/tenancy'),
-      },
-      { moduleId: 'crm', directory: diretorioDeMigracoes('modules/crm') },
-    ]);
+    await runMigrations(dono, migracoesDaPlataforma());
 
     process.env.DATABASE_URL = urlDaAplicacao();
     process.env.JWT_SECRET = 'segredo-de-teste-com-mais-de-32-bytes-1234';

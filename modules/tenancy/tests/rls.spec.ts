@@ -2,9 +2,9 @@ import { createDatabase, withTenant, withUserOnly } from '@ecojotaduo/database';
 import type { DatabaseHandle } from '@ecojotaduo/database';
 import {
   conexaoDoDono,
-  diretorioDeMigracoes,
   exigirBancoEmCI,
   limparDados,
+  migracoesDaPlataforma,
   reservarBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
@@ -46,16 +46,7 @@ describe.skipIf(!temBancoDeTeste)('RLS do módulo tenancy', () => {
     // Serializa com as demais suítes de integração (banco compartilhado).
     liberarBanco = await reservarBancoDeTestes();
     dono = conexaoDoDono();
-    await runMigrations(dono, [
-      {
-        moduleId: 'identity',
-        directory: diretorioDeMigracoes('modules/identity'),
-      },
-      {
-        moduleId: 'tenancy',
-        directory: diretorioDeMigracoes('modules/tenancy'),
-      },
-    ]);
+    await runMigrations(dono, migracoesDaPlataforma());
     handle = createDatabase({ url: urlDaAplicacao(), quiet: true });
   });
 

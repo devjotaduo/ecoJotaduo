@@ -2,9 +2,9 @@ import { hashOpaqueToken } from '@ecojotaduo/auth';
 import { runMigrations } from '@ecojotaduo/database';
 import {
   conexaoDoDono,
-  diretorioDeMigracoes,
   exigirBancoEmCI,
   limparDados,
+  migracoesDaPlataforma,
   PAPEL_MEMBER,
   reservarBancoDeTestes,
   semearServiceAccount,
@@ -124,18 +124,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
     // Serializa com as demais suítes de integração (banco compartilhado).
     liberarBanco = await reservarBancoDeTestes();
     dono = conexaoDoDono();
-    await runMigrations(dono, [
-      { moduleId: 'audit', directory: diretorioDeMigracoes('packages/audit') },
-      {
-        moduleId: 'identity',
-        directory: diretorioDeMigracoes('modules/identity'),
-      },
-      {
-        moduleId: 'tenancy',
-        directory: diretorioDeMigracoes('modules/tenancy'),
-      },
-      { moduleId: 'crm', directory: diretorioDeMigracoes('modules/crm') },
-    ]);
+    await runMigrations(dono, migracoesDaPlataforma());
     await limparDados(dono);
 
     empresaA = await semearTenant(dono, {

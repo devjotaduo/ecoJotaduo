@@ -48,6 +48,17 @@ export function criarGateway(env: Env): Gateway {
   app.get('/health', () => ({ status: 'ok', service: 'mcp-gateway' }));
 
   /**
+   * 500 genérico. O handler padrão do Fastify devolve `error.message` ao
+   * cliente, e mensagem de erro de banco carrega nome de tabela e trecho de
+   * consulta — a API REST já não faz isso (`ProblemDetailsFilter`), e a borda
+   * MCP não pode ser a frouxa. O motivo real fica no log.
+   */
+  app.setErrorHandler((erro, _requisicao, resposta) => {
+    app.log.error(erro);
+    void enviarErro(resposta, 500, 'Erro inesperado ao processar a chamada.');
+  });
+
+  /**
    * Transporte Streamable HTTP em modo **stateless** (`sessionIdGenerator:
    * undefined`): nada é guardado entre chamadas.
    *
@@ -95,11 +106,19 @@ export function criarGateway(env: Env): Gateway {
     await server.connect(transport);
     // A partir daqui quem escreve na resposta é o transporte.
     resposta.hijack();
-    await transport.handleRequest(
-      requisicao.raw,
-      resposta.raw,
-      requisicao.body,
-    );
+    try {
+      await transport.handleRequest(
+        requisicao.raw,
+        resposta.raw,
+        requisicao.body,
+      );
+    } catch (erro) {
+      // Depois do hijack o Fastify não responde mais por esta requisição: uma
+      // exceção aqui deixaria o host esperando para sempre. Fechar é pior que
+      // uma resposta boa e melhor que um socket pendurado.
+      app.log.error(erro);
+      resposta.raw.destroy();
+    }
   };
 
   app.post(ROTA_MCP, responder);

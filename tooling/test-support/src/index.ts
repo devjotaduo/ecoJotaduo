@@ -61,6 +61,33 @@ export function diretorioDeMigracoes(caminhoRelativo: string): string {
   return resolve(raizDoRepositorio(), caminhoRelativo, 'migrations');
 }
 
+/**
+ * Migrações da plataforma, na ordem em que os manifestos as encadeiam.
+ *
+ * Toda suíte de banco aplica esta lista inteira, e não um subconjunto: as
+ * suítes compartilham a base e rodam em ordem arbitrária (o advisory lock
+ * serializa, não ordena). Uma suíte que declarasse menos do que usa passaria
+ * só quando outra tivesse criado a tabela antes — foi o que aconteceu com
+ * `audit_events`, que o `limparDados` trunca em TODAS elas.
+ *
+ * A lista é literal de propósito: `tooling/test-support` não pode importar
+ * `@ecojotaduo/database` nem os módulos, senão o grafo do turbo cicla.
+ */
+export function migracoesDaPlataforma(): {
+  moduleId: string;
+  directory: string;
+}[] {
+  return [
+    { moduleId: 'audit', directory: diretorioDeMigracoes('packages/audit') },
+    {
+      moduleId: 'identity',
+      directory: diretorioDeMigracoes('modules/identity'),
+    },
+    { moduleId: 'tenancy', directory: diretorioDeMigracoes('modules/tenancy') },
+    { moduleId: 'crm', directory: diretorioDeMigracoes('modules/crm') },
+  ];
+}
+
 /** Conexão como DONO das tabelas: usada para migrar e semear (ignora RLS). */
 export function conexaoDoDono(): postgres.Sql {
   return postgres(urlDoDono(), { max: 4, onnotice: () => undefined });

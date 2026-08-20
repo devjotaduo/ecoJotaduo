@@ -7,9 +7,9 @@ import {
 } from '@ecojotaduo/database';
 import {
   conexaoDoDono,
-  diretorioDeMigracoes,
   exigirBancoEmCI,
   limparDados,
+  migracoesDaPlataforma,
   reservarBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
@@ -56,17 +56,7 @@ describe.skipIf(!temBancoDeTeste)('CRM (integração)', () => {
   beforeAll(async () => {
     liberarBanco = await reservarBancoDeTestes();
     dono = conexaoDoDono();
-    await runMigrations(dono, [
-      {
-        moduleId: 'identity',
-        directory: diretorioDeMigracoes('modules/identity'),
-      },
-      {
-        moduleId: 'tenancy',
-        directory: diretorioDeMigracoes('modules/tenancy'),
-      },
-      { moduleId: 'crm', directory: diretorioDeMigracoes('modules/crm') },
-    ]);
+    await runMigrations(dono, migracoesDaPlataforma());
     handle = createDatabase({ url: urlDaAplicacao(), quiet: true });
     clientes = new DrizzleCustomerRepository(handle.db);
     notas = new DrizzleCustomerNoteRepository(handle.db);
