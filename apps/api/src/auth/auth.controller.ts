@@ -16,8 +16,8 @@ import {
   SIGN_IN_USE_CASE,
   TENANCY_API,
 } from '../bootstrap/tokens';
-import { Public } from '../http/decorators';
-import { ZodValidationPipe } from '../http/zod-validation.pipe';
+import { Public } from '@ecojotaduo/http-kit';
+import { ZodValidationPipe } from '@ecojotaduo/http-kit';
 
 const loginSchema = z.object({
   email: z.string().min(3).max(254),

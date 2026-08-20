@@ -19,7 +19,7 @@ import type { FastifyRequest } from 'fastify';
 
 import { TENANCY_API, TOKEN_SERVICE } from '../bootstrap/tokens';
 
-import { PERMISSIONS_KEY, PUBLIC_KEY } from './decorators';
+import { PERMISSIONS_KEY, PUBLIC_KEY } from '@ecojotaduo/http-kit';
 
 /**
  * Ponto único de autorização da API.

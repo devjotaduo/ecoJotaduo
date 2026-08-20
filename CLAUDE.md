@@ -43,7 +43,11 @@ Monólito modular em monorepo pnpm + Turborepo (ADR-0001). Três camadas de past
   montagem da API vive em `apps/api/src/bootstrap/composition.ts`.
 - `modules/` — domínios de negócio, um pacote pnpm cada, em arquitetura hexagonal.
 - `packages/` — kernel compartilhado (config, database, auth, permissions,
-  tenant-context, audit, platform-kernel).
+  tenant-context, audit, platform-kernel, http-kit).
+
+O CRM (`modules/crm`) é a referência de como um módulo se parece completo:
+domínio com invariantes, casos de uso, portas, persistência com RLS, borda REST
+**dentro do módulo** e contribuição MCP sobre os mesmos casos de uso.
 
 ### Regra de negócio única
 
@@ -105,6 +109,10 @@ Nunca aceite `tenantId` como parâmetro de rota, body ou tool MCP.
 Erros seguem Problem Details (RFC 9457) via `ProblemDetailsFilter`. Falhas de
 autenticação são **deliberadamente uniformes** (401 com o mesmo texto para senha
 errada, usuário inexistente e empresa inexistente); o motivo real vai só para o log.
+
+Erro de domínio novo deve estender `DomainError` (`@ecojotaduo/platform-kernel`) e
+declarar seu `kind` (`invalid-request`, `not-found`, `conflict`, `forbidden`). O
+filtro traduz para status HTTP sozinho — **não** adicione `instanceof` novo lá.
 
 ### Migrações
 

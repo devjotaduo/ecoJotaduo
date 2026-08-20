@@ -29,9 +29,15 @@ importers:
       '@ecojotaduo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@ecojotaduo/crm':
+        specifier: workspace:*
+        version: link:../../modules/crm
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/http-kit':
+        specifier: workspace:*
+        version: link:../../packages/http-kit
       '@ecojotaduo/identity':
         specifier: workspace:*
         version: link:../../modules/identity
@@ -90,6 +96,61 @@ importers:
       eslint:
         specifier: ^10.8.1
         version: 10.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
+
+  modules/crm:
+    dependencies:
+      '@ecojotaduo/audit':
+        specifier: workspace:*
+        version: link:../../packages/audit
+      '@ecojotaduo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@ecojotaduo/http-kit':
+        specifier: workspace:*
+        version: link:../../packages/http-kit
+      '@ecojotaduo/permissions':
+        specifier: workspace:*
+        version: link:../../packages/permissions
+      '@ecojotaduo/platform-kernel':
+        specifier: workspace:*
+        version: link:../../packages/platform-kernel
+      '@ecojotaduo/tenant-context':
+        specifier: workspace:*
+        version: link:../../packages/tenant-context
+      '@nestjs/common':
+        specifier: ^11.2.1
+        version: 11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(postgres@3.4.9)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ecojotaduo/test-support':
+        specifier: workspace:*
+        version: link:../../tooling/test-support
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -314,6 +375,34 @@ importers:
       typescript-eslint:
         specifier: ^8.67.0
         version: 8.67.0(eslint@10.8.1)(typescript@5.9.3)
+
+  packages/http-kit:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.2.1
+        version: 11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
 
   packages/permissions:
     devDependencies:

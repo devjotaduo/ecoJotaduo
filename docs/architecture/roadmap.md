@@ -20,13 +20,30 @@ executados de verdade, documentação atualizada e riscos declarados. Nenhum mó
 | **11. Implantação e escala**              | Escala horizontal                     | Imagens Docker, staging/prod, migrations controladas, readiness, graceful shutdown, zero-downtime, deploy independente api/mcp/worker                                      | API e MCP escalam sem estado local                                                                   | Migrations incompatíveis — expand/contract      |
 | **12. Extração seletiva**                 | Processo, não execução                | Contratos estáveis → eventos versionados → testes de contrato → novo deployable → adapter remoto → migração de dados → cutover                                             | Extração sem mudanças relevantes nos consumidores                                                    | Extrair sem justificativa concreta              |
 
+### Fase 3 — escopo entregue
+
+Escopo reduzido a pedido: **clientes, notas e agendamentos** (o cliente é o
+substrato de que notas e agenda dependem). Entregue com domínio, casos de uso,
+persistência com RLS, REST, contribuição MCP, auditoria e testes.
+
+Ficou **fora** desta entrega, deliberadamente:
+
+| Item                          | Por quê                                                 | Quando                          |
+| ----------------------------- | ------------------------------------------------------- | ------------------------------- |
+| Tela React (`apps/web`)       | O pedido foi de recursos mínimos; a API já é consumível | Junto com a Fase 4 (SDK gerado) |
+| Gateway MCP rodando           | As tools existem e são testadas; falta o transporte     | Fase 5                          |
+| Eventos publicados via outbox | Declarados no manifesto, ainda não emitidos             | Fase 8                          |
+| Reagendar (mudar horário)     | Cancelar + agendar cobre o caso                         | Quando houver demanda real      |
+| Arquivar cliente por rota     | A regra existe no domínio, sem endpoint                 | Quando houver demanda real      |
+
 ## Sequência imediata
 
 1. ✅ Fase 0 — arquitetura, diagramas C4 e ADRs.
 2. ✅ Fase 1 — fundação do monorepo (lint, typecheck, testes, build, Docker, CI).
 3. ✅ Fase 2 — identidade, tenant, permissões, auditoria e isolamento testado.
-4. **Fase 3** — CRM vertical: cadastrar, consultar, pesquisar, atualizar, histórico —
-   com REST e MCP chamando exatamente os mesmos casos de uso.
+4. ✅ Fase 3 — CRM mínimo (clientes, notas, agendamentos), com REST e a
+   contribuição MCP chamando exatamente os mesmos casos de uso.
+5. **Fase 4** — OpenAPI + SDK gerado, e então a primeira tela React sobre o SDK.
 
 ### Dívidas conhecidas ao fim da Fase 2
 

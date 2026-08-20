@@ -13,8 +13,8 @@ import {
 import { z } from 'zod';
 
 import { MANAGE_ENTITLEMENTS_USE_CASE } from '../bootstrap/tokens';
-import { RequirePermissions } from '../http/decorators';
-import { ZodValidationPipe } from '../http/zod-validation.pipe';
+import { RequirePermissions } from '@ecojotaduo/http-kit';
+import { ZodValidationPipe } from '@ecojotaduo/http-kit';
 
 const MODULE_ID = /^[a-z][a-z0-9-]*$/;
 

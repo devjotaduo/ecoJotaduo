@@ -1,4 +1,17 @@
 import { loadEnv, type Env } from '@ecojotaduo/config';
+import {
+  CrmAppointmentsController,
+  CrmCustomersController,
+  CRM_ADD_NOTE,
+  CRM_CLOSE_APPOINTMENT,
+  CRM_CREATE_CUSTOMER,
+  CRM_GET_CUSTOMER,
+  CRM_LIST_AGENDA,
+  CRM_LIST_NOTES,
+  CRM_SCHEDULE_APPOINTMENT,
+  CRM_SEARCH_CUSTOMERS,
+  CRM_UPDATE_CUSTOMER,
+} from '@ecojotaduo/crm';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -33,6 +46,18 @@ function doNucleo<K extends keyof NucleoDaPlataforma>(token: symbol, chave: K) {
   };
 }
 
+/** Idem, para os casos de uso do CRM, que ficam agrupados em `nucleo.crm`. */
+function doCrm<K extends keyof NucleoDaPlataforma['crm']>(
+  token: symbol,
+  chave: K,
+) {
+  return {
+    provide: token,
+    useFactory: (nucleo: NucleoDaPlataforma) => nucleo.crm[chave],
+    inject: [PLATFORM_CORE],
+  };
+}
+
 /**
  * Composition root da API REST.
  *
@@ -46,6 +71,9 @@ function doNucleo<K extends keyof NucleoDaPlataforma>(token: symbol, chave: K) {
     AuthController,
     EntitlementsController,
     AuditController,
+    // Controllers do CRM vêm do próprio módulo: ele é dono da sua borda REST.
+    CrmCustomersController,
+    CrmAppointmentsController,
   ],
   providers: [
     { provide: ENV, useFactory: (): Env => loadEnv() },
@@ -64,6 +92,17 @@ function doNucleo<K extends keyof NucleoDaPlataforma>(token: symbol, chave: K) {
     doNucleo(REFRESH_SESSION_USE_CASE, 'refreshSession'),
     doNucleo(ISSUE_SERVICE_TOKEN_USE_CASE, 'serviceToken'),
     doNucleo(MANAGE_ENTITLEMENTS_USE_CASE, 'entitlements'),
+    // CRM: cada caso de uso é exposto pelo token que o módulo declara, a
+    // partir da MESMA instância que alimenta as tools MCP.
+    doCrm(CRM_CREATE_CUSTOMER, 'criarCliente'),
+    doCrm(CRM_UPDATE_CUSTOMER, 'atualizarCliente'),
+    doCrm(CRM_GET_CUSTOMER, 'obterCliente'),
+    doCrm(CRM_SEARCH_CUSTOMERS, 'pesquisarClientes'),
+    doCrm(CRM_ADD_NOTE, 'adicionarNota'),
+    doCrm(CRM_LIST_NOTES, 'listarNotas'),
+    doCrm(CRM_SCHEDULE_APPOINTMENT, 'agendar'),
+    doCrm(CRM_CLOSE_APPOINTMENT, 'encerrarAgendamento'),
+    doCrm(CRM_LIST_AGENDA, 'listarAgenda'),
     DatabaseLifecycle,
     { provide: APP_GUARD, useClass: AccessGuard },
   ],

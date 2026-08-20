@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 
 import { DATABASE } from '../bootstrap/tokens';
-import { Public } from '../http/decorators';
+import { Public } from '@ecojotaduo/http-kit';
 
 export interface HealthStatus {
   status: 'ok';

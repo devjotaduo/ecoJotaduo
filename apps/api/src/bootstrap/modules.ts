@@ -1,3 +1,4 @@
+import { crmManifest } from '@ecojotaduo/crm';
 import { identityManifest } from '@ecojotaduo/identity';
 import {
   resolveModules,
@@ -12,7 +13,11 @@ import { tenancyManifest } from '@ecojotaduo/tenancy';
  * código arbitrário (ver docs/adr/0005-plugin-isolation.md). O kernel valida
  * dependências, detecta ciclos e devolve a ordem de carga e de migração.
  */
-export const modulosInstalados = [identityManifest, tenancyManifest];
+export const modulosInstalados = [
+  identityManifest,
+  tenancyManifest,
+  crmManifest,
+];
 
 export function catalogoDeModulos(): ResolvedModules {
   return resolveModules(modulosInstalados);

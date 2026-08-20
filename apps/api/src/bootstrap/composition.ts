@@ -11,6 +11,23 @@ import {
   verifyPassword,
 } from '@ecojotaduo/auth';
 import type { Env } from '@ecojotaduo/config';
+import {
+  AddCustomerNoteUseCase,
+  CloseAppointmentUseCase,
+  CreateCustomerUseCase,
+  DrizzleAppointmentRepository,
+  DrizzleCustomerNoteRepository,
+  DrizzleCustomerRepository,
+  GetCustomerUseCase,
+  ListAgendaUseCase,
+  ListCustomerNotesUseCase,
+  ScheduleAppointmentUseCase,
+  SearchCustomersUseCase,
+  UpdateCustomerUseCase,
+  crmMcpTools,
+  type CrmUseCases,
+  type McpToolDefinition,
+} from '@ecojotaduo/crm';
 import { createDatabase, type DatabaseHandle } from '@ecojotaduo/database';
 import {
   DrizzleRefreshTokenRepository,
@@ -61,6 +78,21 @@ export interface NucleoDaPlataforma {
   readonly refreshSession: RefreshSessionUseCase;
   readonly serviceToken: IssueServiceTokenUseCase;
   readonly entitlements: ManageEntitlementsUseCase;
+  readonly crm: CrmCompleto;
+  /** Tools MCP prontas; o gateway da Fase 5 apenas as monta no transporte. */
+  readonly crmMcpTools: McpToolDefinition[];
+}
+
+/**
+ * Casos de uso do CRM.
+ *
+ * Estende `CrmUseCases` (o subconjunto que vira tool MCP) com o que hoje só
+ * tem borda REST. Passar este objeto para `crmMcpTools` funciona por tipagem
+ * estrutural — e deixa explícito que não existem duas implementações.
+ */
+export interface CrmCompleto extends CrmUseCases {
+  readonly atualizarCliente: UpdateCustomerUseCase;
+  readonly listarNotas: ListCustomerNotesUseCase;
 }
 
 /** Adapta o TokenService (criptografia) à porta esperada pelos casos de uso. */
@@ -127,12 +159,41 @@ export function criarNucleo(env: Env): NucleoDaPlataforma {
     entitlementsRepo,
   );
 
+  // --- crm ----------------------------------------------------------------
+  const clientesRepo = new DrizzleCustomerRepository(db);
+  const notasRepo = new DrizzleCustomerNoteRepository(db);
+  const agendamentosRepo = new DrizzleAppointmentRepository(db);
+
+  // Uma instância de cada caso de uso, compartilhada por REST e MCP. É esta
+  // linha que garante, na prática, que as duas bordas não divirjam.
+  const crm: CrmCompleto = {
+    criarCliente: new CreateCustomerUseCase(clientesRepo, audit),
+    atualizarCliente: new UpdateCustomerUseCase(clientesRepo, audit),
+    obterCliente: new GetCustomerUseCase(
+      clientesRepo,
+      notasRepo,
+      agendamentosRepo,
+    ),
+    pesquisarClientes: new SearchCustomersUseCase(clientesRepo),
+    adicionarNota: new AddCustomerNoteUseCase(clientesRepo, notasRepo, audit),
+    listarNotas: new ListCustomerNotesUseCase(clientesRepo, notasRepo),
+    agendar: new ScheduleAppointmentUseCase(
+      clientesRepo,
+      agendamentosRepo,
+      audit,
+    ),
+    encerrarAgendamento: new CloseAppointmentUseCase(agendamentosRepo, audit),
+    listarAgenda: new ListAgendaUseCase(agendamentosRepo),
+  };
+
   return {
     handle,
     catalogo,
     tokens,
     audit,
     identity,
+    crm,
+    crmMcpTools: crmMcpTools(crm),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),
     signIn: new SignInUseCase(identity, tenantsRepo, resolverAcesso, emissor),
     refreshSession: new RefreshSessionUseCase(

@@ -6,6 +6,11 @@ import {
 } from '@ecojotaduo/identity';
 import { ForbiddenError } from '@ecojotaduo/permissions';
 import {
+  DomainError,
+  STATUS_POR_PROBLEMA,
+  type ProblemKind,
+} from '@ecojotaduo/platform-kernel';
+import {
   ModuleAlreadyEntitledError,
   NoActiveMembershipError,
   TenantNotActiveError,
@@ -23,6 +28,13 @@ import {
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 const BASE = 'https://jotaduo.com/ecojotaduo/errors';
+
+const TITULO_POR_PROBLEMA: Record<ProblemKind, string> = {
+  'invalid-request': 'Requisição inválida',
+  forbidden: 'Acesso negado',
+  'not-found': 'Não encontrado',
+  conflict: 'Conflito',
+};
 
 interface ProblemDetails {
   type: string;
@@ -129,6 +141,17 @@ export class ProblemDetailsFilter implements ExceptionFilter {
             403,
             'Você não tem permissão para esta operação.',
           );
+    }
+
+    // Erros de domínio dos módulos declaram o tipo de problema; a borda só
+    // traduz. Assim um módulo novo não exige editar este arquivo.
+    if (excecao instanceof DomainError) {
+      return problema(
+        excecao.kind,
+        TITULO_POR_PROBLEMA[excecao.kind],
+        STATUS_POR_PROBLEMA[excecao.kind],
+        excecao.message,
+      );
     }
 
     if (excecao instanceof ModuleAlreadyEntitledError) {

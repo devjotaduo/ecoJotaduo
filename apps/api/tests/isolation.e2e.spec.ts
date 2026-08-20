@@ -25,8 +25,6 @@ import { AppModule } from '../src/app.module';
 import { ProblemDetailsFilter } from '../src/http/problem-details.filter';
 import { registrarContextoDeRequisicao } from '../src/http/request-context';
 
-import { SandboxController } from './sandbox.controller';
-
 const SEGREDO_SERVICE_ACCOUNT = 'segredo-de-service-account-para-teste-0001';
 
 // Valor propositalmente malformado. Fica numa constante (em vez de literal no
@@ -136,6 +134,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
         moduleId: 'tenancy',
         directory: diretorioDeMigracoes('modules/tenancy'),
       },
+      { moduleId: 'crm', directory: diretorioDeMigracoes('modules/crm') },
     ]);
     await limparDados(dono);
 
@@ -174,7 +173,6 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
 
     const modulo = await Test.createTestingModule({
       imports: [AppModule],
-      controllers: [SandboxController],
     }).compile();
 
     app = modulo.createNestApplication<NestFastifyApplication>(
@@ -364,12 +362,12 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
         method: 'POST',
         url: '/api/v1/modules',
         token: tokenA,
-        payload: { moduleId: 'tenancy' },
+        payload: { moduleId: 'crm' },
       });
       expect([201, 409]).toContain(criado.statusCode);
 
-      expect(await modulosDe(tokenA)).toContain('tenancy');
-      expect(await modulosDe(tokenB)).not.toContain('tenancy');
+      expect(await modulosDe(tokenA)).toContain('crm');
+      expect(await modulosDe(tokenB)).not.toContain('crm');
     });
 
     it('a auditoria de uma empresa não aparece para a outra', async () => {
@@ -443,7 +441,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
       // 1. Sem o módulo contratado: 403 dizendo exatamente o motivo.
       const semContrato = await requisicao({
         method: 'GET',
-        url: '/api/v1/sandbox/tenancy',
+        url: '/api/v1/crm/customers',
         token,
       });
       expect(semContrato.statusCode).toBe(403);
@@ -457,13 +455,13 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
         method: 'POST',
         url: '/api/v1/modules',
         token,
-        payload: { moduleId: 'tenancy' },
+        payload: { moduleId: 'crm' },
       });
       expect(contratado.statusCode).toBe(201);
 
       const comContrato = await requisicao({
         method: 'GET',
-        url: '/api/v1/sandbox/tenancy',
+        url: '/api/v1/crm/customers',
         token,
       });
       expect(comContrato.statusCode).toBe(200);
@@ -471,14 +469,14 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
       // 3. Cancelado, o acesso some na requisição seguinte.
       const cancelado = await requisicao({
         method: 'DELETE',
-        url: '/api/v1/modules/tenancy',
+        url: '/api/v1/modules/crm',
         token,
       });
       expect(cancelado.statusCode).toBe(204);
 
       const aposCancelar = await requisicao({
         method: 'GET',
-        url: '/api/v1/sandbox/tenancy',
+        url: '/api/v1/crm/customers',
         token,
       });
       expect(aposCancelar.statusCode).toBe(403);

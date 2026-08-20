@@ -3,8 +3,8 @@ import { Controller, Get, Inject, Query } from '@nestjs/common';
 import { z } from 'zod';
 
 import { AUDIT_LOGGER } from '../bootstrap/tokens';
-import { RequirePermissions } from '../http/decorators';
-import { ZodValidationPipe } from '../http/zod-validation.pipe';
+import { RequirePermissions } from '@ecojotaduo/http-kit';
+import { ZodValidationPipe } from '@ecojotaduo/http-kit';
 
 const consultaSchema = z.object({
   action: z.string().max(128).optional(),
