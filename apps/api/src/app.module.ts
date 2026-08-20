@@ -17,7 +17,10 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { AuditController } from './audit/audit.controller';
 import { AuthController } from './auth/auth.controller';
-import { criarNucleo, type NucleoDaPlataforma } from './bootstrap/composition';
+import {
+  criarNucleo,
+  type NucleoDaPlataforma,
+} from '@ecojotaduo/platform-core';
 import { DatabaseLifecycle } from './bootstrap/database-lifecycle';
 import {
   AUDIT_LOGGER,

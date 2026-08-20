@@ -11,6 +11,8 @@ export const envSchema = z.object({
     .enum(['development', 'test', 'production'])
     .default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
+  /** Porta do gateway MCP: outro processo, outra porta, mesmo `.env`. */
+  MCP_PORT: z.coerce.number().int().min(1).max(65535).default(3001),
 
   /** Conexão da aplicação: papel SEM privilégio de dono, para a RLS valer. */
   DATABASE_URL: z.url(),

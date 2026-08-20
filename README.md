@@ -60,10 +60,11 @@ as suítes que dependem de banco se declaram **puladas** (nunca passam em silên
 ## Estrutura
 
 ```text
-apps/          composition roots (api; futuramente web, mcp-gateway, worker, …)
+apps/          composition roots (api = REST, mcp-gateway = MCP; worker na Fase 8)
 packages/      kernel compartilhado: config, database, auth, permissions,
-               tenant-context, audit, platform-kernel, tsconfig, eslint-config
-modules/       módulos de domínio hexagonais (identity, tenancy; CRM na Fase 3)
+               tenant-context, audit, platform-kernel, platform-core, http-kit,
+               mcp-kit, api-client, tsconfig, eslint-config
+modules/       módulos de domínio hexagonais (identity, tenancy, crm)
 plugins/       plugins first-party (a partir da Fase 6)
 tooling/       apoio a testes e geração de código
 docs/          arquitetura, ADRs, API, runbooks

@@ -1,3 +1,11 @@
+import {
+  definirTool,
+  type McpContribution,
+  type McpPromptDefinition,
+  type McpResourceDefinition,
+  type McpToolContext,
+  type McpToolDefinition,
+} from '@ecojotaduo/mcp-kit';
 import { z } from 'zod';
 
 import type {
@@ -22,50 +30,15 @@ import {
  * Contribuição MCP do CRM.
  *
  * As tools NÃO reimplementam nada: recebem os mesmos casos de uso que o
- * controller REST e devolvem a mesma forma de dado (mesmos presenters). O
- * gateway MCP chega na Fase 5; o que existe aqui já é executável e testado,
- * o que torna o critério "REST e MCP executam o mesmo caso de uso"
- * verificável hoje, e não uma promessa.
+ * controller REST e devolvem a mesma forma de dado (mesmos presenters). É o
+ * que torna verificável — e não uma promessa — o critério "REST e MCP
+ * executam o mesmo caso de uso".
  *
  * Regras aplicadas (docs/architecture/mcp-model.md):
  * - o tenant vem do contexto autenticado, nunca de parâmetro da tool;
- * - toda tool declara permissões e se é leitura ou escrita;
+ * - toda capacidade declara permissões e se é leitura ou escrita;
  * - nomes seguem `dominio.entidade.acao`.
  */
-
-export interface McpToolContext {
-  readonly tenantId: string;
-  readonly actorId: string;
-}
-
-export interface McpToolDefinition {
-  readonly name: string;
-  readonly description: string;
-  readonly inputSchema: z.ZodType;
-  readonly requiredPermissions: readonly string[];
-  readonly readOnly: boolean;
-  /** A entrada já vem validada pelo `inputSchema` (o gateway valida antes). */
-  handle(entrada: never, contexto: McpToolContext): Promise<unknown>;
-}
-
-/**
- * Declara uma tool inferindo o tipo de entrada a partir do schema.
- *
- * A lista guarda tools de entradas diferentes; `handle(entrada: never)` no
- * contrato é o que permite guardá-las juntas sem elenco (contravariância) e,
- * de quebra, obriga quem chama a tool a validar antes pelo `inputSchema` —
- * que é exatamente o que o gateway MCP faz.
- */
-function definirTool<S extends z.ZodType>(definicao: {
-  name: string;
-  description: string;
-  inputSchema: S;
-  requiredPermissions: readonly string[];
-  readOnly: boolean;
-  handle(entrada: z.output<S>, contexto: McpToolContext): Promise<unknown>;
-}): McpToolDefinition {
-  return definicao;
-}
 
 export interface CrmUseCases {
   readonly criarCliente: CreateCustomerUseCase;
@@ -76,6 +49,8 @@ export interface CrmUseCases {
   readonly encerrarAgendamento: CloseAppointmentUseCase;
   readonly listarAgenda: ListAgendaUseCase;
 }
+
+const LEITURA_CLIENTE = ['crm.customer.read'] as const;
 
 export function crmMcpTools(casos: CrmUseCases): McpToolDefinition[] {
   return [
@@ -88,7 +63,7 @@ export function crmMcpTools(casos: CrmUseCases): McpToolDefinition[] {
         limit: z.number().int().min(1).max(50).default(20),
         offset: z.number().int().min(0).default(0),
       }),
-      requiredPermissions: ['crm.customer.read'],
+      requiredPermissions: LEITURA_CLIENTE,
       readOnly: true,
       handle: async (entrada, contexto) => {
         const resultado = await casos.pesquisarClientes.execute({
@@ -112,19 +87,15 @@ export function crmMcpTools(casos: CrmUseCases): McpToolDefinition[] {
         customerId: z.uuid(),
         historicoLimite: z.number().int().min(1).max(50).default(20),
       }),
-      requiredPermissions: ['crm.customer.read'],
+      requiredPermissions: LEITURA_CLIENTE,
       readOnly: true,
-      handle: async (entrada, contexto) => {
-        const { customer, timeline } = await casos.obterCliente.execute({
-          tenantId: contexto.tenantId,
-          customerId: entrada.customerId,
-          historicoLimite: entrada.historicoLimite,
-        });
-        return {
-          ...clienteJson(customer),
-          timeline: timeline.map(historicoJson),
-        };
-      },
+      handle: (entrada, contexto) =>
+        clienteComHistorico(
+          casos,
+          contexto,
+          entrada.customerId,
+          entrada.historicoLimite,
+        ),
     }),
 
     definirTool({
@@ -248,4 +219,113 @@ export function crmMcpTools(casos: CrmUseCases): McpToolDefinition[] {
       },
     }),
   ];
+}
+
+/**
+ * Resources: leitura endereçável por URI, para o host anexar contexto sem
+ * "executar uma ação". Mesma permissão e mesmo caso de uso da tool de leitura
+ * — mudar a forma de endereçar não pode virar um caminho alternativo de
+ * acesso.
+ */
+function crmMcpResources(casos: CrmUseCases): McpResourceDefinition[] {
+  return [
+    {
+      name: 'crm.customer',
+      uriTemplate: 'crm://customers/{customerId}',
+      description: 'Ficha do cliente com a linha do tempo recente.',
+      mimeType: 'application/json',
+      requiredPermissions: LEITURA_CLIENTE,
+      read: (variaveis, contexto) =>
+        clienteComHistorico(casos, contexto, exigirUuid(variaveis.customerId)),
+    },
+    {
+      name: 'crm.customer.history',
+      uriTemplate: 'crm://customers/{customerId}/history',
+      description:
+        'Somente a linha do tempo (notas e compromissos) do cliente.',
+      mimeType: 'application/json',
+      requiredPermissions: LEITURA_CLIENTE,
+      read: async (variaveis, contexto) => {
+        const { timeline } = await casos.obterCliente.execute({
+          tenantId: contexto.tenantId,
+          customerId: exigirUuid(variaveis.customerId),
+          historicoLimite: 50,
+        });
+        return { items: timeline.map(historicoJson) };
+      },
+    },
+  ];
+}
+
+/**
+ * Prompt: roteiro de análise já preenchido com os dados do tenant. O texto é
+ * montado no servidor, então o host recebe conteúdo pronto em vez de uma
+ * instrução para ir buscar dado por conta própria.
+ */
+function crmMcpPrompts(casos: CrmUseCases): McpPromptDefinition[] {
+  return [
+    {
+      name: 'crm.customer.analysis',
+      description:
+        'Roteiro de análise do relacionamento com um cliente, já com ficha e histórico carregados.',
+      requiredPermissions: LEITURA_CLIENTE,
+      arguments: [
+        {
+          name: 'customerId',
+          description: 'Identificador do cliente a analisar.',
+          required: true,
+        },
+      ],
+      build: async (argumentos, contexto) => {
+        const dados = await clienteComHistorico(
+          casos,
+          contexto,
+          exigirUuid(argumentos.customerId),
+          50,
+        );
+        return {
+          description: `Análise de relacionamento — ${dados.name}`,
+          text: [
+            'Analise o relacionamento comercial com este cliente e responda em português.',
+            'Aponte: situação atual, sinais de risco, compromissos em aberto e próximo passo recomendado.',
+            'Use apenas os dados abaixo; não invente fatos que não estejam aqui.',
+            '',
+            JSON.stringify(dados, null, 2),
+          ].join('\n'),
+        };
+      },
+    },
+  ];
+}
+
+export function crmMcpContribution(casos: CrmUseCases): McpContribution {
+  return {
+    tools: crmMcpTools(casos),
+    resources: crmMcpResources(casos),
+    prompts: crmMcpPrompts(casos),
+  };
+}
+
+/** Tool, resource e prompt de leitura convergem aqui — uma forma só de dado. */
+async function clienteComHistorico(
+  casos: CrmUseCases,
+  contexto: McpToolContext,
+  customerId: string,
+  historicoLimite = 20,
+) {
+  const { customer, timeline } = await casos.obterCliente.execute({
+    tenantId: contexto.tenantId,
+    customerId,
+    historicoLimite,
+  });
+  return { ...clienteJson(customer), timeline: timeline.map(historicoJson) };
+}
+
+/**
+ * Variável de URI e argumento de prompt chegam como texto livre; o caso de uso
+ * espera um id. Validar aqui mantém a mesma barreira que o `inputSchema` das
+ * tools dá — nenhuma das três portas de leitura fica mais frouxa que as outras.
+ */
+function exigirUuid(valor: string | undefined): string {
+  return z.uuid().parse(valor);
 }

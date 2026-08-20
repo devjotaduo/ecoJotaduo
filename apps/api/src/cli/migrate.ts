@@ -7,7 +7,7 @@ import {
 } from '@ecojotaduo/database';
 import postgres from 'postgres';
 
-import { catalogoDeModulos } from '../bootstrap/modules';
+import { catalogoDeModulos } from '@ecojotaduo/platform-core';
 
 /**
  * Aplica as migrações pendentes.

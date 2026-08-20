@@ -1,47 +1,41 @@
 {
-  "name": "@ecojotaduo/crm",
-  "version": "0.1.0",
+  "name": "@ecojotaduo/platform-core",
+  "version": "0.0.0",
   "private": true,
-  "description": "Módulo de CRM: clientes, notas e agendamentos",
+  "description": "Montagem unica dos modulos de dominio, compartilhada por todos os composition roots (api, mcp-gateway, worker)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
+    }
   },
   "files": [
-    "dist",
-    "migrations"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@ecojotaduo/audit": "workspace:*",
+    "@ecojotaduo/auth": "workspace:*",
+    "@ecojotaduo/config": "workspace:*",
+    "@ecojotaduo/crm": "workspace:*",
     "@ecojotaduo/database": "workspace:*",
-    "@ecojotaduo/http-kit": "workspace:*",
+    "@ecojotaduo/identity": "workspace:*",
     "@ecojotaduo/mcp-kit": "workspace:*",
-    "@ecojotaduo/permissions": "workspace:*",
     "@ecojotaduo/platform-kernel": "workspace:*",
-    "@ecojotaduo/tenant-context": "workspace:*",
-    "@nestjs/common": "^11.2.1",
-    "@nestjs/swagger": "^11.4.7",
-    "drizzle-orm": "^0.45.2",
-    "zod": "^4.4.3"
+    "@ecojotaduo/tenancy": "workspace:*"
   },
   "devDependencies": {
     "@ecojotaduo/eslint-config": "workspace:*",
-    "@ecojotaduo/test-support": "workspace:*",
     "@ecojotaduo/tsconfig": "workspace:*",
     "@types/node": "^24.0.0",
     "eslint": "^10.8.1",
-    "postgres": "^3.4.9",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"
   }

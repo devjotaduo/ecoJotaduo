@@ -36,6 +36,7 @@ cp .env.example .env && cp .env.test.example .env.test
 pnpm --filter @ecojotaduo/api migrate    # aplica migrações (conecta como dono)
 pnpm --filter @ecojotaduo/api seed:dev   # empresa "demo" + admin@demo.local
 pnpm --filter @ecojotaduo/api dev        # http://127.0.0.1:3000
+pnpm --filter @ecojotaduo/mcp-gateway dev # http://127.0.0.1:3001/mcp
 ```
 
 O init do container só roda com o volume vazio. Se o papel `ecojotaduo_app` ou o banco
@@ -47,11 +48,15 @@ seguido de `up -d`.
 Monólito modular em monorepo pnpm + Turborepo (ADR-0001). Três camadas de pastas:
 
 - `apps/` — **composition roots**. Cada app monta os mesmos módulos com adaptadores de
-  uma borda diferente (`api` = REST; futuramente `mcp-gateway` e `worker`). Toda a
-  montagem da API vive em `apps/api/src/bootstrap/composition.ts`.
+  uma borda diferente (`api` = REST, `mcp-gateway` = MCP; futuramente `worker`).
 - `modules/` — domínios de negócio, um pacote pnpm cada, em arquitetura hexagonal.
 - `packages/` — kernel compartilhado (config, database, auth, permissions,
-  tenant-context, audit, platform-kernel, http-kit).
+  tenant-context, audit, platform-kernel, http-kit, mcp-kit, platform-core).
+
+A montagem dos módulos de domínio é **uma só**, em
+`packages/platform-core/src/composition.ts` (`criarNucleo`). Todo app chama essa
+função; app não monta caso de uso por conta própria, senão as bordas divergem em
+silêncio. O que fica em `apps/<x>` é só a borda: tokens de DI, controllers, rota.
 
 O CRM (`modules/crm`) é a referência de como um módulo se parece completo:
 domínio com invariantes, casos de uso, portas, persistência com RLS, borda REST
@@ -122,6 +127,25 @@ Erro de domínio novo deve estender `DomainError` (`@ecojotaduo/platform-kernel`
 declarar seu `kind` (`invalid-request`, `not-found`, `conflict`, `forbidden`). O
 filtro traduz para status HTTP sozinho — **não** adicione `instanceof` novo lá.
 
+### Borda MCP
+
+O contrato das capacidades (`McpToolDefinition`, `McpResourceDefinition`,
+`McpPromptDefinition`, `McpCatalog`) vive em `@ecojotaduo/mcp-kit` — é o `http-kit` do
+MCP. **Nenhum símbolo do SDK MCP pode entrar em `modules/`** (o lint reprova):
+módulo declara capacidade, o gateway conhece transporte.
+
+O `McpCatalog` recebe o `AccessGrant` em **todo** método — não existe "listar tudo".
+Descoberta e execução passam pela mesma decisão, então uma tool que some da listagem
+também não executa se o host adivinhar o nome. Capacidade sem permissão declarada
+falha na montagem: ela seria visível para qualquer empresa.
+
+No gateway, recusa de negócio vira `isError: true` (o agente corrige e tenta de novo);
+tool inexistente, entrada inválida e acesso negado viram erro JSON-RPC (a chamada não
+aconteceu). Falha interna **nunca** vira `isError` — ver `docs/api/mcp.md`.
+
+Ao criar uma tool: escreva o caso de uso, declare permissões, nome
+`dominio.entidade.acao`, e nunca aceite `tenantId` como parâmetro.
+
 ### Contrato da API (OpenAPI 3.1) e SDK
 
 Rotas se documentam com os **mesmos** schemas Zod que validam a entrada, via
@@ -157,6 +181,11 @@ quebra os testes E2E. Tokens ficam em `apps/api/src/bootstrap/tokens.ts`.
 ## Testes
 
 - Unitários: domínio e aplicação com dublês, sem I/O.
+- **Não conte com `instanceof` de classe de erro atravessando pacote.** Sob o Vitest,
+  um pacote do workspace pode ser carregado em duas cópias (uma inlinada pelo Vite,
+  outra via `require`), e a checagem vira `false` em silêncio — foi assim que um
+  "acesso negado" degradou para "erro interno" na Fase 5. Quem publica um erro
+  declara a classe no próprio pacote (ex.: `AcessoNegadoError` no `mcp-kit`).
 - Integração/E2E: PostgreSQL real, conectando com o papel restrito. Sem `.env.test`
   a suíte se declara **pulada**; com `CI=true` ela **falha** (`exigirBancoEmCI()`), para
   que um pipeline sem banco não fique verde fingindo ter testado o isolamento.

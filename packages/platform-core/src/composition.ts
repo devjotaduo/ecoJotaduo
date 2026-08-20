@@ -24,11 +24,11 @@ import {
   ScheduleAppointmentUseCase,
   SearchCustomersUseCase,
   UpdateCustomerUseCase,
-  crmMcpTools,
+  crmMcpContribution,
   type CrmUseCases,
-  type McpToolDefinition,
 } from '@ecojotaduo/crm';
 import { createDatabase, type DatabaseHandle } from '@ecojotaduo/database';
+import { McpCatalog } from '@ecojotaduo/mcp-kit';
 import {
   DrizzleRefreshTokenRepository,
   DrizzleServiceAccountRepository,
@@ -79,15 +79,18 @@ export interface NucleoDaPlataforma {
   readonly serviceToken: IssueServiceTokenUseCase;
   readonly entitlements: ManageEntitlementsUseCase;
   readonly crm: CrmCompleto;
-  /** Tools MCP prontas; o gateway da Fase 5 apenas as monta no transporte. */
-  readonly crmMcpTools: McpToolDefinition[];
+  /**
+   * Catálogo MCP da instalação. Já sabe filtrar por `AccessGrant`; o gateway
+   * só o liga ao transporte.
+   */
+  readonly mcp: McpCatalog;
 }
 
 /**
  * Casos de uso do CRM.
  *
  * Estende `CrmUseCases` (o subconjunto que vira tool MCP) com o que hoje só
- * tem borda REST. Passar este objeto para `crmMcpTools` funciona por tipagem
+ * tem borda REST. Passar este objeto para a contribuição MCP funciona por tipagem
  * estrutural — e deixa explícito que não existem duas implementações.
  */
 export interface CrmCompleto extends CrmUseCases {
@@ -112,9 +115,10 @@ function emissorDeToken(tokens: TokenService): AccessTokenIssuer {
 /**
  * Monta os módulos de domínio uma única vez.
  *
- * Este é o coração do composition root: nenhuma regra de negócio aqui, só a
- * ligação entre adaptadores concretos e casos de uso. O MCP gateway e o worker
- * chamarão esta mesma função — é o que garante regra de negócio única.
+ * Vive num pacote, e não dentro de `apps/api`, porque todo composition root
+ * chama esta mesma função: a API REST, o gateway MCP e (na Fase 8) o worker.
+ * Nenhuma regra de negócio aqui — só a ligação entre adaptadores concretos e
+ * casos de uso. É esta função que garante, na prática, regra de negócio única.
  */
 export function criarNucleo(env: Env): NucleoDaPlataforma {
   const catalogo = catalogoDeModulos();
@@ -193,7 +197,7 @@ export function criarNucleo(env: Env): NucleoDaPlataforma {
     audit,
     identity,
     crm,
-    crmMcpTools: crmMcpTools(crm),
+    mcp: new McpCatalog([crmMcpContribution(crm)]),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),
     signIn: new SignInUseCase(identity, tenantsRepo, resolverAcesso, emissor),
     refreshSession: new RefreshSessionUseCase(

@@ -29,7 +29,7 @@ import {
 
 import { AppModule } from '../src/app.module';
 import { PLATFORM_CORE } from '../src/bootstrap/tokens';
-import type { NucleoDaPlataforma } from '../src/bootstrap/composition';
+import type { NucleoDaPlataforma } from '@ecojotaduo/platform-core';
 import { ProblemDetailsFilter } from '../src/http/problem-details.filter';
 import { registrarContextoDeRequisicao } from '../src/http/request-context';
 
@@ -103,6 +103,17 @@ describe.skipIf(!temBancoDeTeste)('CRM (E2E)', () => {
    * aberto, tenant e ator resolvidos a partir do token — e nunca de
    * parâmetro da tool. Sem isso a chamada falha, e é assim que tem que ser.
    */
+  /** Grant de administrador do tenant, como o gateway resolveria do token. */
+  const GRANT_TOTAL = {
+    permissions: ['*'],
+    scopes: ['*'],
+    entitlements: ['crm'],
+  };
+
+  function toolsMcp() {
+    return nucleo.mcp.toolsDe(GRANT_TOTAL);
+  }
+
   function comoMcp<T>(fn: () => Promise<T>): Promise<T> {
     const contexto = createContext('mcp');
     return runWithContext(contexto, () => {
@@ -403,7 +414,7 @@ describe.skipIf(!temBancoDeTeste)('CRM (E2E)', () => {
       const clienteRest = corpo<Record<string, unknown>>(viaRest);
 
       // 2. Cadastro pela tool MCP, no mesmo tenant.
-      const criarTool = nucleo.crmMcpTools.find(
+      const criarTool = toolsMcp().find(
         (tool) => tool.name === 'crm.customer.create',
       );
       expect(
@@ -456,7 +467,7 @@ describe.skipIf(!temBancoDeTeste)('CRM (E2E)', () => {
       const token = await entrar(empresa);
       const cliente = await criarCliente(token);
 
-      const agendarTool = nucleo.crmMcpTools.find(
+      const agendarTool = toolsMcp().find(
         (tool) => tool.name === 'crm.appointment.schedule',
       );
 
@@ -492,9 +503,9 @@ describe.skipIf(!temBancoDeTeste)('CRM (E2E)', () => {
     });
 
     it('toda tool declara permissões e se é leitura ou escrita', () => {
-      expect(nucleo.crmMcpTools.length).toBeGreaterThanOrEqual(7);
+      expect(toolsMcp().length).toBeGreaterThanOrEqual(7);
 
-      for (const tool of nucleo.crmMcpTools) {
+      for (const tool of toolsMcp()) {
         expect(tool.name, 'nome deve seguir dominio.entidade.acao').toMatch(
           /^crm\.[a-z-]+\.[a-z-]+$/,
         );

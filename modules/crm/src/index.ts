@@ -67,10 +67,9 @@ export {
 export { CrmCustomersController } from './adapters/http/crm.controller';
 export { CrmAppointmentsController } from './adapters/http/appointments.controller';
 export {
+  crmMcpContribution,
   crmMcpTools,
   type CrmUseCases,
-  type McpToolContext,
-  type McpToolDefinition,
 } from './adapters/mcp/contribution';
 export {
   agendamentoJson,
