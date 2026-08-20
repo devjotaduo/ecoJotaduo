@@ -1,0 +1,39 @@
+{
+  "name": "@movimentar/test-support",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Apoio aos testes de integração: ambiente, banco efêmero e seed de tenants",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vitest-setup": {
+      "types": "./dist/vitest-setup.d.ts",
+      "default": "./dist/vitest-setup.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@movimentar/auth": "workspace:*",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "@movimentar/eslint-config": "workspace:*",
+    "@movimentar/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 
 import { loadEnv } from '@movimentar/config';
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
   FastifyAdapter,
@@ -8,8 +9,10 @@ import {
 } from '@nestjs/platform-fastify';
 
 import { AppModule } from './app.module';
+import { ProblemDetailsFilter } from './http/problem-details.filter';
+import { registrarContextoDeRequisicao } from './http/request-context';
 
-async function bootstrap(): Promise<void> {
+export async function bootstrap(): Promise<NestFastifyApplication> {
   // Fail-fast: ambiente inválido derruba o boot com mensagem clara.
   const env = loadEnv();
 
@@ -18,10 +21,21 @@ async function bootstrap(): Promise<void> {
     new FastifyAdapter(),
   );
 
-  // Necessário para drenar conexões em deploys sem downtime.
+  registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+  app.useGlobalFilters(new ProblemDetailsFilter());
+  // Dispara o OnApplicationShutdown de DatabaseLifecycle em SIGTERM/SIGINT.
   app.enableShutdownHooks();
 
   await app.listen(env.PORT, '0.0.0.0');
+  new Logger('bootstrap').log(
+    `API ouvindo na porta ${env.PORT} (${env.NODE_ENV}).`,
+  );
+
+  return app;
 }
 
-void bootstrap();
+// Só sobe o servidor quando este arquivo é o ponto de entrada: importar o
+// módulo (em teste ou ferramenta) não pode ter efeito colateral.
+if (require.main === module) {
+  void bootstrap();
+}

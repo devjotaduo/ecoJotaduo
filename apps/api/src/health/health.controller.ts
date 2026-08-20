@@ -1,4 +1,13 @@
-import { Controller, Get } from '@nestjs/common';
+import type { DatabaseHandle } from '@movimentar/database';
+import {
+  Controller,
+  Get,
+  Inject,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+
+import { DATABASE } from '../bootstrap/tokens';
+import { Public } from '../http/decorators';
 
 export interface HealthStatus {
   status: 'ok';
@@ -6,12 +15,17 @@ export interface HealthStatus {
   timestamp: string;
 }
 
-/**
- * Liveness básico do processo. A partir da Fase 2 ganha um /readiness que
- * verifica PostgreSQL e Redis antes de receber tráfego.
- */
+export interface ReadinessStatus {
+  status: 'ready';
+  checks: { database: 'ok' };
+}
+
 @Controller('health')
 export class HealthController {
+  constructor(@Inject(DATABASE) private readonly database: DatabaseHandle) {}
+
+  /** Liveness: o processo está de pé. Não toca em dependências externas. */
+  @Public()
   @Get()
   check(): HealthStatus {
     return {
@@ -19,5 +33,22 @@ export class HealthController {
       uptimeSeconds: Math.round(process.uptime()),
       timestamp: new Date().toISOString(),
     };
+  }
+
+  /**
+   * Readiness: só responde OK se o banco atender. É isto que o balanceador
+   * consulta antes de mandar tráfego para uma réplica nova.
+   */
+  @Public()
+  @Get('ready')
+  async ready(): Promise<ReadinessStatus> {
+    try {
+      await this.database.sql`select 1`;
+    } catch (causa) {
+      throw new ServiceUnavailableException('Banco de dados indisponível.', {
+        cause: causa,
+      });
+    }
+    return { status: 'ready', checks: { database: 'ok' } };
   }
 }

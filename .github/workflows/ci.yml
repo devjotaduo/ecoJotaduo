@@ -8,6 +8,22 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: movimentar
+          POSTGRES_PASSWORD: movimentar
+          POSTGRES_DB: movimentar
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U movimentar"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v4
 
@@ -21,6 +37,20 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
+      # O papel restrito é obrigatório: o PostgreSQL não aplica RLS ao dono das
+      # tabelas, então sem ele os testes de isolamento seriam falso-positivos.
+      - name: Preparar banco de testes
+        env:
+          PGPASSWORD: movimentar
+        run: |
+          psql -h localhost -U movimentar -d movimentar -v ON_ERROR_STOP=1 \
+            -c "create role movimentar_app with login password 'movimentar_app'"
+          createdb -h localhost -U movimentar movimentar_test
+          psql -h localhost -U movimentar -d movimentar_test -v ON_ERROR_STOP=1 \
+            -c "grant connect on database movimentar_test to movimentar_app" \
+            -c "grant usage on schema public to movimentar_app"
+          cp .env.test.example .env.test
+
       - name: Formatação
         run: pnpm format:check
 
@@ -30,7 +60,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Testes
+      # As suítes de integração chamam `exigirBancoEmCI()`: com CI=true e sem
+      # banco configurado elas FALHAM, em vez de passarem puladas.
+      - name: Testes (unitários + integração)
         run: pnpm test
 
       - name: Build

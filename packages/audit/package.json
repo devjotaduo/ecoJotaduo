@@ -1,0 +1,44 @@
+{
+  "name": "@movimentar/audit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Trilha de auditoria: porta pura (raiz) e adaptador PostgreSQL (subpath /drizzle)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./drizzle": {
+      "types": "./dist/drizzle.d.ts",
+      "default": "./dist/drizzle.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "migrations"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@movimentar/database": "workspace:*",
+    "@movimentar/tenant-context": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  },
+  "devDependencies": {
+    "@movimentar/eslint-config": "workspace:*",
+    "@movimentar/test-support": "workspace:*",
+    "@movimentar/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.8.1",
+    "postgres": "^3.4.9",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

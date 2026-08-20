@@ -26,31 +26,47 @@ pnpm build       # build de todos os pacotes
 pnpm format      # formatar com Prettier
 ```
 
-Infraestrutura local (PostgreSQL + Redis) — credenciais ficam em `docker/.env`,
-fora do git:
+## Subindo o ambiente local
 
 ```bash
 cp docker/.env.example docker/.env && docker compose -f docker/docker-compose.yml up -d
 ```
 
-API em desenvolvimento:
+O container cria, na primeira subida, o papel restrito `movimentar_app` (é ele que
+sofre a Row Level Security — ver [ADR-0007](docs/adr/0007-auth-and-rls-enforcement.md))
+e o banco de testes.
 
 ```bash
-pnpm --filter @movimentar/api dev   # compila e sobe http://127.0.0.1:3000/health
+cp .env.example .env                          # configuração da aplicação
+pnpm --filter @movimentar/api migrate         # aplica as migrações (como dono)
+pnpm --filter @movimentar/api seed:dev        # cria a empresa "demo" e um usuário
+pnpm --filter @movimentar/api dev             # sobe em http://127.0.0.1:3000
+```
+
+Primeiro login:
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/v1/auth/login -H "content-type: application/json" -d '{"email":"admin@demo.local","password":"senha-de-desenvolvimento","tenantSlug":"demo"}'
 ```
 
 A API escuta em `0.0.0.0` (IPv4, padrão para containers). No Windows, use
-`127.0.0.1` em vez de `localhost` se o navegador/cliente resolver primeiro para
-IPv6. A porta vem da env `PORT` (ver `.env.example`).
+`127.0.0.1` em vez de `localhost` se o cliente resolver primeiro para IPv6.
+
+### Testes de integração
+
+Precisam do banco de pé. Copie `.env.test.example` para `.env.test`; sem esse arquivo
+as suítes que dependem de banco se declaram **puladas** (nunca passam em silêncio).
 
 ## Estrutura
 
 ```text
 apps/          composition roots (api; futuramente web, mcp-gateway, worker, …)
-packages/      kernel compartilhado (tsconfig, eslint-config, config, …)
-modules/       módulos de domínio hexagonais (a partir da Fase 3)
+packages/      kernel compartilhado: config, database, auth, permissions,
+               tenant-context, audit, platform-kernel, tsconfig, eslint-config
+modules/       módulos de domínio hexagonais (identity, tenancy; CRM na Fase 3)
 plugins/       plugins first-party (a partir da Fase 6)
-docs/          arquitetura, ADRs, runbooks
+tooling/       apoio a testes e geração de código
+docs/          arquitetura, ADRs, API, runbooks
 docker/        infraestrutura local
 ```
 

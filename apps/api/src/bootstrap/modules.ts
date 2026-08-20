@@ -1,0 +1,19 @@
+import { identityManifest } from '@movimentar/identity';
+import {
+  resolveModules,
+  type ResolvedModules,
+} from '@movimentar/platform-kernel';
+import { tenancyManifest } from '@movimentar/tenancy';
+
+/**
+ * Módulos internos confiáveis desta instalação.
+ *
+ * O registro é explícito, em tempo de bootstrap — nada de descobrir e executar
+ * código arbitrário (ver docs/adr/0005-plugin-isolation.md). O kernel valida
+ * dependências, detecta ciclos e devolve a ordem de carga e de migração.
+ */
+export const modulosInstalados = [identityManifest, tenancyManifest];
+
+export function catalogoDeModulos(): ResolvedModules {
+  return resolveModules(modulosInstalados);
+}

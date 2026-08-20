@@ -1,0 +1,34 @@
+{
+  "name": "@movimentar/platform-kernel",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Contrato dos módulos da plataforma: manifesto, contribuições e registry",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@movimentar/permissions": "workspace:*"
+  },
+  "devDependencies": {
+    "@movimentar/eslint-config": "workspace:*",
+    "@movimentar/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

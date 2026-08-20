@@ -11,12 +11,17 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?defina em docker/.env}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina em docker/.env}
       POSTGRES_DB: ${POSTGRES_DB:?defina em docker/.env}
+      APP_DB_USER: ${APP_DB_USER:?defina em docker/.env}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?defina em docker/.env}
+      TEST_DB_NAME: ${TEST_DB_NAME:-movimentar_test}
     ports:
       - '5432:5432'
     volumes:
       # A imagem 18+ recomenda montar /var/lib/postgresql (cobre o novo layout
       # de PGDATA versionado, preparado para pg_upgrade).
       - pgdata:/var/lib/postgresql
+      # Roda só na primeira subida: cria o papel da aplicação e o banco de testes.
+      - ./init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
       interval: 5s

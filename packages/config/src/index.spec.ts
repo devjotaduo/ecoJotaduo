@@ -2,41 +2,73 @@ import { describe, expect, it } from 'vitest';
 
 import { InvalidEnvError, loadEnv } from './index';
 
+const MINIMO = {
+  DATABASE_URL: 'postgresql://app:pwd@localhost:5432/movimentar',
+  JWT_SECRET: 'x'.repeat(32),
+};
+
 describe('loadEnv', () => {
-  it('aplica defaults em ambiente vazio', () => {
-    const env = loadEnv({});
+  it('aplica defaults quando só o obrigatório é informado', () => {
+    const env = loadEnv({ ...MINIMO });
+
     expect(env.NODE_ENV).toBe('development');
     expect(env.PORT).toBe(3000);
-    expect(env.DATABASE_URL).toBeUndefined();
+    expect(env.DATABASE_APP_ROLE).toBe('movimentar_app');
+    expect(env.ACCESS_TOKEN_TTL_SECONDS).toBe(900);
+    expect(env.JWT_ISSUER).toBe('movimentar-platform');
+  });
+
+  it('falha cedo listando TODAS as variáveis faltantes', () => {
+    try {
+      loadEnv({});
+      expect.unreachable('deveria ter lançado');
+    } catch (erro) {
+      expect(erro).toBeInstanceOf(InvalidEnvError);
+      expect((erro as Error).message).toContain('DATABASE_URL');
+      expect((erro as Error).message).toContain('JWT_SECRET');
+    }
+  });
+
+  it('recusa segredo de assinatura fraco', () => {
+    expect(() => loadEnv({ ...MINIMO, JWT_SECRET: 'curto-demais' })).toThrow(
+      /JWT_SECRET/,
+    );
   });
 
   it('converte PORT de string para número', () => {
-    expect(loadEnv({ PORT: '8080' }).PORT).toBe(8080);
+    expect(loadEnv({ ...MINIMO, PORT: '8080' }).PORT).toBe(8080);
   });
 
-  it('rejeita PORT não numérica com erro descritivo', () => {
-    expect(() => loadEnv({ PORT: 'abc' })).toThrow(InvalidEnvError);
-    expect(() => loadEnv({ PORT: 'abc' })).toThrow(/PORT/);
-  });
-
-  it('rejeita PORT fora da faixa válida', () => {
-    expect(() => loadEnv({ PORT: '70000' })).toThrow(InvalidEnvError);
-  });
-
-  it('rejeita DATABASE_URL malformada', () => {
-    expect(() => loadEnv({ DATABASE_URL: 'nao-e-uma-url' })).toThrow(
+  it('rejeita PORT não numérica ou fora da faixa', () => {
+    expect(() => loadEnv({ ...MINIMO, PORT: 'abc' })).toThrow(InvalidEnvError);
+    expect(() => loadEnv({ ...MINIMO, PORT: '70000' })).toThrow(
       InvalidEnvError,
     );
   });
 
+  it('rejeita DATABASE_URL malformada', () => {
+    expect(() => loadEnv({ ...MINIMO, DATABASE_URL: 'nao-e-uma-url' })).toThrow(
+      InvalidEnvError,
+    );
+  });
+
+  it('recusa TTL de access token fora dos limites de segurança', () => {
+    expect(() =>
+      loadEnv({ ...MINIMO, ACCESS_TOKEN_TTL_SECONDS: '86400' }),
+    ).toThrow(InvalidEnvError);
+  });
+
   it('aceita ambiente completo válido', () => {
     const env = loadEnv({
+      ...MINIMO,
       NODE_ENV: 'production',
-      PORT: '3000',
-      DATABASE_URL: 'postgresql://user:pass@localhost:5432/db',
+      DATABASE_ADMIN_URL: 'postgresql://owner:pwd@localhost:5432/movimentar',
       REDIS_URL: 'redis://localhost:6379',
+      REFRESH_TOKEN_TTL_DAYS: '7',
     });
+
     expect(env.NODE_ENV).toBe('production');
-    expect(env.DATABASE_URL).toContain('postgresql://');
+    expect(env.REFRESH_TOKEN_TTL_DAYS).toBe(7);
+    expect(env.DATABASE_ADMIN_URL).toContain('owner');
   });
 });
