@@ -9,7 +9,7 @@ import {
   limparDados,
   migracoesDaPlataforma,
   PAPEL_MEMBER,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
   urlDaAplicacao,
@@ -42,7 +42,7 @@ const CNPJ = '11.222.333/0001-81';
  */
 describe.skipIf(!temBancoDeTeste)('Gateway MCP (E2E)', () => {
   let dono: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let gateway: Gateway;
   let nucleo: NucleoDaPlataforma;
   let endereco: string;
@@ -99,7 +99,7 @@ describe.skipIf(!temBancoDeTeste)('Gateway MCP (E2E)', () => {
   }
 
   beforeAll(async () => {
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     dono = conexaoDoDono();
     await runMigrations(dono, migracoesDaPlataforma());
 
@@ -120,7 +120,7 @@ describe.skipIf(!temBancoDeTeste)('Gateway MCP (E2E)', () => {
     await gateway?.app.close();
     await nucleo?.handle.close();
     await dono.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   beforeEach(async () => {

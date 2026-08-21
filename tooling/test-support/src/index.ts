@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
 
 import { hashPassword } from '@ecojotaduo/auth';
 import postgres from 'postgres';
@@ -35,14 +35,47 @@ export function exigirBancoEmCI(): void {
   }
 }
 
+/**
+ * Banco PRÓPRIO deste pacote, derivado do diretório em que o Vitest roda.
+ *
+ * Antes todas as suítes compartilhavam um banco só e um advisory lock as
+ * serializava. Isso funcionou até a plataforma crescer: a espera pelo lock
+ * conta dentro do `beforeAll`, então cada módulo novo empurrava a última
+ * suíte para mais perto do timeout — e o CI ficou vermelho por espera, não
+ * por defeito. Um banco por pacote elimina a disputa (as suítes rodam de
+ * verdade em paralelo) e, de quebra, uma suíte não tem como corromper os
+ * dados de outra.
+ */
+export function nomeDoBancoDoPacote(): string {
+  const pacote = basename(process.cwd()).toLowerCase();
+  return `ecojotaduo_test_${pacote.replace(/[^a-z0-9]+/g, '_')}`;
+}
+
+/** Troca o nome do banco na URL, preservando credenciais e host. */
+function comBanco(url: string, banco: string): string {
+  const destino = new URL(url);
+  destino.pathname = `/${banco}`;
+  return destino.toString();
+}
+
 export function urlDaAplicacao(): string {
   if (!APP_URL) {
     throw new Error('TEST_DATABASE_URL não definida (veja .env.test.example).');
   }
-  return APP_URL;
+  return comBanco(APP_URL, nomeDoBancoDoPacote());
 }
 
 export function urlDoDono(): string {
+  if (!ADMIN_URL) {
+    throw new Error(
+      'TEST_ADMIN_DATABASE_URL não definida (veja .env.test.example).',
+    );
+  }
+  return comBanco(ADMIN_URL, nomeDoBancoDoPacote());
+}
+
+/** URL de manutenção: o banco base do `.env.test`, usado só para criar os outros. */
+function urlDeManutencao(): string {
   if (!ADMIN_URL) {
     throw new Error(
       'TEST_ADMIN_DATABASE_URL não definida (veja .env.test.example).',
@@ -64,11 +97,11 @@ export function diretorioDeMigracoes(caminhoRelativo: string): string {
 /**
  * Migrações da plataforma, na ordem em que os manifestos as encadeiam.
  *
- * Toda suíte de banco aplica esta lista inteira, e não um subconjunto: as
- * suítes compartilham a base e rodam em ordem arbitrária (o advisory lock
- * serializa, não ordena). Uma suíte que declarasse menos do que usa passaria
- * só quando outra tivesse criado a tabela antes — foi o que aconteceu com
- * `audit_events`, que o `limparDados` trunca em TODAS elas.
+ * Toda suíte de banco aplica esta lista inteira, e não um subconjunto: o banco
+ * do pacote nasce vazio e precisa de todas as tabelas — o `limparDados` trunca
+ * todas elas. Antes, com base compartilhada, uma suíte que declarasse menos do
+ * que usa passava só quando outra tivesse criado a tabela primeiro; foi assim
+ * que `audit_events` derrubou o CI.
  *
  * A lista é literal de propósito: `tooling/test-support` não pode importar
  * `@ecojotaduo/database` nem os módulos, senão o grafo do turbo cicla.
@@ -102,23 +135,92 @@ export function conexaoDoDono(): postgres.Sql {
   return postgres(urlDoDono(), { max: 4, onnotice: () => undefined });
 }
 
-// Identificador fixo e arbitrário do advisory lock que serializa as suítes.
-const LOCK_SUITES = 4_071_984;
+/** `duplicate_database`: outro pacote criou primeiro — para nós é sucesso. */
+const JA_EXISTE = '42P04';
+/** `object_in_use`: dois `create database` disputando o template. Repetir. */
+const TEMPLATE_OCUPADO = '55006';
 
 /**
- * Garante que apenas uma suíte de integração use o banco por vez.
+ * Garante que o banco DESTE pacote existe, e devolve a função de encerramento.
  *
- * Os pacotes rodam em paralelo (turbo), mas compartilham o mesmo banco de
- * testes: sem isto, o `truncate` de uma suíte apaga os dados que outra acabou
- * de semear. O lock é de SESSÃO, em uma conexão dedicada — encerrar a conexão
- * libera o lock, então não há risco de travar o banco se um teste quebrar.
+ * Substitui o advisory lock que serializava todas as suítes: com um banco por
+ * pacote não há disputa, então elas rodam em paralelo de verdade e a espera
+ * some do `beforeAll`.
  *
- * Devolve a função de liberação, para chamar no `afterAll`.
+ * Chame no `beforeAll`; a função devolvida vai no `afterAll`.
  */
-export async function reservarBancoDeTestes(): Promise<() => Promise<void>> {
-  const cliente = postgres(urlDoDono(), { max: 1, onnotice: () => undefined });
-  await cliente`select pg_advisory_lock(${LOCK_SUITES})`;
-  return () => cliente.end({ timeout: 5 });
+export async function prepararBancoDeTestes(): Promise<() => Promise<void>> {
+  const banco = nomeDoBancoDoPacote();
+  const manutencao = postgres(urlDeManutencao(), {
+    max: 1,
+    onnotice: () => undefined,
+  });
+
+  try {
+    const [existente] = await manutencao<{ um: number }[]>`
+      select 1 as um from pg_database where datname = ${banco}
+    `;
+    if (!existente) {
+      await criarBanco(manutencao, banco);
+    }
+  } finally {
+    await manutencao.end({ timeout: 5 });
+  }
+
+  // O papel da aplicação não herda nada: precisa de permissão explícita em
+  // CADA banco novo (ver docs/architecture/tenancy.md).
+  const novo = postgres(urlDoDono(), { max: 1, onnotice: () => undefined });
+  try {
+    // Só USAGE: as tabelas são criadas pelo DONO, nas migrações. O papel da
+    // aplicação nunca cria nada — é isso que faz a RLS valer para ele.
+    await novo.unsafe(`grant usage on schema public to ${papelDaAplicacao()}`);
+  } finally {
+    await novo.end({ timeout: 5 });
+  }
+
+  return () => Promise.resolve();
+}
+
+/**
+ * `create database` serializa no template: com vários pacotes subindo ao mesmo
+ * tempo, um perde e recebe `object_in_use`. Repetir resolve — e se outro
+ * ganhou a corrida, o banco já existe e está tudo certo.
+ */
+async function criarBanco(
+  manutencao: postgres.Sql,
+  banco: string,
+): Promise<void> {
+  for (let tentativa = 0; tentativa < 12; tentativa += 1) {
+    try {
+      await manutencao.unsafe(`create database "${banco}"`);
+      return;
+    } catch (erro) {
+      const codigo = codigoPostgres(erro);
+      if (codigo === JA_EXISTE) {
+        return;
+      }
+      if (codigo !== TEMPLATE_OCUPADO) {
+        throw erro;
+      }
+      await new Promise((resolver) => setTimeout(resolver, 250));
+    }
+  }
+  throw new Error(
+    `Não foi possível criar o banco de testes "${banco}": o template ficou ocupado.`,
+  );
+}
+
+function papelDaAplicacao(): string {
+  const url = new URL(urlDaAplicacao());
+  // Só letras, dígitos e sublinhado: o nome entra num GRANT, que não aceita
+  // parâmetro — validar aqui é o que impede injeção pela variável de ambiente.
+  const papel = decodeURIComponent(url.username);
+  if (!/^[a-z_][a-z0-9_]*$/i.test(papel)) {
+    throw new Error(
+      `Nome de papel inesperado em TEST_DATABASE_URL: "${papel}".`,
+    );
+  }
+  return papel;
 }
 
 const TABELAS = [

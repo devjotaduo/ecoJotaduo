@@ -37,8 +37,11 @@ jobs:
       - name: Instalar dependências
         run: pnpm install --frozen-lockfile
 
-      # O papel restrito é obrigatório: o PostgreSQL não aplica RLS ao dono das
-      # tabelas, então sem ele os testes de isolamento seriam falso-positivos.
+      # Duas coisas aqui. O papel restrito é obrigatório: o PostgreSQL não
+      # aplica RLS ao dono das tabelas, então sem ele os testes de isolamento
+      # seriam falso-positivos. E `ecojotaduo_test` é só o banco de MANUTENÇÃO
+      # — cada pacote cria e usa o seu (`ecojotaduo_test_<pacote>`), para as
+      # suítes rodarem em paralelo sem disputar a mesma base.
       - name: Preparar banco de testes
         env:
           PGPASSWORD: ecojotaduo

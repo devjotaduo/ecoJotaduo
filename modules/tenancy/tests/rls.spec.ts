@@ -5,7 +5,7 @@ import {
   exigirBancoEmCI,
   limparDados,
   migracoesDaPlataforma,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
   urlDaAplicacao,
@@ -37,14 +37,14 @@ exigirBancoEmCI();
  */
 describe.skipIf(!temBancoDeTeste)('RLS do módulo tenancy', () => {
   let dono: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let handle: DatabaseHandle;
   let empresaA: TenantSemeado;
   let empresaB: TenantSemeado;
 
   beforeAll(async () => {
     // Serializa com as demais suítes de integração (banco compartilhado).
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     dono = conexaoDoDono();
     await runMigrations(dono, migracoesDaPlataforma());
     handle = createDatabase({ url: urlDaAplicacao(), quiet: true });
@@ -53,7 +53,7 @@ describe.skipIf(!temBancoDeTeste)('RLS do módulo tenancy', () => {
   afterAll(async () => {
     await handle.close();
     await dono.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   beforeEach(async () => {

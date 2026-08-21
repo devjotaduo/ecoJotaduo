@@ -17,7 +17,7 @@ import {
   exigirBancoEmCI,
   limparDados,
   migracoesDaPlataforma,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
   urlDaAplicacao,
@@ -68,7 +68,7 @@ interface EntregaRecebida {
  */
 describe.skipIf(!temBancoDeTeste)('Plugins (E2E)', () => {
   let dono: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let app: NestFastifyApplication;
   let nucleo: NucleoDaPlataforma;
   let destino: Server;
@@ -151,7 +151,7 @@ describe.skipIf(!temBancoDeTeste)('Plugins (E2E)', () => {
   }
 
   beforeAll(async () => {
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     dono = conexaoDoDono();
     await runMigrations(dono, migracoesDaPlataforma());
 
@@ -209,7 +209,7 @@ describe.skipIf(!temBancoDeTeste)('Plugins (E2E)', () => {
     await app?.close();
     await new Promise<void>((resolver) => destino.close(() => resolver()));
     await dono.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   beforeEach(async () => {

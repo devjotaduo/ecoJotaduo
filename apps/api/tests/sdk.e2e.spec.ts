@@ -5,7 +5,7 @@ import {
   exigirBancoEmCI,
   limparDados,
   migracoesDaPlataforma,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
   urlDaAplicacao,
@@ -43,13 +43,13 @@ function amanha(horas = 14): string {
  */
 describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
   let dono: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let app: NestFastifyApplication;
   let baseUrl: string;
   let empresa: TenantSemeado;
 
   beforeAll(async () => {
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     dono = conexaoDoDono();
     await runMigrations(dono, migracoesDaPlataforma());
 
@@ -76,7 +76,7 @@ describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
   afterAll(async () => {
     await app?.close();
     await dono.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   beforeEach(async () => {

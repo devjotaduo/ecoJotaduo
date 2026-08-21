@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import {
   conexaoDoDono,
   exigirBancoEmCI,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   temBancoDeTeste,
 } from '@ecojotaduo/test-support';
 import type postgres from 'postgres';
@@ -27,12 +27,12 @@ exigirBancoEmCI();
  */
 describe.skipIf(!temBancoDeTeste)('runMigrations (PostgreSQL real)', () => {
   let sql: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let diretorio: string;
 
   beforeAll(async () => {
     // Serializa com as demais suítes de integração (banco compartilhado).
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     sql = conexaoDoDono();
     diretorio = await mkdtemp(join(tmpdir(), 'ecojotaduo-migracoes-'));
     await sql`drop table if exists exemplo_migrator`;
@@ -45,7 +45,7 @@ describe.skipIf(!temBancoDeTeste)('runMigrations (PostgreSQL real)', () => {
     await sql`drop table if exists exemplo_migrator`;
     await sql`delete from platform_migrations where module_id = 'exemplo'`;
     await sql.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   it('aplica arquivos em ordem e registra no ledger', async () => {

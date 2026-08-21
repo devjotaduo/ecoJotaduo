@@ -5,7 +5,7 @@ import {
   limparDados,
   migracoesDaPlataforma,
   PAPEL_MEMBER,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
   urlDaAplicacao,
@@ -63,7 +63,7 @@ function amanha(horas = 14): string {
  */
 describe.skipIf(!temBancoDeTeste)('CRM (E2E)', () => {
   let dono: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let app: NestFastifyApplication;
   let nucleo: NucleoDaPlataforma;
   let empresa: TenantSemeado;
@@ -141,7 +141,7 @@ describe.skipIf(!temBancoDeTeste)('CRM (E2E)', () => {
   }
 
   beforeAll(async () => {
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     dono = conexaoDoDono();
     await runMigrations(dono, migracoesDaPlataforma());
 
@@ -167,7 +167,7 @@ describe.skipIf(!temBancoDeTeste)('CRM (E2E)', () => {
   afterAll(async () => {
     await app?.close();
     await dono.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   beforeEach(async () => {

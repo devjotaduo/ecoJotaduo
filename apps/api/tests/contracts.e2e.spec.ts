@@ -5,7 +5,7 @@ import {
   exigirBancoEmCI,
   limparDados,
   migracoesDaPlataforma,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   semearTenant,
   temBancoDeTeste,
   urlDaAplicacao,
@@ -65,7 +65,7 @@ function daquiA(dias: number): string {
  */
 describe.skipIf(!temBancoDeTeste)('Contratos (E2E)', () => {
   let dono: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let app: NestFastifyApplication;
   let nucleo: NucleoDaPlataforma;
   let empresa: TenantSemeado;
@@ -179,7 +179,7 @@ describe.skipIf(!temBancoDeTeste)('Contratos (E2E)', () => {
   const GRANT = { permissions: ['*'], scopes: ['*'], entitlements: MODULOS };
 
   beforeAll(async () => {
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     dono = conexaoDoDono();
     await runMigrations(dono, migracoesDaPlataforma());
 
@@ -205,7 +205,7 @@ describe.skipIf(!temBancoDeTeste)('Contratos (E2E)', () => {
   afterAll(async () => {
     await app?.close();
     await dono.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   beforeEach(async () => {

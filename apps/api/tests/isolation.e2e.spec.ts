@@ -6,7 +6,7 @@ import {
   limparDados,
   migracoesDaPlataforma,
   PAPEL_MEMBER,
-  reservarBancoDeTestes,
+  prepararBancoDeTestes,
   semearServiceAccount,
   semearTenant,
   temBancoDeTeste,
@@ -70,7 +70,7 @@ interface Problema {
  */
 describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
   let dono: postgres.Sql;
-  let liberarBanco: (() => Promise<void>) | undefined;
+  let encerrarBanco: (() => Promise<void>) | undefined;
   let app: NestFastifyApplication;
   let empresaA: TenantSemeado;
   let empresaB: TenantSemeado;
@@ -122,7 +122,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
 
   beforeAll(async () => {
     // Serializa com as demais suítes de integração (banco compartilhado).
-    liberarBanco = await reservarBancoDeTestes();
+    encerrarBanco = await prepararBancoDeTestes();
     dono = conexaoDoDono();
     await runMigrations(dono, migracoesDaPlataforma());
     await limparDados(dono);
@@ -177,7 +177,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
   afterAll(async () => {
     await app?.close();
     await dono.end({ timeout: 5 });
-    await liberarBanco?.();
+    await encerrarBanco?.();
   });
 
   // -------------------------------------------------------------------------
