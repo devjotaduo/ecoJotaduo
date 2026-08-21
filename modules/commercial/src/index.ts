@@ -55,7 +55,6 @@ export {
   proposalNumbers,
   proposals,
 } from './adapters/persistence/schema';
-export { CommercialProposalsController } from './adapters/http/proposals.controller';
 export { propostaJson } from './adapters/http/presenters';
 export {
   commercialMcpContribution,

@@ -71,8 +71,10 @@ export const envSchema = z.object({
   /** Teto por credencial no gateway MCP: um agente em laço custa banco. */
   RATE_LIMIT_MCP_MAX: z.coerce.number().int().min(1).default(120),
 
-  /** Reservado para BullMQ (Fase 8). */
-  REDIS_URL: z.url().optional(),
+  // Não há `REDIS_URL`, e a ausência é decisão: o outbox É a fila (ADR-0012) e
+  // o rate limit conta em memória (ADR-0014). A variável ficou "reservada"
+  // desde a Fase 0 para uma fila que nunca precisou existir — config morta
+  // acaba virando serviço morto em produção.
 });
 
 export type Env = z.infer<typeof envSchema>;

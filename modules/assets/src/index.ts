@@ -57,8 +57,6 @@ export {
   DrizzleAssetRepository,
 } from './adapters/persistence/repositories';
 export { assetHolds, assets } from './adapters/persistence/schema';
-export { AssetsController } from './adapters/http/assets.controller';
-export { AssetHoldsController } from './adapters/http/asset-holds.controller';
 export { ativoJson, bloqueioJson } from './adapters/http/presenters';
 export {
   assetsMcpContribution,

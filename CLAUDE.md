@@ -365,6 +365,23 @@ engano:
 - `fastify` está fixado por `pnpm.overrides` na raiz: duas cópias na árvore geram tipos
   incompatíveis entre o adapter do Nest e o app.
 
+### Empacotamento (ADR-0015)
+
+Quatro imagens: `api`, `mcp-gateway` e `worker` saem do mesmo `docker/Dockerfile`
+(`--build-arg APP=`); a tela sai de `docker/Dockerfile.web` e é servida pelo Caddy,
+que também é o proxy. `docs/operations/deploy.md` tem o procedimento.
+
+**Módulo com borda REST expõe os controllers em `src/http.ts`, nunca no `index.ts`**,
+com a entrada `./http` no `exports` do `package.json`. O motivo é concreto: enquanto
+estavam no índice, o worker e o gateway MCP carregavam NestJS inteiro em tempo de
+`require` — e o worker chegou a não subir por falta de `reflect-metadata`. Nenhum
+teste pega isso; só empacotar e subir.
+
+A migração é **serviço de deploy**, não passo de boot: N réplicas migrando ao subir
+são N migrações concorrentes, e rollback tentaria migrar para trás. Migração nova
+precisa ser compatível para trás (expand/contract) — durante o rolling, código velho
+e novo falam com o mesmo banco.
+
 Um módulo só está pronto quando entrega um fluxo de negócio completo — tabela + CRUD
 não conta. Uma fase só está pronta com lint, typecheck, testes e build executados de
 verdade e documentação atualizada.

@@ -47,7 +47,6 @@ export type {
 // Adaptadores
 export { DrizzleRentalRepository } from './adapters/persistence/repositories';
 export { rentalNumbers, rentals } from './adapters/persistence/schema';
-export { RentalsController } from './adapters/http/rentals.controller';
 export { locacaoJson } from './adapters/http/presenters';
 export {
   operationsMcpContribution,

@@ -28,9 +28,7 @@ flowchart TB
 
     subgraph DATA["Dados e infraestrutura"]
         POSTGRES[("PostgreSQL 18")]
-        REDIS[("Redis 8")]
-        STORAGE["Object Storage (S3-compatível)"]
-        OBS["OpenTelemetry<br/>logs + traces + métricas"]
+        OBS["Log estruturado + trilha de auditoria"]
     end
 
     subgraph PLUGINS["Extensões"]
@@ -60,8 +58,6 @@ flowchart TB
 
     USECASES --> MODULES
     MODULES --> POSTGRES
-    MODULES --> REDIS
-    MODULES --> STORAGE
     MODULES --> EVENTS
     EVENTS --> WORKER
 

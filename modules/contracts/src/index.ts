@@ -41,7 +41,6 @@ export type {
 // Adaptadores
 export { DrizzleContractRepository } from './adapters/persistence/repositories';
 export { contractNumbers, contracts } from './adapters/persistence/schema';
-export { ContractsController } from './adapters/http/contracts.controller';
 export { contratoJson } from './adapters/http/presenters';
 export {
   contractsMcpContribution,

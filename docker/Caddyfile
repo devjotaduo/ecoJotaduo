@@ -1,0 +1,65 @@
+# Proxy reverso e servidor da aplicação web.
+#
+# Tudo atrás do MESMO domínio, e isso não é arrumação: o refresh token vive num
+# cookie `SameSite=Strict` (ADR-0011). Servir a tela num domínio e a API em
+# outro faria o navegador não enviar o cookie, e a sessão morreria a cada
+# recarregamento — sem erro nenhum, o que é pior.
+
+{
+	# Endereço de e-mail para o certificado automático. Vem do compose.
+	email {$ACME_EMAIL:admin@localhost}
+	# Em desenvolvimento, `local_certs` evita bater no Let's Encrypt.
+	{$CADDY_EXTRA_GLOBAL}
+}
+
+{$SITE_ADDRESS:http://localhost} {
+	encode zstd gzip
+
+	# A API. O prefixo `/api` é o mesmo que o proxy do Vite usa em
+	# desenvolvimento — a tela não sabe se está num ou no outro.
+	handle /api/* {
+		reverse_proxy api:3000 {
+			# Só encaminha para réplica que responde readiness. Sem isto, um
+			# deploy manda tráfego para um processo que ainda está subindo.
+			health_uri /health/ready
+			health_interval 10s
+			health_timeout 3s
+		}
+	}
+
+	# Documentação OpenAPI servida pela própria API.
+	handle /docs* {
+		reverse_proxy api:3000
+	}
+
+	# Gateway MCP: outro processo, outra porta, mesmo domínio.
+	handle /mcp* {
+		reverse_proxy mcp-gateway:3001 {
+			health_uri /health
+			health_interval 10s
+			health_timeout 3s
+			# Streamable HTTP mantém a resposta aberta; um buffer aqui
+			# seguraria o fluxo até o fim e quebraria o streaming.
+			flush_interval -1
+		}
+	}
+
+	# Tudo o mais é a aplicação web (SPA): rota desconhecida cai no index,
+	# senão um F5 em `/clientes` devolveria 404.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Cabeçalhos que pertencem a QUEM SERVE A PÁGINA, e não à API. A API manda
+	# os dela nas respostas dela (ADR-0014); estes valem para o HTML e para os
+	# arquivos estáticos.
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		# O servidor identifica menos, o atacante enumera menos.
+		-Server
+	}
+}

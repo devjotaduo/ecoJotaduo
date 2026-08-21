@@ -1,0 +1,29 @@
+# Aplicação web: build estático do Vite, servido pelo Caddy.
+#
+# Separada do Dockerfile dos serviços Node porque o resultado é outro tipo de
+# coisa — não há processo Node em produção, só arquivos. O mesmo Caddy que
+# serve esses arquivos é o proxy reverso da API e do gateway, e é por isso que
+# tudo fica na MESMA origem: o cookie `httpOnly` do refresh token exige
+# same-site (ADR-0011).
+
+FROM node:24-alpine AS base
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+ENV CI=true
+RUN corepack enable
+WORKDIR /repo
+
+FROM base AS build
+COPY . .
+
+# Ver `docker/Dockerfile` para o porquê de cada opção desta linha.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm --config.minimumReleaseAge=0 install --frozen-lockfile
+
+# `web...` inclui as dependências do pacote no grafo: o build da tela precisa
+# do SDK (`@ecojotaduo/api-client`) já compilado, e o turbo resolve a ordem.
+RUN pnpm --filter @ecojotaduo/web... build
+
+FROM caddy:2-alpine AS runtime
+COPY --from=build /repo/apps/web/dist /srv
+COPY docker/Caddyfile /etc/caddy/Caddyfile
+EXPOSE 80 443

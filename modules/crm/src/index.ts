@@ -66,8 +66,6 @@ export {
   customerNotes,
   customers,
 } from './adapters/persistence/schema';
-export { CrmCustomersController } from './adapters/http/crm.controller';
-export { CrmAppointmentsController } from './adapters/http/appointments.controller';
 export {
   crmMcpContribution,
   crmMcpTools,

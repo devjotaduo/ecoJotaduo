@@ -1,0 +1,27 @@
+# O contexto de build é o repositório inteiro (o monorepo precisa dele para
+# resolver as dependências de workspace). Fora daqui fica tudo o que não muda
+# a imagem e só engorda o contexto — ou que não pode entrar nela de jeito
+# nenhum.
+
+# Segredos. Nunca, em hipótese alguma, dentro de uma imagem.
+.env
+.env.*
+!.env.example
+!.env.test.example
+docker/.env
+
+node_modules
+**/node_modules
+
+# Artefatos de build: a imagem compila os dela. Copiar os locais faria a
+# imagem depender do que estava na máquina de quem rodou o build.
+**/dist
+**/.turbo
+**/coverage
+apps/web/dist
+
+.git
+.github
+.claude
+**/*.log
+**/.DS_Store

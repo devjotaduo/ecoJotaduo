@@ -1,7 +1,5 @@
 import { loadEnv, type Env } from '@ecojotaduo/config';
 import {
-  AssetHoldsController,
-  AssetsController,
   ASSETS_AVAILABILITY,
   ASSETS_GET,
   ASSETS_HOLD,
@@ -12,8 +10,6 @@ import {
   ASSETS_UPDATE,
 } from '@ecojotaduo/assets';
 import {
-  CrmAppointmentsController,
-  CrmCustomersController,
   CRM_ADD_NOTE,
   CRM_CLOSE_APPOINTMENT,
   CRM_CREATE_CUSTOMER,
@@ -25,7 +21,6 @@ import {
   CRM_UPDATE_CUSTOMER,
 } from '@ecojotaduo/crm';
 import {
-  CommercialProposalsController,
   COMMERCIAL_CREATE_PROPOSAL,
   COMMERCIAL_DECIDE_PROPOSAL,
   COMMERCIAL_GET_PROPOSAL,
@@ -34,7 +29,6 @@ import {
   COMMERCIAL_UPDATE_PROPOSAL,
 } from '@ecojotaduo/commercial';
 import {
-  ContractsController,
   CONTRACTS_ACTIVATE,
   CONTRACTS_CLOSE,
   CONTRACTS_CREATE,
@@ -42,7 +36,6 @@ import {
   CONTRACTS_SEARCH,
 } from '@ecojotaduo/contracts';
 import {
-  RentalsController,
   OPERATIONS_CANCEL,
   OPERATIONS_FINISH,
   OPERATIONS_GET,
@@ -51,17 +44,37 @@ import {
   OPERATIONS_START,
 } from '@ecojotaduo/operations';
 import {
-  NotificationsController,
   NOTIFICATIONS_RUNTIME,
   NOTIFICATIONS_SEND,
 } from '@ecojotaduo/plugin-notifications-example';
 import {
-  PluginsController,
   PLUGINS_CHANGE_STATUS,
   PLUGINS_CONFIGURE,
   PLUGINS_INSTALL,
   PLUGINS_LIST,
 } from '@ecojotaduo/plugins';
+/**
+ * Controllers dos módulos, do subcaminho `/http`.
+ *
+ * Separado do `index` de propósito: eles trazem NestJS junto, e o gateway
+ * MCP e o worker importam os MESMOS módulos sem servir HTTP. Enquanto
+ * estavam no `index`, os dois carregavam um framework inteiro em tempo de
+ * require — e o worker chegou a não subir por causa disso.
+ */
+import {
+  AssetHoldsController,
+  AssetsController,
+} from '@ecojotaduo/assets/http';
+import { CommercialProposalsController } from '@ecojotaduo/commercial/http';
+import { ContractsController } from '@ecojotaduo/contracts/http';
+import {
+  CrmAppointmentsController,
+  CrmCustomersController,
+} from '@ecojotaduo/crm/http';
+import { RentalsController } from '@ecojotaduo/operations/http';
+import { NotificationsController } from '@ecojotaduo/plugin-notifications-example/http';
+import { PluginsController } from '@ecojotaduo/plugins/http';
+
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -184,7 +197,8 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     AuthController,
     EntitlementsController,
     AuditController,
-    // Controllers do CRM vêm do próprio módulo: ele é dono da sua borda REST.
+    // Controllers dos módulos vêm do próprio módulo: ele é dono da sua borda
+    // REST. O que o app faz é montar.
     CrmCustomersController,
     CrmAppointmentsController,
     CommercialProposalsController,

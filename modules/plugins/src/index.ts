@@ -50,4 +50,3 @@ export {
   pluginInstallations,
   pluginSecrets,
 } from './adapters/persistence/schema';
-export { PluginsController } from './adapters/http/plugins.controller';

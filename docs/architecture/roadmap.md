@@ -66,7 +66,9 @@ Ficou **fora** desta entrega, deliberadamente:
     pagas, negação de acesso auditada nas duas bordas, limite de requisições
     por credencial, refresh token em cookie `httpOnly`, cabeçalhos de
     segurança, log estruturado por requisição e runbooks.
-    Próximo: **Fase 11** (implantação e escala).
+12. ✅ Fase 11 — Implantação: quatro imagens, compose de produção com Caddy,
+    migração como passo explícito de deploy, e o CI construindo e subindo a
+    pilha. Próximo: **Fase 12** (extração seletiva).
 
 ### Fase 5 — escopo entregue
 
@@ -384,6 +386,55 @@ Ficou **fora**, deliberadamente (detalhe no ADR-0014):
 | Store compartilhado de rate limit | Só passa a importar com múltiplas réplicas                                                                                                     | Fase 11                 |
 | Rotação de `SECRETS_KEY`          | Exige duas chaves ativas ao mesmo tempo e recifragem por empresa                                                                               | 2º ambiente             |
 | Token anti-CSRF                   | Nenhuma rota de negócio é autenticada por cookie (ADR-0011)                                                                                    | Se alguma passar a usar |
+
+### Fase 11 — Implantação (ADR-0015)
+
+Até aqui existia um documento de visão da Fase 0 descrevendo VM única com
+Compose — e nenhum Dockerfile. Documento de implantação que ninguém executou é
+hipótese com formatação de plano.
+
+**O que passou a existir**
+
+| Peça                             | O que faz                                                            |
+| -------------------------------- | -------------------------------------------------------------------- |
+| `docker/Dockerfile`              | Uma imagem para `api`, `mcp-gateway` e `worker` (`--build-arg APP=`) |
+| `docker/Dockerfile.web`          | Build do Vite + Caddy servindo os estáticos                          |
+| `docker/Caddyfile`               | Proxy: `/` → tela, `/api` → API, `/mcp` → gateway; TLS automático    |
+| `docker/docker-compose.prod.yml` | A pilha, com `migrate` como serviço que roda antes das réplicas      |
+| `docs/operations/deploy.md`      | Primeira subida, deploy de versão, réplicas, expand/contract         |
+| Job `imagens` no CI              | Constrói as quatro e sobe a pilha inteira a cada PR                  |
+
+**Verificado de verdade**, não por leitura: as quatro imagens constroem, a
+migração aplica as 11 migrações e sai, os cinco serviços ficam saudáveis, e o
+fluxo completo passa pelo proxy — login com cookie, renovação, detecção de
+reuso, saída, criação de cliente e o worker drenando o outbox até `delivered`.
+Com `--scale api=3`, a mesma sessão atravessa as três réplicas.
+
+**O defeito que só o empacotamento revelou.** O worker não subia:
+`Cannot find module 'reflect-metadata'`. O `index.ts` de cada módulo
+reexportava os controllers REST, então qualquer importador — inclusive o
+worker, que não serve HTTP — carregava NestJS inteiro em tempo de `require`.
+
+A correção não foi adicionar a dependência: foi mover a borda REST para um
+subcaminho (`@ecojotaduo/<mod>/http`) que só o `apps/api` importa. Isso torna
+real uma fronteira que a documentação já afirmava. **Nenhum teste unitário ou
+E2E pegaria isso** — todos rodam num processo que já tem o Nest carregado.
+
+**Duas coisas que o hábito manda incluir e foram medidas antes:** `dumb-init`
+(o container para em ~1s com e sem ele, porque os apps tratam SIGTERM) e Redis
+(estava no documento de visão e nunca foi usado — o outbox é a fila, o rate
+limit conta em memória).
+
+Ficou **fora**, com motivo no ADR-0015:
+
+| Item                              | Por quê                                                                              | Quando                   |
+| --------------------------------- | ------------------------------------------------------------------------------------ | ------------------------ |
+| Kubernetes                        | Uma VM com Compose atende o MVP; manifestos ficariam sem ninguém rodando             | Quando uma VM não bastar |
+| Publicação em registry            | Não há ambiente de destino; o CI constrói para provar, não para distribuir           | Com o primeiro deploy    |
+| OpenTelemetry                     | Já existe onde rodar coletor, mas ainda não há backend para onde exportar            | Com o backend            |
+| Teste de carga                    | Faz sentido contra a pilha empacotada — que passou a existir agora                   | Fase 12                  |
+| Store compartilhado de rate limit | Só importa com réplicas permanentes                                                  | Com réplicas fixas       |
+| Backup automatizado               | O procedimento manual está no runbook; agendar exige decidir onde guardar fora da VM | Com o primeiro deploy    |
 
 ### Dívidas conhecidas ao fim da Fase 2
 

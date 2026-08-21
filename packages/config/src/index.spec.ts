@@ -74,7 +74,6 @@ describe('loadEnv', () => {
       ...MINIMO,
       NODE_ENV: 'production',
       DATABASE_ADMIN_URL: 'postgresql://owner:pwd@localhost:5432/ecojotaduo',
-      REDIS_URL: 'redis://localhost:6379',
       REFRESH_TOKEN_TTL_DAYS: '7',
     });
 
