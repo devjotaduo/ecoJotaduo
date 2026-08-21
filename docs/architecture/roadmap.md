@@ -53,7 +53,10 @@ Ficou **fora** desta entrega, deliberadamente:
    ✅ **Commercial** (propostas: elaborar → enviar → decidir).
    ✅ **Contracts** (formalizar da proposta aceita → ativar → encerrar).
    ✅ **Assets** (cadastrar → bloquear por período → liberar → baixar).
-   Próximo: Operations → Billing → Finance → Inventory → Maintenance → RH.
+   ✅ **Operations** (programar sob contrato → retirar → devolver → cancelar).
+   Os demais verticais (Billing, Finance, Inventory, Maintenance, RH) foram
+   **pulados a pedido**: os quatro entregues já provam o padrão de módulo e a
+   comunicação entre eles. Próximo: **Fase 8**, eventos e jobs.
 
 ### Fase 5 — escopo entregue
 
@@ -187,6 +190,50 @@ Ficou **fora**, deliberadamente:
 | Hierarquia de ativos (implemento, conjunto) | Um nível cobre o escopo mínimo; a árvore complica toda consulta de disponibilidade | Quando houver demanda  |
 | Eventos publicados                          | Declarados no manifesto, sem barramento até a Fase 8                               | Fase 8                 |
 
+### Fase 7 — Operations (quarto vertical)
+
+O elo que fecha a fase: a locação nasce de um **contrato em vigor** e **reserva o
+equipamento no patrimônio**. É o primeiro módulo que depende de dois outros, e o
+primeiro que ESCREVE em outro módulo.
+
+Três escolhas de desenho que valem registro:
+
+- **Operações não sabe se um equipamento está livre.** Não existe coluna
+  "locado" aqui: programar uma locação chama `AssetsPublicApi.reserve(...)`, e a
+  garantia contra locação dupla passa a ser a restrição de exclusão que já
+  existia em Ativos. Verificado por falsificação: neutralizada a reserva, a
+  segunda locação no mesmo período passa com 201 em vez de 409.
+
+- **A locação cabe dentro da vigência do contrato.** Equipamento na rua fora da
+  vigência não tem o que o cubra — nem comercialmente, nem em caso de sinistro.
+  Cliente e período vêm do contrato, não de quem programa.
+
+- **`overdue` é derivado de `endsAt`**, seguindo `expired` do Comercial e de
+  Contratos. Uma locação em andamento com prazo vencido está atrasada no
+  instante em que passa, e é disso que sai cobrança extra. `diasDeAtraso()` é
+  calculado antes de encerrar, porque depois a situação vira `finished` e o
+  número se perderia.
+
+**Escrita entre módulos passa pelos casos de uso do dono**, e não pelo
+repositório dele: a recusa de equipamento comprometido e a auditoria do bloqueio
+ficam num lugar só, valendo igual para quem chama pelo REST, pela tool MCP ou de
+outro módulo.
+
+Ficou **fora**, deliberadamente:
+
+| Item                                    | Por quê                                                                 | Quando                |
+| --------------------------------------- | ----------------------------------------------------------------------- | --------------------- |
+| Apontamento de operação (horímetro, km) | Depende de telemetria ou de coleta em campo; nada consome hoje          | Quando houver fonte   |
+| Cobrança do atraso                      | `overdueDays` já sai pronto na leitura; quem fatura é Billing           | Fase 7, com Billing   |
+| Agenda/roteirização de entrega e coleta | É outro problema (rotas, motoristas); locação fechada não depende disso | Quando houver demanda |
+| Troca de equipamento na mesma locação   | Encerrar e programar outra cobre o caso, e mantém o histórico honesto   | Se a operação pedir   |
+| Eventos publicados                      | Declarados no manifesto, sem barramento até a Fase 8                    | Fase 8                |
+
+**Dívida assumida:** reservar no patrimônio e gravar a locação são duas
+transações. A reserva vem primeiro (o conflito recusa antes de existir locação)
+e há compensação se a gravação falhar — mas compensação não é atomicidade. A
+unidade de trabalho transacional entra na Fase 8.
+
 ### `apps/web` — primeira tela (ADR-0011)
 
 Entregue junto do segundo vertical: login, carteira de clientes com linha do tempo,
@@ -194,7 +241,8 @@ funil de propostas (criar → enviar → decidir) e contratos (formalizar → at
 encerrar). Consome **apenas** o SDK gerado — nenhum tipo de API escrito à mão.
 
 O pátio de equipamentos entrou junto com o terceiro vertical, com o filtro de
-disponibilidade por data — a tela que torna visível que a situação é derivada.
+disponibilidade por data — a tela que torna visível que a situação é derivada. As
+locações entraram com o quarto, mostrando os dias de atraso na própria lista.
 
 ### Dívidas conhecidas ao fim da Fase 2
 
@@ -208,4 +256,5 @@ disponibilidade por data — a tela que torna visível que a situação é deriv
 | Negação de acesso não é auditada (nem no REST nem no MCP)                                                           | Agente sondando o catálogo não deixa rastro   | Fase 10, nas duas bordas de uma vez                  |
 | Sem rate limiting por credencial no gateway MCP                                                                     | Agente em laço custa banco                    | Fase 10, junto com o do login                        |
 | Webhook de plugin: janela de DNS rebinding entre resolver e conectar                                                | SSRF residual em cenário elaborado            | Ao introduzir camada de saída controlada (Fase 10)   |
+| Locação: reservar no patrimônio e gravar são duas transações (há compensação, não atomicidade)                      | Falha rara deixa reserva órfã                 | Fase 8, com a unidade de trabalho transacional       |
 | `SECRETS_KEY` não tem rotação                                                                                       | Trocar a chave hoje invalida os segredos      | Quando houver o segundo ambiente de produção         |

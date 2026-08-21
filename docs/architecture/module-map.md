@@ -58,29 +58,36 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 
 ## Responsabilidades, eventos e permissões
 
-| Módulo            | Depende de                           | Eventos publicados (exemplos)                                   | Permissões (exemplos)                                    |
-| ----------------- | ------------------------------------ | --------------------------------------------------------------- | -------------------------------------------------------- |
-| **Identity**      | —                                    | `identity.user.created.v1`                                      | `platform.user.manage`                                   |
-| **Tenancy**       | Identity                             | `tenancy.tenant.created.v1`, `tenancy.entitlement.granted.v1`   | `platform.module.manage`                                 |
-| **Employees**     | Identity                             | `employees.employee.hired.v1`                                   | `employees.employee.read/create`                         |
-| **CRM**           | —                                    | `crm.customer.created.v1`, `crm.customer.updated.v1`            | `crm.customer.read/create/update`                        |
-| **Catalog**       | —                                    | `catalog.item.published.v1`                                     | `catalog.item.read/manage`                               |
-| **Commercial** ✅ | CRM (Catalog: adiado, ver nota)      | `commercial.proposal.sent/approved/rejected.v1`                 | `commercial.proposal.read/create/update/send/approve`    |
-| **Contracts** ✅  | Commercial                           | `contracts.contract.activated/finished/canceled.v1`             | `contracts.contract.read/create/activate/close`          |
-| **Assets** ✅     | —                                    | `assets.asset.registered/unavailable/available/retired.v1`      | `assets.asset.read/manage/hold/retire`                   |
-| **Inventory**     | Catalog                              | `inventory.stock.adjusted.v1`                                   | `inventory.stock.read/adjust`                            |
-| **Operations**    | Contracts, Assets                    | `operations.rental.started.v1`, `operations.rental.finished.v1` | `operations.rental.create`, `operations.schedule.manage` |
-| **Maintenance**   | Assets, Inventory                    | `maintenance.work-order.completed.v1`                           | `maintenance.work-order.schedule`                        |
-| **Billing**       | Contracts, Operations                | `billing.invoice.issued.v1`                                     | `finance.invoice.read`, `billing.invoice.issue`          |
-| **Finance**       | (eventos)                            | `finance.payment.received.v1`                                   | `finance.payment.approve`                                |
-| **Documents**     | (transversal, por contrato genérico) | `documents.document.attached.v1`                                | `documents.document.read/attach`                         |
-| **Notifications** | (eventos)                            | `notifications.message.sent.v1`                                 | `notifications.channel.manage`                           |
+| Módulo            | Depende de                           | Eventos publicados (exemplos)                                 | Permissões (exemplos)                                 |
+| ----------------- | ------------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------- |
+| **Identity**      | —                                    | `identity.user.created.v1`                                    | `platform.user.manage`                                |
+| **Tenancy**       | Identity                             | `tenancy.tenant.created.v1`, `tenancy.entitlement.granted.v1` | `platform.module.manage`                              |
+| **Employees**     | Identity                             | `employees.employee.hired.v1`                                 | `employees.employee.read/create`                      |
+| **CRM**           | —                                    | `crm.customer.created.v1`, `crm.customer.updated.v1`          | `crm.customer.read/create/update`                     |
+| **Catalog**       | —                                    | `catalog.item.published.v1`                                   | `catalog.item.read/manage`                            |
+| **Commercial** ✅ | CRM (Catalog: adiado, ver nota)      | `commercial.proposal.sent/approved/rejected.v1`               | `commercial.proposal.read/create/update/send/approve` |
+| **Contracts** ✅  | Commercial                           | `contracts.contract.activated/finished/canceled.v1`           | `contracts.contract.read/create/activate/close`       |
+| **Assets** ✅     | —                                    | `assets.asset.registered/unavailable/available/retired.v1`    | `assets.asset.read/manage/hold/retire`                |
+| **Inventory**     | Catalog                              | `inventory.stock.adjusted.v1`                                 | `inventory.stock.read/adjust`                         |
+| **Operations** ✅ | Contracts, Assets                    | `operations.rental.started/finished/canceled.v1`              | `operations.rental.read/create/manage`                |
+| **Maintenance**   | Assets, Inventory                    | `maintenance.work-order.completed.v1`                         | `maintenance.work-order.schedule`                     |
+| **Billing**       | Contracts, Operations                | `billing.invoice.issued.v1`                                   | `finance.invoice.read`, `billing.invoice.issue`       |
+| **Finance**       | (eventos)                            | `finance.payment.received.v1`                                 | `finance.payment.approve`                             |
+| **Documents**     | (transversal, por contrato genérico) | `documents.document.attached.v1`                              | `documents.document.read/attach`                      |
+| **Notifications** | (eventos)                            | `notifications.message.sent.v1`                               | `notifications.channel.manage`                        |
 
 > **Nota (Fase 7)** — O Comercial foi entregue sem a dependência de Catalog: no escopo
 > mínimo o item da proposta é descrito à mão, com preço e quantidade. Quando o Catalog
 > existir, o item ganha uma referência opcional — nada do que já está gravado muda.
 > A referência ao CRM passa pela superfície pública (`CrmPublicApi`), nunca pelas
 > tabelas `crm_*`.
+>
+> **Nota (Fase 7)** — Operations é o primeiro módulo que **escreve** em outro: a
+> locação reserva o equipamento chamando `AssetsPublicApi.reserve(...)`, que por
+> sua vez passa pelos casos de uso de Ativos. Não existe coluna "locado" aqui — a
+> garantia contra locação dupla é a restrição de exclusão que já vive em Ativos.
+> `operations.schedule.manage` virou `operations.rental.manage`: no escopo
+> mínimo a agenda não é entidade separada da locação.
 >
 > **Nota (Fase 7)** — Assets foi entregue com quatro permissões, e não com as duas
 > (`read`/`manage`) previstas aqui: operar o pátio (`hold`) é rotina diária de um

@@ -86,7 +86,12 @@ describe.skipIf(!temBancoDeTeste)('Ativos (integração)', () => {
     liberar = new ReleaseHoldUseCase(bloqueiosRepo, audit);
     baixar = new RetireAssetUseCase(ativos, bloqueiosRepo, audit);
     disponibilidade = new CheckAvailabilityUseCase(ativos, bloqueiosRepo);
-    superficiePublica = new AssetsService(ativos, bloqueiosRepo);
+    superficiePublica = new AssetsService(
+      ativos,
+      bloqueiosRepo,
+      bloquear,
+      liberar,
+    );
   });
 
   afterAll(async () => {

@@ -558,6 +558,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/operations/rentals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista locações por contrato, cliente, equipamento ou situação */
+        get: operations["searchRentals"];
+        put?: never;
+        /** Programa uma locação sob um contrato em vigor */
+        post: operations["scheduleRental"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/rentals/{rentalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtém uma locação com situação e dias de atraso */
+        get: operations["getRental"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/rentals/{rentalId}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra a retirada: o equipamento saiu */
+        post: operations["startRental"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/rentals/{rentalId}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra a devolução e libera o equipamento no pátio */
+        post: operations["finishRental"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/operations/rentals/{rentalId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancela uma locação ainda não retirada e libera o equipamento */
+        post: operations["cancelRental"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plugins": {
         parameters: {
             query?: never;
@@ -4222,6 +4308,614 @@ export interface operations {
                 };
             };
             /** @description O bloqueio já havia sido liberado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    searchRentals: {
+        parameters: {
+            query?: {
+                contractId?: string;
+                customerId?: string;
+                assetId?: string;
+                status?: "scheduled" | "active" | "finished" | "canceled";
+                atrasadas?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de locações. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            number: number;
+                            /** Format: uuid */
+                            contractId: string;
+                            /** Format: uuid */
+                            customerId: string;
+                            /** Format: uuid */
+                            assetId: string;
+                            assetCode: string;
+                            /** Format: uuid */
+                            holdId: string;
+                            /** @enum {string} */
+                            status: "scheduled" | "active" | "finished" | "canceled" | "overdue";
+                            /** @enum {string} */
+                            storedStatus: "scheduled" | "active" | "finished" | "canceled";
+                            overdueDays: number;
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            startedAt: string | null;
+                            finishedAt: string | null;
+                            canceledAt: string | null;
+                            closeReason: string | null;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    scheduleRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    contractId: string;
+                    /** Format: uuid */
+                    assetId: string;
+                    /** Format: date-time */
+                    startsAt: string;
+                    /** Format: date-time */
+                    endsAt: string;
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Locação programada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        contractId: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        assetId: string;
+                        assetCode: string;
+                        /** Format: uuid */
+                        holdId: string;
+                        /** @enum {string} */
+                        status: "scheduled" | "active" | "finished" | "canceled" | "overdue";
+                        /** @enum {string} */
+                        storedStatus: "scheduled" | "active" | "finished" | "canceled";
+                        overdueDays: number;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        startedAt: string | null;
+                        finishedAt: string | null;
+                        canceledAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Contrato fora de vigor, período fora da vigência, ou equipamento já comprometido. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    getRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rentalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Locação encontrada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        contractId: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        assetId: string;
+                        assetCode: string;
+                        /** Format: uuid */
+                        holdId: string;
+                        /** @enum {string} */
+                        status: "scheduled" | "active" | "finished" | "canceled" | "overdue";
+                        /** @enum {string} */
+                        storedStatus: "scheduled" | "active" | "finished" | "canceled";
+                        overdueDays: number;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        startedAt: string | null;
+                        finishedAt: string | null;
+                        canceledAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    startRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rentalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Locação em andamento. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        contractId: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        assetId: string;
+                        assetCode: string;
+                        /** Format: uuid */
+                        holdId: string;
+                        /** @enum {string} */
+                        status: "scheduled" | "active" | "finished" | "canceled" | "overdue";
+                        /** @enum {string} */
+                        storedStatus: "scheduled" | "active" | "finished" | "canceled";
+                        overdueDays: number;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        startedAt: string | null;
+                        finishedAt: string | null;
+                        canceledAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description A locação não está programada. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    finishRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rentalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Locação encerrada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        contractId: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        assetId: string;
+                        assetCode: string;
+                        /** Format: uuid */
+                        holdId: string;
+                        /** @enum {string} */
+                        status: "scheduled" | "active" | "finished" | "canceled" | "overdue";
+                        /** @enum {string} */
+                        storedStatus: "scheduled" | "active" | "finished" | "canceled";
+                        overdueDays: number;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        startedAt: string | null;
+                        finishedAt: string | null;
+                        canceledAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    cancelRental: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rentalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Locação cancelada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        contractId: string;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        assetId: string;
+                        assetCode: string;
+                        /** Format: uuid */
+                        holdId: string;
+                        /** @enum {string} */
+                        status: "scheduled" | "active" | "finished" | "canceled" | "overdue";
+                        /** @enum {string} */
+                        storedStatus: "scheduled" | "active" | "finished" | "canceled";
+                        overdueDays: number;
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        startedAt: string | null;
+                        finishedAt: string | null;
+                        canceledAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description O equipamento já saiu. */
             409: {
                 headers: {
                     [name: string]: unknown;

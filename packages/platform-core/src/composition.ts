@@ -22,6 +22,7 @@ import {
   SearchAssetsUseCase,
   UpdateAssetUseCase,
   assetsMcpContribution,
+  AssetsService,
   type AssetsUseCases,
 } from '@ecojotaduo/assets';
 import type { Env } from '@ecojotaduo/config';
@@ -63,6 +64,7 @@ import {
   DrizzleContractRepository,
   GetContractUseCase,
   SearchContractsUseCase,
+  ContractsService,
   type ContractsUseCases,
   type ProposalDirectory,
 } from '@ecojotaduo/contracts';
@@ -77,6 +79,19 @@ import {
   type LeitorDeClientes,
   type PoliticaDeDestino,
 } from '@ecojotaduo/plugin-notifications-example';
+import {
+  CancelRentalUseCase,
+  DrizzleRentalRepository,
+  FinishRentalUseCase,
+  GetRentalUseCase,
+  operationsMcpContribution,
+  ScheduleRentalUseCase,
+  SearchRentalsUseCase,
+  StartRentalUseCase,
+  type AssetDirectory,
+  type ContractDirectory,
+  type OperationsUseCases,
+} from '@ecojotaduo/operations';
 import type {
   PluginRuntime,
   PluginRuntimeProvider,
@@ -148,6 +163,7 @@ export interface NucleoDaPlataforma {
   readonly commercial: CommercialCompleto;
   readonly contracts: ContractsUseCases;
   readonly assets: AssetsUseCases;
+  readonly operations: OperationsUseCases;
   /**
    * Catálogo MCP da instalação. Já sabe filtrar por `AccessGrant`; o gateway
    * só o liga ao transporte.
@@ -451,6 +467,72 @@ export function criarNucleo(
     disponibilidade: new CheckAvailabilityUseCase(ativosRepo, bloqueiosRepo),
   };
 
+  // --- operações ----------------------------------------------------------
+  // O elo que fecha a Fase 7: a locação nasce de um contrato EM VIGOR e
+  // reserva o equipamento no patrimônio. As duas referências passam pelas
+  // superfícies públicas — Operações não conhece `contracts_*` nem `assets_*`.
+  const contratosPublicos = new ContractsService(contratosRepo);
+  const diretorioDeContratos: ContractDirectory = {
+    find: async (tenantId, contractId) => {
+      const contrato = await contratosPublicos.findContract(
+        tenantId,
+        contractId,
+      );
+      return (
+        contrato && {
+          contractId: contrato.contractId,
+          number: contrato.number,
+          customerId: contrato.customerId,
+          title: contrato.title,
+          status: contrato.status,
+          startsOn: contrato.startsOn,
+          endsOn: contrato.endsOn,
+        }
+      );
+    },
+  };
+
+  // Reservar é ESCRITA em outro módulo, e passa pelos casos de uso dele: a
+  // recusa de equipamento comprometido e a auditoria do bloqueio ficam num
+  // lugar só, valendo igual para quem chama pelo REST, pela tool MCP ou daqui.
+  const ativosPublicos = new AssetsService(
+    ativosRepo,
+    bloqueiosRepo,
+    assets.bloquear,
+    assets.liberar,
+  );
+  const diretorioDeAtivos: AssetDirectory = {
+    find: async (tenantId, assetId) => {
+      const ativo = await ativosPublicos.findAsset(tenantId, assetId);
+      return (
+        ativo && {
+          assetId: ativo.assetId,
+          code: ativo.code,
+          name: ativo.name,
+          availability: ativo.availability,
+        }
+      );
+    },
+    reservar: (tenantId, entrada) => ativosPublicos.reserve(tenantId, entrada),
+    liberar: (tenantId, holdId) =>
+      ativosPublicos.releaseReservation(tenantId, holdId),
+  };
+
+  const locacoesRepo = new DrizzleRentalRepository(db);
+  const operations: OperationsUseCases = {
+    programar: new ScheduleRentalUseCase(
+      locacoesRepo,
+      diretorioDeContratos,
+      diretorioDeAtivos,
+      audit,
+    ),
+    obter: new GetRentalUseCase(locacoesRepo),
+    pesquisar: new SearchRentalsUseCase(locacoesRepo),
+    retirar: new StartRentalUseCase(locacoesRepo, audit),
+    devolver: new FinishRentalUseCase(locacoesRepo, diretorioDeAtivos, audit),
+    cancelar: new CancelRentalUseCase(locacoesRepo, diretorioDeAtivos, audit),
+  };
+
   return {
     handle,
     catalogo,
@@ -461,6 +543,7 @@ export function criarNucleo(
     commercial,
     contracts,
     assets,
+    operations,
     plugins,
     // A tool do plugin entra no MESMO catálogo das tools de módulo. Quem
     // decide se ela aparece é o entitlement `plugin.<id>`, não código de
@@ -470,6 +553,7 @@ export function criarNucleo(
       commercialMcpContribution(commercial),
       contractsMcpContribution(contracts),
       assetsMcpContribution(assets),
+      operationsMcpContribution(operations),
       notificationsMcpContribution(notificacoes, runtimeDeNotificacoes),
     ]),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),

@@ -1,5 +1,6 @@
 export * from './manifest';
 export * from './contracts.tokens';
+export * from './contracts/public-api';
 
 // Domínio
 export {
@@ -46,3 +47,4 @@ export {
   contractsMcpContribution,
   type ContractsUseCases,
 } from './adapters/mcp/contribution';
+export { ContractsService } from './contracts.service';

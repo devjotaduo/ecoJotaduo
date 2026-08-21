@@ -42,6 +42,15 @@ import {
   CONTRACTS_SEARCH,
 } from '@ecojotaduo/contracts';
 import {
+  RentalsController,
+  OPERATIONS_CANCEL,
+  OPERATIONS_FINISH,
+  OPERATIONS_GET,
+  OPERATIONS_SCHEDULE,
+  OPERATIONS_SEARCH,
+  OPERATIONS_START,
+} from '@ecojotaduo/operations';
+import {
   NotificationsController,
   NOTIFICATIONS_RUNTIME,
   NOTIFICATIONS_SEND,
@@ -86,6 +95,18 @@ function doNucleo<K extends keyof NucleoDaPlataforma>(token: symbol, chave: K) {
   return {
     provide: token,
     useFactory: (nucleo: NucleoDaPlataforma) => nucleo[chave],
+    inject: [PLATFORM_CORE],
+  };
+}
+
+/** Idem, para os casos de uso de Operações. */
+function deOperacoes<K extends keyof NucleoDaPlataforma['operations']>(
+  token: symbol,
+  chave: K,
+) {
+  return {
+    provide: token,
+    useFactory: (nucleo: NucleoDaPlataforma) => nucleo.operations[chave],
     inject: [PLATFORM_CORE],
   };
 }
@@ -170,6 +191,7 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     ContractsController,
     AssetsController,
     AssetHoldsController,
+    RentalsController,
     // Administração de extensões e a borda do plugin de exemplo — este
     // segundo é o que prova que capacidade de plugin só existe quando a
     // empresa habilita.
@@ -223,6 +245,12 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     deAtivos(ASSETS_RELEASE, 'liberar'),
     deAtivos(ASSETS_RETIRE, 'baixar'),
     deAtivos(ASSETS_AVAILABILITY, 'disponibilidade'),
+    deOperacoes(OPERATIONS_SCHEDULE, 'programar'),
+    deOperacoes(OPERATIONS_GET, 'obter'),
+    deOperacoes(OPERATIONS_SEARCH, 'pesquisar'),
+    deOperacoes(OPERATIONS_START, 'retirar'),
+    deOperacoes(OPERATIONS_FINISH, 'devolver'),
+    deOperacoes(OPERATIONS_CANCEL, 'cancelar'),
     doPlugins(PLUGINS_LIST, 'listar'),
     doPlugins(PLUGINS_INSTALL, 'instalar'),
     doPlugins(PLUGINS_CONFIGURE, 'configurar'),

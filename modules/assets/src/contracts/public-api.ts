@@ -42,6 +42,35 @@ export interface AssetsPublicApi {
     startsAt: Date,
     endsAt: Date,
   ): Promise<AssetAvailabilityAnswer | null>;
+
+  /**
+   * Tira o equipamento de circulação num período, em nome de outro módulo.
+   *
+   * Quem chama descreve o COMPROMISSO (uma locação, uma ordem de serviço); o
+   * bloqueio em si continua sendo assunto de Ativos, com as regras dele:
+   * equipamento baixado recusa, período já comprometido recusa, e a restrição
+   * de exclusão do banco fecha a corrida. Lança erro de domínio de Ativos —
+   * quem chama deixa subir, e o filtro traduz para o status certo.
+   */
+  reserve(
+    tenantId: string,
+    entrada: {
+      assetId: string;
+      startsAt: Date;
+      endsAt: Date;
+      notes?: string | null;
+    },
+  ): Promise<AssetReservation>;
+
+  /** Devolve o equipamento à circulação agora, encerrando a reserva. */
+  releaseReservation(tenantId: string, holdId: string): Promise<void>;
+}
+
+export interface AssetReservation {
+  readonly holdId: string;
+  readonly assetId: string;
+  readonly startsAt: Date;
+  readonly endsAt: Date;
 }
 
 export const ASSETS_PUBLIC_API = Symbol.for('ecojotaduo.assets.publicApi');

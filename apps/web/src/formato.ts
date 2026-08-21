@@ -76,6 +76,8 @@ export const SITUACAO: Record<string, string> = {
   available: 'Disponível',
   held: 'Bloqueado',
   retired: 'Baixado',
+  // Operações: `overdue` sai do prazo vencido, também sem coluna no banco.
+  overdue: 'Atrasada',
 };
 
 /** Motivos de bloqueio de um ativo. */

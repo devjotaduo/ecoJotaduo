@@ -1,5 +1,10 @@
 import type {
+  HoldAssetUseCase,
+  ReleaseHoldUseCase,
+} from './application/assets.use-cases';
+import type {
   AssetAvailabilityAnswer,
+  AssetReservation,
   AssetsPublicApi,
   AssetSummary,
 } from './contracts/public-api';
@@ -15,6 +20,12 @@ export class AssetsService implements AssetsPublicApi {
   constructor(
     private readonly ativos: AssetRepository,
     private readonly bloqueios: AssetHoldRepository,
+    // Reservar passa pelos CASOS DE USO, e não direto no repositório: a
+    // verificação de sobreposição, a recusa de ativo baixado e a auditoria
+    // ficam num lugar só, valendo igual para a borda REST, a tool MCP e o
+    // módulo que chama daqui.
+    private readonly bloquear: HoldAssetUseCase,
+    private readonly liberar: ReleaseHoldUseCase,
   ) {}
 
   async findAsset(
@@ -71,5 +82,37 @@ export class AssetsService implements AssetsPublicApi {
       available: conflitos.length === 0,
       heldUntil: primeiro ? primeiro.periodoEfetivo.fim : null,
     };
+  }
+
+  async reserve(
+    tenantId: string,
+    entrada: {
+      assetId: string;
+      startsAt: Date;
+      endsAt: Date;
+      notes?: string | null;
+    },
+  ): Promise<AssetReservation> {
+    const bloqueio = await this.bloquear.execute({
+      tenantId,
+      assetId: entrada.assetId,
+      // Reserva de outro módulo é sempre compromisso com alguém, nunca
+      // manutenção — o motivo diz por que o equipamento está fora.
+      reason: 'reserved',
+      startsAt: entrada.startsAt,
+      endsAt: entrada.endsAt,
+      notes: entrada.notes,
+    });
+
+    return {
+      holdId: bloqueio.id,
+      assetId: bloqueio.assetId,
+      startsAt: bloqueio.startsAt,
+      endsAt: bloqueio.endsAt,
+    };
+  }
+
+  async releaseReservation(tenantId: string, holdId: string): Promise<void> {
+    await this.liberar.execute({ tenantId, holdId });
   }
 }

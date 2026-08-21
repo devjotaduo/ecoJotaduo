@@ -128,6 +128,10 @@ export function migracoesDaPlataforma(): {
       directory: diretorioDeMigracoes('modules/contracts'),
     },
     { moduleId: 'assets', directory: diretorioDeMigracoes('modules/assets') },
+    {
+      moduleId: 'operations',
+      directory: diretorioDeMigracoes('modules/operations'),
+    },
   ];
 }
 
@@ -226,6 +230,8 @@ function papelDaAplicacao(): string {
 
 const TABELAS = [
   'audit_events',
+  'operations_rentals',
+  'operations_rental_numbers',
   'assets_asset_holds',
   'assets_assets',
   'contracts_contracts',

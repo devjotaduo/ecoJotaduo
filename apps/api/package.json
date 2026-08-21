@@ -25,6 +25,7 @@
     "@ecojotaduo/database": "workspace:*",
     "@ecojotaduo/http-kit": "workspace:*",
     "@ecojotaduo/identity": "workspace:*",
+    "@ecojotaduo/operations": "workspace:*",
     "@ecojotaduo/permissions": "workspace:*",
     "@ecojotaduo/platform-core": "workspace:*",
     "@ecojotaduo/platform-kernel": "workspace:*",

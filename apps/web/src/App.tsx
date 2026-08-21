@@ -11,6 +11,7 @@ import { ProvedorDeSessao, useSessao } from './api/sessao';
 import { Ativos } from './paginas/Ativos';
 import { Cliente, Clientes } from './paginas/Clientes';
 import { Contratos } from './paginas/Contratos';
+import { Locacoes } from './paginas/Locacoes';
 import { Login } from './paginas/Login';
 import { Proposta, Propostas } from './paginas/Propostas';
 import { Botao } from './ui/componentes';
@@ -59,6 +60,9 @@ function Interno() {
           {pode('assets.asset.read') ? (
             <NavLink to="/ativos">Ativos</NavLink>
           ) : null}
+          {pode('operations.rental.read') ? (
+            <NavLink to="/locacoes">Locações</NavLink>
+          ) : null}
         </nav>
         <div className="cabecalho__conta">
           <span className="cabecalho__empresa">{acesso?.tenantName}</span>
@@ -75,6 +79,7 @@ function Interno() {
         <Route path="/propostas/:proposalId" element={<RotaDaProposta />} />
         <Route path="/contratos" element={<Contratos />} />
         <Route path="/ativos" element={<Ativos />} />
+        <Route path="/locacoes" element={<Locacoes />} />
         <Route path="*" element={<Navigate to="/clientes" replace />} />
       </Routes>
     </div>
