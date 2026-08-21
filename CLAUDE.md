@@ -131,6 +131,16 @@ tem efeito imediato. Permissões seguem `modulo.recurso.acao`; o prefixo `platfo
 o único isento de entitlement. Rotas usam `@RequirePermissions(...)` ou `@Public()`.
 Nunca aceite `tenantId` como parâmetro de rota, body ou tool MCP.
 
+A resolução de acesso roda numa **transação só** (unidade de trabalho): são cinco
+consultas por requisição autenticada, e cinco transações saturavam o pool antes de
+qualquer outra coisa. O ganho é custo, não foto consistente — o banco é `read
+committed`.
+
+Recusa por permissão, escopo ou módulo é **auditada** nas duas bordas
+(`platform.access.denied`, com a razão). Recusa por token, vínculo ou empresa não é:
+ali ainda não há empresa autenticada, e escolher um tenant a partir de um token
+forjável seria inventar rastro.
+
 Erros seguem Problem Details (RFC 9457) via `ProblemDetailsFilter`. Falhas de
 autenticação são **deliberadamente uniformes** (401 com o mesmo texto para senha
 errada, usuário inexistente e empresa inexistente); o motivo real vai só para o log.
@@ -254,6 +264,30 @@ um provedor gerenciado que bloqueie extensões faria a migração falhar no boot
 `@Inject(Reflector)`), e providers usam `useFactory` + `inject`. O Vitest transpila com
 esbuild, que não emite `design:paramtypes` — injeção por tipo funciona em produção mas
 quebra os testes E2E. Tokens ficam em `apps/api/src/bootstrap/tokens.ts`.
+
+### Limites, cabeçalhos e log (ADR-0014)
+
+O limite de requisições é **por credencial**, não por IP: um ERP roda atrás de NAT
+corporativo, e um balde por endereço puniria a empresa inteira pelo uso de uma
+pessoa. O login tem balde próprio (por endereço — ali ainda não há credencial). O
+contador vive na memória do processo: sem Redis por decisão (ADR-0012), com N
+réplicas o teto efetivo é N vezes maior.
+
+Toda borda HTTP liga três coisas — contexto, cabeçalhos de segurança e log de
+requisição. Na API isso está em `prepararBordaHttp`, chamada **também pelos testes
+E2E**: se cada teste tivesse a própria lista, um plugin novo passaria a valer em
+produção e não no teste, e o teste continuaria verde.
+
+Registro de plugin do Fastify é **adiado até o boot**: use `await app.register(...)`
+antes das rotas. Com `void`, o hook chega depois delas e não vale — o limitador
+ficava carregado e inerte, que é pior que não existir.
+
+Uma linha JSON de log por requisição responde quem, qual empresa, qual interface,
+qual rota, quanto tempo e qual resultado. Nunca entram corpo, query string nem
+credencial: log atravessa processos, fica guardado por meses e sai da plataforma —
+mesmo cuidado que vale para evento de domínio.
+
+Procedimentos de incidente e de backup/restauração: `docs/operations/runbooks.md`.
 
 ## Testes
 

@@ -1,7 +1,11 @@
 import cookie from '@fastify/cookie';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 
-import { registrarContextoDeRequisicao } from './request-context';
+import {
+  registrarContextoDeRequisicao,
+  registrarHsts,
+  registrarLogDeRequisicao,
+} from './request-context';
 
 /**
  * Preparo da borda HTTP: tudo o que precisa existir no Fastify **antes** das
@@ -21,9 +25,14 @@ import { registrarContextoDeRequisicao } from './request-context';
  */
 export async function prepararBordaHttp(
   app: NestFastifyApplication,
+  opcoes: { readonly hsts?: boolean } = {},
 ): Promise<void> {
   const instancia = app.getHttpAdapter().getInstance();
   registrarContextoDeRequisicao(instancia);
+  if (opcoes.hsts) {
+    registrarHsts(instancia);
+  }
+  registrarLogDeRequisicao(instancia);
   // Lê e escreve o cookie `httpOnly` do refresh token (ver
   // `auth/refresh-cookie.ts`).
   await app.register(cookie);

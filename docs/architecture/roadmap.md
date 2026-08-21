@@ -61,7 +61,12 @@ Ficou **fora** desta entrega, deliberadamente:
    backoff, DLQ e replay; `apps/worker` como terceiro composition root.
 10. ✅ Fase 9 — MCP Apps: contrato de interface no `mcp-kit`, documento
     montado pelo gateway com CSP fechada e runtime embutido, painel do pátio
-    como exemplo. Próximo: **Fase 10** (observabilidade e segurança).
+    como exemplo.
+11. ✅ Fase 10 — Observabilidade e segurança: dívidas de transação e corrida
+    pagas, negação de acesso auditada nas duas bordas, limite de requisições
+    por credencial, refresh token em cookie `httpOnly`, cabeçalhos de
+    segurança, log estruturado por requisição e runbooks.
+    Próximo: **Fase 11** (implantação e escala).
 
 ### Fase 5 — escopo entregue
 
@@ -289,8 +294,8 @@ Ficou **fora**, deliberadamente (detalhe no ADR-0012):
 | Item                                    | Por quê                                                             | Quando                       |
 | --------------------------------------- | ------------------------------------------------------------------- | ---------------------------- |
 | BullMQ / broker externo                 | O outbox já é a fila; broker seria um segundo lugar para a mensagem | Ao surgir consumidor externo |
-| Chave de idempotência na entrada da API | Sem retry automático de cliente hoje                                | Fase 10                      |
-| Circuit breaker e rate limit de saída   | O backoff já contém um destino instável                             | Fase 10                      |
+| Chave de idempotência na entrada da API | Sem retry automático de cliente hoje                                | Fase 11                      |
+| Circuit breaker e rate limit de saída   | O backoff já contém um destino instável                             | Fase 11                      |
 | Consumo de evento entre módulos         | Nenhum precisa hoje; o primeiro consumidor real é um plugin         | Quando um pedir              |
 | Retenção / expurgo do outbox            | Sem volume que justifique; apagar cedo perde histórico              | Fase 11                      |
 | Ordenação estrita por agregado          | Nenhum handler depende de ordem                                     | Quando um depender           |
@@ -329,18 +334,67 @@ Ficou **fora**, deliberadamente (detalhe no ADR-0013):
 | `updateModelContext` a partir do app | Deixa o app influenciar o que o modelo lê                              | Junto com o item acima   |
 | App de plugin (third-party)          | O contrato já serve; falta o primeiro que peça                         | Quando um pedir          |
 | Framework de UI no documento         | O painel é uma lista; framework aqui é peso morto                      | Se um app ficar complexo |
-| Teste em navegador de verdade        | O E2E cobre montagem, CSP e autorização                                | Fase 10                  |
+| Teste em navegador de verdade        | O E2E cobre montagem, CSP e autorização                                | Fase 11                  |
+
+### Fase 10 — Observabilidade e segurança (ADR-0014)
+
+A primeira fase que não construiu capacidade nova: pagou o que estava anotado.
+O item mais antigo esperava desde a Fase 3.
+
+**Dívidas pagas**
+
+| Dívida                                            | Como                                                                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Resolver acesso abria 5 transações por requisição | Envolvido na unidade de trabalho da Fase 8 — nenhum repositório mudou de assinatura                           |
+| Rotação de refresh token não era atômica          | Revoga antes de emitir, com `revoked_at is null` no próprio `UPDATE`: o banco escolhe a vencedora             |
+| Negação de acesso não deixava rastro              | `platform.access.denied` nas duas bordas, com a razão (`entitlement` / `permission` / `scope`)                |
+| Sem rate limiting                                 | `@fastify/rate-limit` nas duas bordas, com balde por credencial e balde separado para o login                 |
+| Refresh token no `sessionStorage`                 | Cookie `httpOnly` + `sameSite=strict` + `path` restrito; `POST /auth/logout` passou a existir por necessidade |
+
+**Achado de brinde.** A instabilidade do teste de backoff do outbox não era do
+teste: o `lote()` comparava `available_at` (escrito pelo banco) com
+`new Date()` (relógio do processo). Um worker com relógio adiantado pegaria o
+evento antes da hora; atrasado, o deixaria parado. Seleção e adiamento passaram
+a usar `now()` do banco.
+
+**Correção de rumo.** A unidade de trabalho ganhou uma proteção que foi
+retirada no mesmo dia: um erro alto quando a consulta pedia escopo de usuário
+numa unidade sem ele. Ela quebrou 61 testes por um problema que este código não
+tem — a policy do outbox nem lê `app.user_id`. Ficou o comportamento certo, que
+é **refixar** o escopo: dentro da unidade a consulta responde igual a fora, sem
+cerimônia em nenhum ponto de chamada.
+
+**Critério de aceite.** Para qualquer requisição é possível responder quem fez,
+de qual empresa, por qual interface, o quê, quanto tempo e com que resultado —
+pela trilha de auditoria (ações de negócio e recusas) e por uma linha JSON de
+log por requisição (o resto: leitura, erro, latência).
+
+**Também entrou:** cabeçalhos de segurança explícitos nas duas bordas (HSTS só
+em produção), `docs/operations/runbooks.md` com os procedimentos de incidente e
+o de backup/restauração — incluindo a verificação obrigatória de que a RLS
+sobreviveu à restauração.
+
+Ficou **fora**, deliberadamente (detalhe no ADR-0014):
+
+| Item                              | Por quê                                                                                                                                        | Quando                  |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| OpenTelemetry                     | O `correlationId` já atravessa API, gateway e worker (inclusive pelo outbox) e é consultável. OTel só soma com coletor e backend para exportar | Fase 11                 |
+| Dashboards e alertas              | Dependem de um destino de métricas que ainda não existe                                                                                        | Fase 11                 |
+| Teste de carga                    | Sem ambiente parecido com produção, mede a máquina de quem rodou                                                                               | Fase 11                 |
+| Store compartilhado de rate limit | Só passa a importar com múltiplas réplicas                                                                                                     | Fase 11                 |
+| Rotação de `SECRETS_KEY`          | Exige duas chaves ativas ao mesmo tempo e recifragem por empresa                                                                               | 2º ambiente             |
+| Token anti-CSRF                   | Nenhuma rota de negócio é autenticada por cookie (ADR-0011)                                                                                    | Se alguma passar a usar |
 
 ### Dívidas conhecidas ao fim da Fase 2
 
-| Item                                                                                                                | Impacto                                       | Quando resolver                                                |
-| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------- |
-| Resolver o acesso abre **5** transações por requisição (tenant, vínculo, papéis, contratações, plugins habilitados) | Latência extra em toda rota autenticada       | Vencida desde a Fase 3; agrupar em uma transação               |
-| ABAC ainda é só o gancho de política (só RBAC + escopos estão em uso)                                               | Regras de alçada por valor não existem        | Fase 7, com Comercial/Financeiro                               |
-| Sem rate limiting no login                                                                                          | Força bruta só é contida pelo custo do scrypt | Fase 10                                                        |
-| Rotação de refresh token não é atômica (emite e depois revoga)                                                      | Janela mínima de corrida em uso concorrente   | A unidade de trabalho já existe (Fase 8); falta aplicá-la aqui |
-| Sem cache — a regra de segmentação por tenant existe, mas não tem sujeito                                           | Nenhum                                        | Ao introduzir o primeiro cache                                 |
-| Negação de acesso não é auditada (nem no REST nem no MCP)                                                           | Agente sondando o catálogo não deixa rastro   | Fase 10, nas duas bordas de uma vez                            |
-| Sem rate limiting por credencial no gateway MCP                                                                     | Agente em laço custa banco                    | Fase 10, junto com o do login                                  |
-| Webhook de plugin: janela de DNS rebinding entre resolver e conectar                                                | SSRF residual em cenário elaborado            | Ao introduzir camada de saída controlada (Fase 10)             |
-| `SECRETS_KEY` não tem rotação                                                                                       | Trocar a chave hoje invalida os segredos      | Quando houver o segundo ambiente de produção                   |
+| Item                                                                      | Impacto                                  | Quando resolver                                                 |
+| ------------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- |
+| ~~Resolver o acesso abre **5** transações por requisição~~                | —                                        | ✅ Fase 10 — uma transação só, pela unidade de trabalho         |
+| ABAC ainda é só o gancho de política (só RBAC + escopos estão em uso)     | Regras de alçada por valor não existem   | Fase 7, com Comercial/Financeiro                                |
+| ~~Sem rate limiting no login~~                                            | —                                        | ✅ Fase 10 — balde próprio, por endereço                        |
+| ~~Rotação de refresh token não é atômica~~                                | —                                        | ✅ Fase 10 — revoga antes de emitir, condição no próprio UPDATE |
+| Sem cache — a regra de segmentação por tenant existe, mas não tem sujeito | Nenhum                                   | Ao introduzir o primeiro cache                                  |
+| ~~Negação de acesso não é auditada~~                                      | —                                        | ✅ Fase 10 — `platform.access.denied` nas duas bordas           |
+| ~~Sem rate limiting por credencial no gateway MCP~~                       | —                                        | ✅ Fase 10                                                      |
+| Webhook de plugin: janela de DNS rebinding entre resolver e conectar      | SSRF residual em cenário elaborado       | Ao introduzir camada de saída controlada (Fase 11)              |
+| `SECRETS_KEY` não tem rotação                                             | Trocar a chave hoje invalida os segredos | Quando houver o segundo ambiente de produção                    |

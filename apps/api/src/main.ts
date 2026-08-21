@@ -22,7 +22,8 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
     new FastifyAdapter(),
   );
 
-  await prepararBordaHttp(app);
+  // HSTS só em produção: sob HTTP puro o navegador ignora e em dev atrapalha.
+  await prepararBordaHttp(app, { hsts: env.NODE_ENV === 'production' });
   await registrarLimiteDeRequisicoes(app, env);
   app.useGlobalFilters(new ProblemDetailsFilter());
   // Dispara o OnApplicationShutdown de DatabaseLifecycle em SIGTERM/SIGINT.

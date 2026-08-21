@@ -5,6 +5,10 @@ import {
   criarNucleo,
   type NucleoDaPlataforma,
 } from '@ecojotaduo/platform-core';
+import {
+  CABECALHOS_DE_SEGURANCA,
+  linhaDeRequisicao,
+} from '@ecojotaduo/platform-kernel';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import rateLimit from '@fastify/rate-limit';
@@ -64,6 +68,36 @@ export async function criarGateway(env: Env): Promise<Gateway> {
   // aqui, o limitador ficava carregado e inerte — pior que não existir, porque
   // parece protegido.
   await app.register(rateLimit, opcoesDeRateLimit(env));
+
+  // Os MESMOS cabeçalhos da API REST. A borda MCP responde JSON como a outra,
+  // e ser a borda frouxa é como um afrouxamento acaba chegando à produção.
+  app.addHook('onRequest', (_requisicao, resposta, feito) => {
+    for (const [nome, valor] of Object.entries(CABECALHOS_DE_SEGURANCA)) {
+      void resposta.header(nome, valor);
+    }
+    feito();
+  });
+
+  /**
+   * Uma linha por chamada, com quem, de qual empresa, quanto tempo e com que
+   * resultado — o critério de aceite da Fase 10 vale para as duas bordas.
+   *
+   * O contexto da sessão é montado dentro do handler, então aqui ele já não
+   * está ativo: o que se registra é o que a própria requisição carrega.
+   */
+  app.addHook('onResponse', (requisicao, resposta, feito) => {
+    app.log.info(
+      linhaDeRequisicao({
+        method: requisicao.method,
+        route: requisicao.routeOptions?.url ?? requisicao.url,
+        status: resposta.statusCode,
+        durationMs: Math.round(resposta.elapsedTime),
+        correlationId: String(resposta.getHeader(CORRELATION_HEADER) ?? ''),
+        channel: 'mcp',
+      }),
+    );
+    feito();
+  });
 
   app.get('/health', () => ({ status: 'ok', service: 'mcp-gateway' }));
 
