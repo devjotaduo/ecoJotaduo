@@ -12,6 +12,11 @@ import {
   type Tool,
 } from '@modelcontextprotocol/sdk/types.js';
 
+import {
+  montarDocumentoDoApp,
+  RESOURCE_MIME_TYPE,
+  RESOURCE_URI_META_KEY,
+} from './apps';
 import type { SessaoMcp } from './authorize';
 import { comoErroDeTool, protocolo } from './errors';
 
@@ -53,6 +58,10 @@ export function criarServidorMcp(
   const executar = <T>(fn: () => Promise<T>): Promise<T> =>
     runWithContext(sessao.contexto, fn);
 
+  /** A interface está no recorte desta empresa e desta credencial? */
+  const appVisivel = (uri: string): boolean =>
+    catalogo.appsDe(sessao.grant).some((app) => app.uri === uri);
+
   server.setRequestHandler(
     ListToolsRequestSchema,
     protocolo(() => ({
@@ -63,6 +72,12 @@ export function criarServidorMcp(
         // que o agente lê não tem como divergir do que o servidor aceita.
         inputSchema: jsonSchemaDeZod(tool.inputSchema) as Tool['inputSchema'],
         annotations: { readOnlyHint: tool.readOnly },
+        // Só aponta para a interface se ela estiver no recorte DESTA empresa:
+        // sugerir uma tela que o host não conseguiria ler daria erro na cara
+        // de quem usa, sem ganho nenhum.
+        ...(tool.appUri && appVisivel(tool.appUri)
+          ? { _meta: { [RESOURCE_URI_META_KEY]: tool.appUri } }
+          : {}),
       })),
     })),
   );
@@ -79,7 +94,17 @@ export function criarServidorMcp(
         const resultado = await executar(() =>
           tool.handle(entrada as never, sessao.capacidade),
         );
-        return { content: [conteudoDeTexto(resultado)] };
+        // `content` é o resultado de sempre — é o que um host sem suporte a
+        // MCP Apps lê, e nada de negócio depende da interface. O
+        // `structuredContent` é a MESMA resposta, na forma que a interface
+        // consome sem reparsear texto.
+        return {
+          content: [conteudoDeTexto(resultado)],
+          ...(ehObjeto(resultado) ? { structuredContent: resultado } : {}),
+          ...(tool.appUri && appVisivel(tool.appUri)
+            ? { _meta: { [RESOURCE_URI_META_KEY]: tool.appUri } }
+            : {}),
+        };
       } catch (erro) {
         return comoErroDeTool(erro);
       }
@@ -87,13 +112,23 @@ export function criarServidorMcp(
   );
 
   /**
-   * `resources/list` fica vazio de propósito: os recursos do CRM são por
-   * cliente, e enumerar a carteira inteira como recurso não escala nem
-   * respeita paginação. A descoberta acontece pelos templates.
+   * `resources/list` traz só as interfaces (`ui://`), que têm URI fixa.
+   *
+   * Os recursos de negócio ficam de fora de propósito: são por cliente, e
+   * enumerar a carteira inteira não escala nem respeita paginação — a
+   * descoberta deles acontece pelos templates, logo abaixo.
    */
   server.setRequestHandler(
     ListResourcesRequestSchema,
-    protocolo(() => ({ resources: [] })),
+    protocolo(() => ({
+      resources: catalogo.appsDe(sessao.grant).map((app) => ({
+        uri: app.uri,
+        name: app.name,
+        title: app.title,
+        description: app.description,
+        mimeType: RESOURCE_MIME_TYPE,
+      })),
+    })),
   );
 
   server.setRequestHandler(
@@ -112,6 +147,23 @@ export function criarServidorMcp(
     ReadResourceRequestSchema,
     protocolo(async (requisicao) => {
       const { uri } = requisicao.params;
+
+      // Interface interativa: o documento é montado aqui, com a CSP e o
+      // runtime do protocolo. A autorização é a mesma das outras capacidades
+      // — app fora do recorte da empresa não é legível nem com a URI em mãos.
+      if (uri.startsWith('ui://')) {
+        const app = catalogo.acharApp(sessao.grant, uri);
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: RESOURCE_MIME_TYPE,
+              text: montarDocumentoDoApp(app),
+            },
+          ],
+        };
+      }
+
       const { resource, variaveis } = catalogo.acharResource(sessao.grant, uri);
       const conteudo = await executar(() =>
         resource.read(variaveis, sessao.capacidade),
@@ -154,6 +206,10 @@ export function criarServidorMcp(
   );
 
   return server;
+}
+
+function ehObjeto(valor: unknown): valor is Record<string, unknown> {
+  return typeof valor === 'object' && valor !== null && !Array.isArray(valor);
 }
 
 function conteudoDeTexto(valor: unknown) {

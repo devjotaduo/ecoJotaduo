@@ -64,4 +64,5 @@ export {
   assetsMcpContribution,
   type AssetsUseCases,
 } from './adapters/mcp/contribution';
+export { patioApp, PATIO_APP_URI } from './adapters/mcp/patio.app';
 export { AssetsService } from './assets.service';

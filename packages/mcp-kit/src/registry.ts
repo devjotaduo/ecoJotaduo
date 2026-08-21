@@ -6,6 +6,7 @@ import {
 import { z } from 'zod';
 
 import type {
+  McpAppDefinition,
   McpCapability,
   McpContribution,
   McpPromptDefinition,
@@ -58,6 +59,25 @@ export class RecursoDesconhecidoError extends Error {
   }
 }
 
+export class AppDesconhecidoError extends Error {
+  constructor(uri: string) {
+    super(
+      `Interface "${uri}" não existe ou não está disponível para esta empresa.`,
+    );
+    this.name = 'AppDesconhecidoError';
+  }
+}
+
+/** Tool que aponta para um app inexistente renderizaria uma tela em branco. */
+export class AppInexistenteError extends Error {
+  constructor(tool: string, uri: string) {
+    super(
+      `A tool "${tool}" aponta para a interface "${uri}", que nenhum módulo declara.`,
+    );
+    this.name = 'AppInexistenteError';
+  }
+}
+
 export class PromptDesconhecidoError extends Error {
   constructor(name: string) {
     super(
@@ -79,16 +99,19 @@ export class McpCatalog {
   private readonly tools: readonly McpToolDefinition[];
   private readonly resources: readonly McpResourceDefinition[];
   private readonly prompts: readonly McpPromptDefinition[];
+  private readonly apps: readonly McpAppDefinition[];
 
   constructor(contribuicoes: readonly McpContribution[]) {
     this.tools = contribuicoes.flatMap((c) => c.tools);
     this.resources = contribuicoes.flatMap((c) => c.resources);
     this.prompts = contribuicoes.flatMap((c) => c.prompts);
+    this.apps = contribuicoes.flatMap((c) => c.apps ?? []);
 
     for (const capacidade of [
       ...this.tools,
       ...this.resources,
       ...this.prompts,
+      ...this.apps,
     ]) {
       if (capacidade.requiredPermissions.length === 0) {
         throw new CapabilidadeSemPermissaoError(capacidade.name);
@@ -98,6 +121,14 @@ export class McpCatalog {
     const duplicado = nomes.find((nome, i) => nomes.indexOf(nome) !== i);
     if (duplicado) {
       throw new Error(`Duas tools MCP disputam o nome "${duplicado}".`);
+    }
+
+    // Falha na montagem, e não na primeira chamada: uma tool que aponta para
+    // interface inexistente renderizaria tela em branco no host de quem a usa.
+    for (const tool of this.tools) {
+      if (tool.appUri && !this.apps.some((app) => app.uri === tool.appUri)) {
+        throw new AppInexistenteError(tool.name, tool.appUri);
+      }
     }
   }
 
@@ -111,6 +142,20 @@ export class McpCatalog {
 
   promptsDe(grant: AccessGrant): McpPromptDefinition[] {
     return filtrar(this.prompts, grant);
+  }
+
+  appsDe(grant: AccessGrant): McpAppDefinition[] {
+    return filtrar(this.apps, grant);
+  }
+
+  /** Lança `AppDesconhecidoError` quando o grant não alcança a interface. */
+  acharApp(grant: AccessGrant, uri: string): McpAppDefinition {
+    const app = this.apps.find((candidato) => candidato.uri === uri);
+    if (!app) {
+      throw new AppDesconhecidoError(uri);
+    }
+    exigir(grant, app.requiredPermissions);
+    return app;
   }
 
   /** Lança `ToolDesconhecidaError` quando o grant não alcança a tool. */

@@ -124,3 +124,25 @@ amarrar a chamada do agente ao registro de auditoria.
 | MCP Apps (UI interativa)               | Fase 9                          |
 | `outputSchema` / `structuredContent`   | Quando um host consumidor pedir |
 | Rate limiting por credencial           | Fase 10                         |
+
+## Interfaces interativas (MCP Apps)
+
+Algumas tools sugerem uma **interface** que o host renderiza num iframe
+isolado. Hoje há uma: `assets.asset.search` aponta para `ui://assets/patio.html`,
+o quadro do pátio de equipamentos.
+
+A interface é **sugestão**. A tool devolve o mesmo resultado de sempre em
+`content` (e agora também em `structuredContent`), e um host sem suporte a Apps
+não perde nada — nenhuma decisão de negócio depende de a tela ter sido
+renderizada.
+
+O documento é montado pelo gateway, com:
+
+- `Content-Security-Policy: default-src 'none'` — e `connect-src` fechado, a
+  menos que o app declare domínios. Sem isso, um app seria um canal de saída.
+- o runtime do protocolo embutido, porque buscar de CDN é uma requisição que a
+  própria CSP barra.
+
+A autorização é a mesma das outras capacidades: a interface aparece em
+`resources/list` só para quem alcança as permissões dela, e `resources/read`
+reautoriza — a URI em mãos não abre nada. Ver ADR-0013.

@@ -18,6 +18,7 @@ import type {
   UpdateAssetUseCase,
 } from '../../application/assets.use-cases';
 import { MOTIVOS_DE_BLOQUEIO } from '../../domain/hold';
+import { patioApp, PATIO_APP_URI } from './patio.app';
 import {
   ativoJson,
   bloqueioJson,
@@ -71,6 +72,10 @@ export function assetsMcpTools(casos: AssetsUseCases): McpToolDefinition[] {
       }),
       requiredPermissions: LEITURA,
       readOnly: true,
+      // Sugestão de interface: o host que suporta MCP Apps desenha o quadro do
+      // pátio a partir DESTE mesmo resultado. Quem não suporta lê o JSON e não
+      // perde nada — nenhuma decisão depende da tela ter sido renderizada.
+      appUri: PATIO_APP_URI,
       handle: async (entrada, contexto) => {
         const resultado = await casos.pesquisar.execute({
           tenantId: contexto.tenantId,
@@ -263,6 +268,7 @@ export function assetsMcpContribution(casos: AssetsUseCases): McpContribution {
     tools: assetsMcpTools(casos),
     resources: assetsMcpResources(casos),
     prompts: [],
+    apps: [patioApp],
   };
 }
 

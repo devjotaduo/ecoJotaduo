@@ -15,7 +15,7 @@ executados de verdade, documentação atualizada e riscos declarados. Nenhum mó
 | **6. Module Registry e Plugin SDK** ✅    | Extensão controlada                   | `packages/plugin-sdk` (manifesto validado + runtime), `modules/plugins` (catálogo, instalação por empresa, segredos cifrados, health), plugin `notifications-example` com REST e MCP          | Ativar/desativar plugin em uma empresa não afeta outras — verificado em E2E                          | Plugin externo (out-of-process) ainda não existe |
 | **7. Expansão dos módulos**               | Verticais de negócio                  | Ordem: Commercial → Contracts → Assets → Operations → Billing → Finance → Inventory → Maintenance → RH; cada um com domínio, REST, MCP, eventos, UI, testes, auditoria                        | Cada módulo entrega ao menos um fluxo de negócio completo                                            | Módulos rasos em paralelo — um vertical por vez  |
 | **8. Eventos, integrações e jobs** ✅     | Confiabilidade assíncrona             | Outbox + dispatcher, BullMQ, retries, idempotência, DLQ, webhooks assinados, replay, circuit breaker, rate limit                                                                              | Falha temporária de integração não desfaz transação nem derruba API                                  | Semântica de retry mal definida                  |
-| **9. MCP Apps e UIs de plugin**           | Interfaces interativas                | App exemplo (form + dashboard), CSP, sandbox, validação de mensagens, fallback textual                                                                                                        | Host sem suporte a Apps continua usando a tool estruturada                                           | Depender de host específico                      |
+| **9. MCP Apps e UIs de plugin** ✅        | Interfaces interativas                | App exemplo (form + dashboard), CSP, sandbox, validação de mensagens, fallback textual                                                                                                        | Host sem suporte a Apps continua usando a tool estruturada                                           | Depender de host específico                      |
 | **10. Observabilidade e segurança**       | Confiança operacional                 | OTel completo, dashboards, alertas, auditoria consultável, rate limiting, headers, secret management, backup/restore testado, runbooks, carga                                                 | Responder: quem, qual tenant, qual interface, qual use case, quanto tempo, resultado, correlation ID | Instrumentação tardia — base já na Fase 1        |
 | **11. Implantação e escala**              | Escala horizontal                     | Imagens Docker, staging/prod, migrations controladas, readiness, graceful shutdown, zero-downtime, deploy independente api/mcp/worker                                                         | API e MCP escalam sem estado local                                                                   | Migrations incompatíveis — expand/contract       |
 | **12. Extração seletiva**                 | Processo, não execução                | Contratos estáveis → eventos versionados → testes de contrato → novo deployable → adapter remoto → migração de dados → cutover                                                                | Extração sem mudanças relevantes nos consumidores                                                    | Extrair sem justificativa concreta               |
@@ -59,7 +59,9 @@ Ficou **fora** desta entrega, deliberadamente:
    comunicação entre eles.
 9. ✅ Fase 8 — Outbox transacional, unidade de trabalho, dispatcher com retry,
    backoff, DLQ e replay; `apps/worker` como terceiro composition root.
-   Próximo: **Fase 9** (MCP Apps) ou **Fase 10** (observabilidade e segurança).
+10. ✅ Fase 9 — MCP Apps: contrato de interface no `mcp-kit`, documento
+    montado pelo gateway com CSP fechada e runtime embutido, painel do pátio
+    como exemplo. Próximo: **Fase 10** (observabilidade e segurança).
 
 ### Fase 5 — escopo entregue
 
@@ -292,6 +294,42 @@ Ficou **fora**, deliberadamente (detalhe no ADR-0012):
 | Consumo de evento entre módulos         | Nenhum precisa hoje; o primeiro consumidor real é um plugin         | Quando um pedir              |
 | Retenção / expurgo do outbox            | Sem volume que justifique; apagar cedo perde histórico              | Fase 11                      |
 | Ordenação estrita por agregado          | Nenhum handler depende de ordem                                     | Quando um depender           |
+
+### Fase 9 — MCP Apps (ADR-0013)
+
+O risco que o próprio roadmap registrou para esta fase era **depender de host
+específico**. A resposta está no critério de aceite, e ele virou o primeiro
+bloco do E2E: a tool devolve o resultado de sempre em `content`, e um host sem
+suporte a Apps não perde nada.
+
+Três decisões:
+
+- **A interface é sugestão, não requisito.** Ela desenha o `structuredContent`
+  que a tool já devolveu — não busca nada por conta própria, porque duas
+  leituras seriam duas verdades. E `_meta` só aparece quando o app está no
+  recorte da empresa: sugerir uma tela que o host não conseguiria ler daria
+  erro na cara de quem usa.
+
+- **O módulo declara o corpo; o gateway monta o documento.** Markup, estilo e
+  script vêm do módulo; a Content-Security-Policy e o runtime do protocolo são
+  do gateway. Nenhum símbolo do SDK MCP entrou em `modules/` (ADR-0004 segue
+  valendo), e a CSP não depende de o autor do módulo lembrar dela —
+  `default-src 'none'`, e `connect-src` só abre com `connectDomains` declarado.
+
+- **App é capacidade, e reautoriza na leitura.** `acharApp` exige as permissões
+  como `acharTool` faz. Verificado por falsificação: sem isso, uma empresa sem
+  o módulo lê a interface adivinhando a URI. App sem permissão declarada e tool
+  apontando para app inexistente falham na **montagem** do catálogo.
+
+Ficou **fora**, deliberadamente (detalhe no ADR-0013):
+
+| Item                                 | Por quê                                                                | Quando                   |
+| ------------------------------------ | ---------------------------------------------------------------------- | ------------------------ |
+| App que chama tools de volta         | O painel se basta com o que recebe; chamar de volta é outra superfície | Quando um app precisar   |
+| `updateModelContext` a partir do app | Deixa o app influenciar o que o modelo lê                              | Junto com o item acima   |
+| App de plugin (third-party)          | O contrato já serve; falta o primeiro que peça                         | Quando um pedir          |
+| Framework de UI no documento         | O painel é uma lista; framework aqui é peso morto                      | Se um app ficar complexo |
+| Teste em navegador de verdade        | O E2E cobre montagem, CSP e autorização                                | Fase 10                  |
 
 ### Dívidas conhecidas ao fim da Fase 2
 
