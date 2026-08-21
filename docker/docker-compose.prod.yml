@@ -166,6 +166,16 @@ services:
     depends_on:
       - api
       - mcp-gateway
+    healthcheck:
+      # A API de administração do Caddy, e não a porta 80: o bloco público
+      # responde pelo NOME do site (`SITE_ADDRESS`), então uma requisição a
+      # 127.0.0.1 não casaria com ele em produção. O `/config/` prova as duas
+      # coisas que importam — o processo está de pé e carregou a configuração.
+      test: ['CMD', 'wget', '--spider', '-q', 'http://127.0.0.1:2019/config/']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
     volumes:
       # Certificados emitidos pelo ACME: sem persistir, cada reinício pede
       # certificado novo e esbarra no limite de emissão do Let's Encrypt.

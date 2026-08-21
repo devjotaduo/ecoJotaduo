@@ -121,14 +121,20 @@ jobs:
       # Cada serviço precisa CONSEGUIR SUBIR. O worker já quebrou no boot por
       # carregar, sem precisar, o NestJS que vinha pela reexportação dos
       # controllers — coisa que nenhum teste unitário pegaria.
+      # A espera é pela PRÓPRIA condição que vai ser verificada, e não por um
+      # sinal parecido. Contar serviços saudáveis deixava de fora o Caddy; e
+      # esperar só pela tela não prova nada sobre a API, porque os estáticos
+      # respondem antes de qualquer upstream existir. Um 401 pelo proxy prova
+      # a cadeia inteira: Caddy de pé, rota certa, API atendendo.
       - name: Os serviços sobem
         run: |
           docker compose -f docker/docker-compose.prod.yml --env-file docker/ci.env up -d --no-build
-          for tentativa in $(seq 1 30); do
-            saudaveis=$(docker compose -f docker/docker-compose.prod.yml --env-file docker/ci.env \
-              ps --format '{{.Service}} {{.Status}}' | grep -c healthy || true)
-            if [ "$saudaveis" -ge 3 ]; then break; fi
-            sleep 5
+          for tentativa in $(seq 1 40); do
+            if [ "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/api/v1/auth/me)" = "401" ]; then
+              echo "pilha pronta na tentativa $tentativa"
+              break
+            fi
+            sleep 3
           done
           docker compose -f docker/docker-compose.prod.yml --env-file docker/ci.env ps
 
