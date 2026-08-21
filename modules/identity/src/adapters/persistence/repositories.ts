@@ -106,11 +106,16 @@ export class DrizzleRefreshTokenRepository implements RefreshTokenRepository {
     };
   }
 
-  async revoke(id: string, substitutoId: string | null): Promise<void> {
-    await this.db
+  async revoke(id: string, substitutoId: string | null): Promise<boolean> {
+    // `revoked_at is null` no WHERE: o UPDATE trava a linha e reavalia a
+    // condição, então de duas rotações simultâneas exatamente uma afeta a
+    // linha. Sem isso, ambas passariam e a detecção de reuso nunca dispararia.
+    const afetadas = await this.db
       .update(refreshTokens)
       .set({ revokedAt: new Date(), replacedById: substitutoId })
-      .where(eq(refreshTokens.id, id));
+      .where(and(eq(refreshTokens.id, id), isNull(refreshTokens.revokedAt)))
+      .returning({ id: refreshTokens.id });
+    return afetadas.length > 0;
   }
 
   async revokeAllOfUser(userId: string): Promise<void> {

@@ -304,6 +304,7 @@ export function criarNucleo(
     tenantsRepo,
     new DrizzleMembershipRepository(db),
     entitlementsRepo,
+    uow,
     [
       {
         listEntitlements: async (tenantId) =>

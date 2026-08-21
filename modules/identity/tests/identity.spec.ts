@@ -214,16 +214,21 @@ describe('RefreshTokenUseCase (rotação)', () => {
       return Promise.resolve(this.registros.get(tokenHash) ?? null);
     }
 
-    revoke(id: string): Promise<void> {
+    /** Espelha o `where revoked_at is null` do UPDATE real. */
+    revoke(id: string, substitutoId: string | null): Promise<boolean> {
       for (const registro of this.registros.values()) {
         if (registro.id === id) {
+          if (registro.revokedAt) {
+            return Promise.resolve(false);
+          }
           this.registros.set(registro.tokenHash, {
             ...registro,
             revokedAt: new Date(),
           });
+          return Promise.resolve(substitutoId !== undefined);
         }
       }
-      return Promise.resolve();
+      return Promise.resolve(false);
     }
 
     revokeAllOfUser(userId: string): Promise<void> {

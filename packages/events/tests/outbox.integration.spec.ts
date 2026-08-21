@@ -360,11 +360,18 @@ describe.skipIf(!temBancoDeTeste)('Outbox transacional (integração)', () => {
       expect(segundo).toBeGreaterThan(primeiro);
     });
 
+    /**
+     * Quanto falta para o evento voltar à fila, medido INTEIRAMENTE pelo
+     * relógio do banco. Comparar `available_at` com `Date.now()` misturava os
+     * dois relógios e falhava por alguns milissegundos de desvio — o mesmo
+     * defeito que existia no `lote()` e valia em produção, não só no teste.
+     */
     async function esperaAtual(): Promise<number> {
-      const [linha] = await dono<{ available_at: Date }[]>`
-        select available_at from platform_outbox where tenant_id = ${empresaA.tenantId}
+      const [linha] = await dono<{ ms: number }[]>`
+        select extract(epoch from (available_at - now())) * 1000 as ms
+        from platform_outbox where tenant_id = ${empresaA.tenantId}
       `;
-      return linha!.available_at.getTime() - Date.now();
+      return Number(linha!.ms);
     }
   });
 

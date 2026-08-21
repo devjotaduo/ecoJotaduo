@@ -137,9 +137,7 @@ export class OutboxDispatcher {
       eventId: evento.id,
       tentativas,
       erro: falhas.join(' | '),
-      proximaEm: desistir
-        ? null
-        : new Date(Date.now() + this.espera(tentativas)),
+      esperaMs: desistir ? null : this.espera(tentativas),
     });
     return desistir ? 'morto' : 'adiado';
   }

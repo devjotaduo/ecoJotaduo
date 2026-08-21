@@ -28,7 +28,7 @@ export async function withTenant<T>(
   // que permite gravar o dado e o evento de forma atômica, sem que nenhum
   // repositório precise receber `tx` por parâmetro. Fora dela, nada muda —
   // cada chamada continua abrindo a sua.
-  const daUnidade = transacaoDaUnidade(escopo.tenantId);
+  const daUnidade = await transacaoDaUnidade(escopo.tenantId, escopo.userId);
   if (daUnidade) {
     return fn(daUnidade);
   }
@@ -40,19 +40,19 @@ export async function withTenant<T>(
  * `withTenant` chamado por repositórios lá no fundo — compartilha a mesma
  * transação e o mesmo commit.
  */
-export function comUnidadeDeTrabalho<T>(
+export async function comUnidadeDeTrabalho<T>(
   db: Database,
   escopo: TenantScope,
   fn: () => Promise<T>,
 ): Promise<T> {
   // Já dentro de uma: participa da que existe, em vez de abrir outra. Sem
   // isto, um caso de uso que chama outro perderia a atomicidade em silêncio.
-  const daUnidade = transacaoDaUnidade(escopo.tenantId);
+  const daUnidade = await transacaoDaUnidade(escopo.tenantId, escopo.userId);
   if (daUnidade) {
     return fn();
   }
   return abrirTransacaoDoTenant(db, escopo, (tx) =>
-    comUnidadeAtiva(escopo.tenantId, tx, fn),
+    comUnidadeAtiva(escopo, tx, fn),
   );
 }
 

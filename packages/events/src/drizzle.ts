@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { Database } from '@ecojotaduo/database';
 import { withTenant } from '@ecojotaduo/database';
 import { requireAuth, requireContext } from '@ecojotaduo/tenant-context';
-import { and, asc, eq, lte, sql } from 'drizzle-orm';
+import { and, asc, eq, sql } from 'drizzle-orm';
 
 import type {
   EventoParaPublicar,
@@ -93,7 +93,11 @@ export class DrizzleOutbox {
             and(
               eq(outbox.tenantId, tenantId),
               eq(outbox.status, 'pending'),
-              lte(outbox.availableAt, new Date()),
+              // `now()` do BANCO, e não `new Date()` do processo: a coluna foi
+              // escrita pelo banco, e um worker com relógio adiantado pegaria
+              // o evento antes da hora (ou, atrasado, o deixaria parado). A
+              // função de descoberta já compara assim — aqui era a exceção.
+              sql`${outbox.availableAt} <= now()`,
             ),
           )
           .orderBy(asc(outbox.availableAt), asc(outbox.occurredAt))
@@ -177,7 +181,8 @@ export class DrizzleOutbox {
     eventId: string;
     tentativas: number;
     erro: string;
-    proximaEm: Date | null;
+    /** Espera até a próxima tentativa; `null` desiste e manda para a DLQ. */
+    esperaMs: number | null;
   }): Promise<void> {
     await withTenant(
       this.db,
@@ -186,10 +191,10 @@ export class DrizzleOutbox {
         await tx
           .update(outbox)
           .set(
-            entrada.proximaEm
+            entrada.esperaMs !== null
               ? {
                   attempts: entrada.tentativas,
-                  availableAt: entrada.proximaEm,
+                  availableAt: sql`now() + make_interval(secs => ${entrada.esperaMs / 1000})`,
                   lastError: entrada.erro.slice(0, 2000),
                 }
               : {

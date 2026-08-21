@@ -41,8 +41,15 @@ export class RefreshTokenUseCase {
     entrada: { userId: string; tenantId: string },
     agora: Date = new Date(),
   ): Promise<IssuedRefreshToken> {
+    return this.gravar(randomUUID(), entrada, agora);
+  }
+
+  private async gravar(
+    id: string,
+    entrada: { userId: string; tenantId: string },
+    agora: Date,
+  ): Promise<IssuedRefreshToken> {
     const token = this.generator.create();
-    const id = randomUUID();
     const expiresAt = new Date(agora.getTime() + this.ttlDays * 86_400_000);
 
     await this.tokens.save({
@@ -80,12 +87,29 @@ export class RefreshTokenUseCase {
       throw new RefreshTokenInvalidError();
     }
 
-    const novo = await this.issue(
+    // Revoga ANTES de emitir, e só se ninguém revogou antes. A ordem importa:
+    //
+    // - revogar primeiro faz a falha ser fechada (o usuário refaz o login) em
+    //   vez de aberta (dois refresh tokens válidos saídos de um);
+    // - a condição `revoked_at is null` vive no UPDATE, então duas chamadas
+    //   simultâneas com o MESMO token têm uma vencedora — a perdedora cai no
+    //   ramo de reuso abaixo, que é exatamente o que se quer de um vazamento.
+    //
+    // O id do substituto é sorteado aqui para poder ser encadeado já na
+    // revogação; se a emissão falhar, ele fica apontando para um token que
+    // não existe, e isso é informação de investigação, não defeito.
+    const novoId = randomUUID();
+    const revogou = await this.tokens.revoke(registro.id, novoId);
+    if (!revogou) {
+      await this.tokens.revokeAllOfUser(registro.userId);
+      throw new RefreshTokenInvalidError();
+    }
+
+    const novo = await this.gravar(
+      novoId,
       { userId: registro.userId, tenantId: registro.tenantId },
       agora,
     );
-    // Encadeia a substituição: a trilha permite investigar um vazamento.
-    await this.tokens.revoke(registro.id, novo.id);
 
     return {
       userId: registro.userId,

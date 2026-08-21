@@ -1,6 +1,7 @@
 import { NoopAuditLogger } from '@ecojotaduo/audit';
 import type { IdentityPublicApi } from '@ecojotaduo/identity';
 import { authorize } from '@ecojotaduo/permissions';
+import { NoopUnitOfWork } from '@ecojotaduo/platform-kernel';
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -163,6 +164,7 @@ describe('ResolveAccessGrantUseCase', () => {
         { moduleId: 'crm', status: 'active', expiresAt: null },
         { moduleId: 'finance', status: 'suspended', expiresAt: null },
       ]),
+      new NoopUnitOfWork(),
     );
 
     const { grant } = await caso.execute({
@@ -183,6 +185,7 @@ describe('ResolveAccessGrantUseCase', () => {
       new TenantsFake([tenant()]),
       new MembershipsFake([{ tenantId: TENANT_B, userId: USUARIO }]),
       new EntitlementsFake(),
+      new NoopUnitOfWork(),
     );
 
     await expect(
@@ -195,6 +198,7 @@ describe('ResolveAccessGrantUseCase', () => {
       new TenantsFake([tenant(TENANT_A, 'suspended')]),
       new MembershipsFake([{ tenantId: TENANT_A, userId: USUARIO }], ['*']),
       new EntitlementsFake(),
+      new NoopUnitOfWork(),
     );
 
     await expect(
@@ -209,6 +213,7 @@ describe('ResolveAccessGrantUseCase', () => {
       new EntitlementsFake([
         { moduleId: 'crm', status: 'active', expiresAt: null },
       ]),
+      new NoopUnitOfWork(),
     );
 
     const grant = await caso.executeForServiceAccount({
@@ -247,6 +252,7 @@ describe('SignInUseCase', () => {
       new EntitlementsFake([
         { moduleId: 'crm', status: 'active', expiresAt: null },
       ]),
+      new NoopUnitOfWork(),
     );
     return new SignInUseCase(
       identity,

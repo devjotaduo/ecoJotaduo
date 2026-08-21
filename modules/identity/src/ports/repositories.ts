@@ -36,8 +36,15 @@ export interface RefreshTokenRepository {
     expiresAt: Date;
   }): Promise<void>;
   findByHash(tokenHash: string): Promise<RefreshTokenRecord | null>;
-  /** Marca como usado e aponta para o token que o substituiu (rotação). */
-  revoke(id: string, substitutoId: string | null): Promise<void>;
+  /**
+   * Marca como usado e aponta para o token que o substituiu (rotação).
+   *
+   * Devolve `false` quando a linha JÁ estava revogada — é o que transforma
+   * duas rotações concorrentes do mesmo token em uma vencedora e uma
+   * detecção de reuso. A condição tem de ser avaliada pelo armazenamento,
+   * não pelo chamador: ler-e-depois-escrever deixa a janela aberta.
+   */
+  revoke(id: string, substitutoId: string | null): Promise<boolean>;
   revokeAllOfUser(userId: string): Promise<void>;
 }
 

@@ -1,4 +1,5 @@
 import type { AccessGrant } from '@ecojotaduo/permissions';
+import type { UnitOfWork } from '@ecojotaduo/platform-kernel';
 
 import { entitlementIsValid } from '../domain/tenant';
 import { NoActiveMembershipError, TenantNotFoundError } from '../domain/errors';
@@ -21,17 +22,39 @@ export interface ResolvedAccess {
  * Roda a CADA requisição (o guard da API chama antes do caso de uso), então
  * revogar um papel ou suspender um vínculo tem efeito imediato — não fica
  * esperando o access token expirar.
+ *
+ * As cinco leituras vão numa **transação só**. O ganho é custo: quatro
+ * conexões do pool a menos por requisição autenticada, e um `begin` +
+ * `set_config` em vez de cinco. Como isso acontece em TODA rota autenticada,
+ * o pool era o primeiro recurso a saturar sob carga.
+ *
+ * O que isto NÃO dá: foto consistente. O banco roda em `read committed`, e
+ * nesse nível cada comando toma o próprio snapshot mesmo dentro da mesma
+ * transação. Quem quiser a decisão inteira de um instante só precisa de
+ * `repeatable read` — deliberadamente fora daqui, porque o desvio de estado
+ * entre as leituras é de milissegundos e sempre no sentido seguro (a
+ * contratação lida é a mais recente).
  */
 export class ResolveAccessGrantUseCase {
   constructor(
     private readonly tenants: TenantRepository,
     private readonly memberships: MembershipRepository,
     private readonly entitlements: EntitlementRepository,
+    private readonly uow: UnitOfWork,
     /** Extensões (plugins) que também concedem acesso quando habilitadas. */
     private readonly contribuidores: readonly EntitlementContributor[] = [],
   ) {}
 
   async execute(entrada: {
+    tenantId: string;
+    userId: string;
+    scopes: readonly string[];
+    agora?: Date;
+  }): Promise<ResolvedAccess> {
+    return this.uow.executar(entrada.tenantId, () => this.resolver(entrada));
+  }
+
+  private async resolver(entrada: {
     tenantId: string;
     userId: string;
     scopes: readonly string[];
@@ -84,6 +107,16 @@ export class ResolveAccessGrantUseCase {
     scopes: readonly string[];
     agora?: Date;
   }): Promise<AccessGrant> {
+    return this.uow.executar(entrada.tenantId, () =>
+      this.resolverServico(entrada),
+    );
+  }
+
+  private async resolverServico(entrada: {
+    tenantId: string;
+    scopes: readonly string[];
+    agora?: Date;
+  }): Promise<AccessGrant> {
     const tenant = await this.tenants.findById(entrada.tenantId);
     if (!tenant) {
       throw new TenantNotFoundError(entrada.tenantId);
@@ -111,10 +144,10 @@ export class ResolveAccessGrantUseCase {
   /**
    * Entitlements vindos de extensões (hoje, plugins habilitados).
    *
-   * Uma consulta a mais por requisição — a dívida de "resolver acesso abre N
-   * transações" cresce e está registrada no roadmap. O caminho contrário
-   * (guardar o resultado num token) seria pior: desabilitar um plugin
-   * demoraria a valer, que é exatamente o que esta cadeia existe para evitar.
+   * Uma consulta a mais por requisição, hoje dentro da mesma transação das
+   * demais. O caminho contrário (guardar o resultado num token) seria pior:
+   * desabilitar um plugin demoraria a valer, que é exatamente o que esta
+   * cadeia existe para evitar.
    */
   private async extras(tenantId: string): Promise<string[]> {
     if (this.contribuidores.length === 0) {
