@@ -18,6 +18,46 @@ export interface RefreshTokenRecord {
   readonly revokedAt: Date | null;
 }
 
+export interface PersonalAccessTokenRecord {
+  readonly id: string;
+  readonly userId: string;
+  readonly tenantId: string;
+  readonly name: string;
+  readonly hint: string;
+  readonly scopes: readonly string[];
+  readonly expiresAt: Date | null;
+  readonly revokedAt: Date | null;
+  readonly lastUsedAt: Date | null;
+  readonly createdAt: Date;
+}
+
+export interface PersonalAccessTokenRepository {
+  save(entrada: {
+    id: string;
+    userId: string;
+    tenantId: string;
+    name: string;
+    tokenHash: string;
+    hint: string;
+    scopes: readonly string[];
+    expiresAt: Date | null;
+    createdAt: Date;
+  }): Promise<void>;
+  findByHash(tokenHash: string): Promise<PersonalAccessTokenRecord | null>;
+  listOfUser(
+    userId: string,
+    tenantId: string,
+  ): Promise<PersonalAccessTokenRecord[]>;
+  /** `false` quando o token não é desta pessoa nesta empresa, ou já foi revogado. */
+  revoke(
+    tokenId: string,
+    userId: string,
+    tenantId: string,
+    agora: Date,
+  ): Promise<boolean>;
+  markUsed(tokenId: string, agora: Date): Promise<void>;
+}
+
 export interface UserRepository {
   findByEmail(email: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;

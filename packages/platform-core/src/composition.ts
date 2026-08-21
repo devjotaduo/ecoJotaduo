@@ -127,8 +127,10 @@ import {
 import { lerChaveDeSegredos } from '@ecojotaduo/auth';
 import { pluginEntitlement } from '@ecojotaduo/permissions';
 import {
+  DrizzlePersonalAccessTokenRepository,
   DrizzleRefreshTokenRepository,
   DrizzleServiceAccountRepository,
+  PersonalAccessTokenUseCase,
   DrizzleUserRepository,
   IdentityService,
   RefreshTokenUseCase,
@@ -176,6 +178,8 @@ export interface NucleoDaPlataforma {
   /** Handlers que a instalação registra para os eventos publicados. */
   readonly handlersDeEventos: readonly EventHandler[];
   readonly identity: IdentityPublicApi;
+  /** Emissão, listagem e revogação de tokens pessoais (borda REST). */
+  readonly tokensPessoais: PersonalAccessTokenUseCase;
   readonly tenancy: TenancyPublicApi;
   readonly signIn: SignInUseCase;
   readonly refreshSession: RefreshSessionUseCase;
@@ -311,6 +315,14 @@ export function criarNucleo(
 
   // --- identity -----------------------------------------------------------
   const usuarios = new DrizzleUserRepository(db);
+  // Credencial de longa duração de uma PESSOA. Exposto no núcleo porque a
+  // borda REST precisa dele para emitir, listar e revogar.
+  const tokensPessoais = new PersonalAccessTokenUseCase(
+    new DrizzlePersonalAccessTokenRepository(db),
+    hasherDeSegredo,
+    { create: createOpaqueToken },
+  );
+
   const identity = new IdentityService(
     new VerifyCredentialsUseCase(usuarios, hasherDeSenha),
     new VerifyServiceAccountUseCase(
@@ -324,6 +336,7 @@ export function criarNucleo(
       env.REFRESH_TOKEN_TTL_DAYS,
     ),
     usuarios,
+    tokensPessoais,
   );
 
   // --- plugins ------------------------------------------------------------
@@ -669,6 +682,7 @@ export function criarNucleo(
     outbox: outboxRepo,
     handlersDeEventos: handlers,
     identity,
+    tokensPessoais,
     crm,
     commercial,
     contracts,

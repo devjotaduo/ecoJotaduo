@@ -32,6 +32,33 @@ export const sessaoRenovadaResposta = sessaoResposta.omit({
   user: true,
 });
 
+/**
+ * O valor do token aparece AQUI e em nenhum outro lugar do contrato. Não há
+ * rota de leitura: quem perder o valor emite outro e revoga o antigo.
+ */
+export const tokenPessoalCriadoResposta = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  token: z.string(),
+  scopes: z.array(z.string()),
+  expiresAt: z.iso.datetime().nullable(),
+});
+
+export const tokenPessoalResumoResposta = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  /** Início do valor: serve para reconhecer qual revogar. */
+  hint: z.string(),
+  scopes: z.array(z.string()),
+  expiresAt: z.iso.datetime().nullable(),
+  lastUsedAt: z.iso.datetime().nullable(),
+  createdAt: z.iso.datetime(),
+});
+
+export const tokensPessoaisResposta = z.object({
+  items: z.array(tokenPessoalResumoResposta),
+});
+
 export const tokenDeServicoResposta = z.object({
   accessToken: z.string(),
   expiresAt: z.iso.datetime(),

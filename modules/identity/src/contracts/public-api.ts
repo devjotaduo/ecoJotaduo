@@ -24,6 +24,14 @@ export interface IdentityRefreshToken {
   readonly expiresAt: Date;
 }
 
+export interface IdentityTokenBearer {
+  readonly tokenId: string;
+  readonly userId: string;
+  readonly tenantId: string;
+  /** Teto de permissão do token; a decisão final é a interseção com os papéis. */
+  readonly scopes: readonly string[];
+}
+
 export interface IdentityPublicApi {
   /** Lança InvalidCredentialsError quando e-mail ou senha não conferem. */
   verifyCredentials(entrada: {
@@ -57,6 +65,16 @@ export interface IdentityPublicApi {
    * pode virar um oráculo que diz quais tokens existem.
    */
   revokeSessionByRefreshToken(refreshToken: string): Promise<void>;
+
+  /**
+   * Autentica um token pessoal e devolve o portador.
+   *
+   * É o que permite um programa agir em nome de uma PESSOA de forma
+   * continuada — sem virar conta de serviço compartilhada, que apagaria o
+   * "quem" da trilha de auditoria. Lança quando o token é desconhecido,
+   * revogado ou expirado, sem distinguir os três casos.
+   */
+  authenticatePersonalToken(token: string): Promise<IdentityTokenBearer>;
 }
 
 /** Token de injeção usado pelo composition root (evita acoplar em classe). */

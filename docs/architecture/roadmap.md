@@ -490,6 +490,26 @@ Ficou **fora**, com motivo no ADR-0016:
 | Repetição e disjuntor no cliente | Leitura idempotente com timeout curto; repetir esconde a indisponibilidade               | Se a chamada crescer          |
 | Extrair um segundo módulo        | O padrão está provado; repetir sem necessidade é custo sem benefício                     | Com justificativa (ADR-0001)  |
 
+### Depois da Fase 12 — tokens pessoais
+
+Primeira coisa construída por demanda concreta e não por plano: o gateway MCP
+ganhou consumidor (LibreChat), e um host que manda cabeçalho fixo não convive
+com access token de quinze minutos.
+
+A saída fácil seria uma conta de serviço compartilhada. Ela custaria a
+propriedade central da plataforma: a trilha diria "conta de serviço" para todo
+mundo e as permissões deixariam de ser por pessoa. O token pessoal preserva as
+duas — mesma identidade, mesmo recorte, com prazo e revogação.
+
+Quatro propriedades, todas com teste falsificado:
+
+| Propriedade                        | Por que importa                                                              |
+| ---------------------------------- | ---------------------------------------------------------------------------- |
+| Age como a pessoa                  | A trilha continua respondendo "quem"; conta compartilhada apagaria isso      |
+| `scopes` é teto, não concessão     | Dá para dar ao agente MENOS do que se tem; nunca mais                        |
+| Não emite outro token pessoal      | Sem isso, um token vazado se renova e revogar o original não adianta         |
+| Revogação vale na chamada seguinte | Não há cache de credencial — o acesso é resolvido do banco a cada requisição |
+
 ### Dívidas conhecidas ao fim da Fase 2
 
 | Item                                                                      | Impacto                                  | Quando resolver                                                 |

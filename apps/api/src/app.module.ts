@@ -80,6 +80,7 @@ import { APP_GUARD } from '@nestjs/core';
 
 import { AuditController } from './audit/audit.controller';
 import { AuthController } from './auth/auth.controller';
+import { PersonalTokensController } from './auth/personal-tokens.controller';
 import {
   criarNucleo,
   type NucleoDaPlataforma,
@@ -90,6 +91,7 @@ import {
   DATABASE,
   ENV,
   IDENTITY_API,
+  PERSONAL_TOKENS_USE_CASE,
   ISSUE_SERVICE_TOKEN_USE_CASE,
   MANAGE_ENTITLEMENTS_USE_CASE,
   MODULE_CATALOG,
@@ -195,6 +197,7 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
   controllers: [
     HealthController,
     AuthController,
+    PersonalTokensController,
     EntitlementsController,
     AuditController,
     // Controllers dos módulos vêm do próprio módulo: ele é dono da sua borda
@@ -224,6 +227,7 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     doNucleo(TOKEN_SERVICE, 'tokens'),
     doNucleo(AUDIT_LOGGER, 'audit'),
     doNucleo(IDENTITY_API, 'identity'),
+    doNucleo(PERSONAL_TOKENS_USE_CASE, 'tokensPessoais'),
     doNucleo(TENANCY_API, 'tenancy'),
     doNucleo(SIGN_IN_USE_CASE, 'signIn'),
     doNucleo(REFRESH_SESSION_USE_CASE, 'refreshSession'),

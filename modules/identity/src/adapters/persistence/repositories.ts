@@ -1,9 +1,11 @@
 import type { Database } from '@ecojotaduo/database';
-import { eq, isNull, and } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 
 import { Email } from '../../domain/email';
 import { User, type UserStatus } from '../../domain/user';
 import type {
+  PersonalAccessTokenRecord,
+  PersonalAccessTokenRepository,
   RefreshTokenRecord,
   RefreshTokenRepository,
   ServiceAccountRecord,
@@ -11,7 +13,12 @@ import type {
   UserRepository,
 } from '../../ports/repositories';
 
-import { refreshTokens, serviceAccounts, users } from './schema';
+import {
+  personalAccessTokens,
+  refreshTokens,
+  serviceAccounts,
+  users,
+} from './schema';
 
 /**
  * `identity_users` é tabela de PLATAFORMA (global), não de tenant: o login
@@ -126,4 +133,109 @@ export class DrizzleRefreshTokenRepository implements RefreshTokenRepository {
         and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)),
       );
   }
+}
+
+/**
+ * Tokens pessoais.
+ *
+ * Tabela de plataforma, como as outras do identity: sem `withTenant`, porque a
+ * autenticação acontece ANTES de qualquer empresa ser resolvida. O isolamento
+ * aqui vem das próprias cláusulas — toda leitura e escrita filtra por
+ * `(user_id, tenant_id)`, e a autenticação é por hash único.
+ */
+export class DrizzlePersonalAccessTokenRepository implements PersonalAccessTokenRepository {
+  constructor(private readonly db: Database) {}
+
+  async save(entrada: {
+    id: string;
+    userId: string;
+    tenantId: string;
+    name: string;
+    tokenHash: string;
+    hint: string;
+    scopes: readonly string[];
+    expiresAt: Date | null;
+    createdAt: Date;
+  }): Promise<void> {
+    await this.db.insert(personalAccessTokens).values({
+      ...entrada,
+      scopes: [...entrada.scopes],
+    });
+  }
+
+  async findByHash(
+    tokenHash: string,
+  ): Promise<PersonalAccessTokenRecord | null> {
+    const [linha] = await this.db
+      .select()
+      .from(personalAccessTokens)
+      .where(eq(personalAccessTokens.tokenHash, tokenHash))
+      .limit(1);
+    return linha ? paraRegistroDeToken(linha) : null;
+  }
+
+  async listOfUser(
+    userId: string,
+    tenantId: string,
+  ): Promise<PersonalAccessTokenRecord[]> {
+    const linhas = await this.db
+      .select()
+      .from(personalAccessTokens)
+      .where(
+        and(
+          eq(personalAccessTokens.userId, userId),
+          eq(personalAccessTokens.tenantId, tenantId),
+          isNull(personalAccessTokens.revokedAt),
+        ),
+      )
+      .orderBy(desc(personalAccessTokens.createdAt));
+    return linhas.map(paraRegistroDeToken);
+  }
+
+  async revoke(
+    tokenId: string,
+    userId: string,
+    tenantId: string,
+    agora: Date,
+  ): Promise<boolean> {
+    // O `where` inclui o dono: adivinhar o id de um token alheio não revoga
+    // nada. E `revoked_at is null` faz revogar duas vezes ser inofensivo.
+    const afetadas = await this.db
+      .update(personalAccessTokens)
+      .set({ revokedAt: agora })
+      .where(
+        and(
+          eq(personalAccessTokens.id, tokenId),
+          eq(personalAccessTokens.userId, userId),
+          eq(personalAccessTokens.tenantId, tenantId),
+          isNull(personalAccessTokens.revokedAt),
+        ),
+      )
+      .returning({ id: personalAccessTokens.id });
+    return afetadas.length > 0;
+  }
+
+  async markUsed(tokenId: string, agora: Date): Promise<void> {
+    await this.db
+      .update(personalAccessTokens)
+      .set({ lastUsedAt: agora })
+      .where(eq(personalAccessTokens.id, tokenId));
+  }
+}
+
+function paraRegistroDeToken(
+  linha: typeof personalAccessTokens.$inferSelect,
+): PersonalAccessTokenRecord {
+  return {
+    id: linha.id,
+    userId: linha.userId,
+    tenantId: linha.tenantId,
+    name: linha.name,
+    hint: linha.hint,
+    scopes: linha.scopes,
+    expiresAt: linha.expiresAt,
+    revokedAt: linha.revokedAt,
+    lastUsedAt: linha.lastUsedAt,
+    createdAt: linha.createdAt,
+  };
 }

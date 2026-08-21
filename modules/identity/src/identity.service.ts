@@ -1,8 +1,10 @@
+import type { PersonalAccessTokenUseCase } from './application/personal-access-token.use-case';
 import type { RefreshTokenUseCase } from './application/refresh-token.use-case';
 import type { VerifyCredentialsUseCase } from './application/verify-credentials.use-case';
 import type { VerifyServiceAccountUseCase } from './application/verify-service-account.use-case';
 import type {
   IdentityPublicApi,
+  IdentityTokenBearer,
   IdentityRefreshToken,
   IdentityServiceAccountSummary,
   IdentityUserSummary,
@@ -16,6 +18,7 @@ export class IdentityService implements IdentityPublicApi {
     private readonly verificarServiceAccount: VerifyServiceAccountUseCase,
     private readonly refreshTokens: RefreshTokenUseCase,
     private readonly usuarios: UserRepository,
+    private readonly tokensPessoais: PersonalAccessTokenUseCase,
   ) {}
 
   verifyCredentials(entrada: {
@@ -60,5 +63,9 @@ export class IdentityService implements IdentityPublicApi {
 
   revokeSessionByRefreshToken(refreshToken: string): Promise<void> {
     return this.refreshTokens.revokeSession(refreshToken);
+  }
+
+  authenticatePersonalToken(token: string): Promise<IdentityTokenBearer> {
+    return this.tokensPessoais.authenticate(token);
   }
 }

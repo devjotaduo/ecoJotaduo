@@ -8,6 +8,17 @@ export type Channel = 'rest' | 'mcp' | 'job' | 'webhook' | 'system';
 
 export type ActorKind = 'user' | 'service' | 'system';
 
+/**
+ * COMO a requisição se autenticou.
+ *
+ * Não é a mesma coisa que `ActorKind`: um token pessoal e um login são a mesma
+ * PESSOA agindo, por credenciais de risco diferente. A distinção importa em
+ * dois lugares — operações que exigem sessão de verdade (emitir outro token
+ * pessoal, por exemplo) e a trilha, onde vale saber que a ação veio de um
+ * agente e não de alguém na tela.
+ */
+export type CredentialKind = 'session' | 'personal-token' | 'service';
+
 export interface Actor {
   readonly kind: ActorKind;
   /** userId (usuário) ou id da service account. */
@@ -19,6 +30,8 @@ export interface Actor {
 export interface AuthenticatedContext {
   readonly tenantId: TenantId;
   readonly actor: Actor;
+  /** Padrão `session`: a maioria das bordas autentica por login. */
+  readonly credential?: CredentialKind;
   readonly userId?: UserId;
   readonly permissions: readonly string[];
   readonly scopes: readonly string[];

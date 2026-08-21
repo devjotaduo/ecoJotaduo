@@ -2,6 +2,7 @@ import { InvalidTokenError } from '@ecojotaduo/auth';
 import {
   InvalidCredentialsError,
   UserNotActiveError,
+  PersonalTokenInvalidError,
   RefreshTokenInvalidError,
 } from '@ecojotaduo/identity';
 import { ForbiddenError } from '@ecojotaduo/permissions';
@@ -117,7 +118,8 @@ export class ProblemDetailsFilter implements ExceptionFilter {
       excecao instanceof NoActiveMembershipError ||
       excecao instanceof TenantNotFoundError ||
       excecao instanceof InvalidTokenError ||
-      excecao instanceof RefreshTokenInvalidError
+      excecao instanceof RefreshTokenInvalidError ||
+      excecao instanceof PersonalTokenInvalidError
     ) {
       return problema(
         'unauthorized',

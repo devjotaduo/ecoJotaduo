@@ -42,8 +42,40 @@ Três coisas que valem para qualquer host:
 - **O catálogo é por credencial.** Duas pessoas da mesma empresa podem ver conjuntos
   diferentes de tools, conforme os papéis. Quem não contratou o módulo não vê nada
   dele — e também não executa, mesmo mandando o nome exato.
-- **O token expira** (15 min por padrão). O host precisa renovar por
-  `POST /api/v1/auth/refresh` e reconectar; o gateway não renova sessão de ninguém.
+- **O access token expira** em 15 minutos. Para um host que renova sessão isso
+  funciona; para um que manda cabeçalho fixo, não — e é para esse caso que
+  existe o token pessoal, abaixo.
+
+### Token pessoal: quando o host manda cabeçalho fixo
+
+Um agente hospedado (LibreChat, por exemplo) não refaz login a cada quinze
+minutos: ele guarda um cabeçalho e o repete. A saída **errada** seria uma conta
+de serviço compartilhada — a trilha passaria a dizer "conta de serviço" para
+todo mundo, e as permissões deixariam de ser por pessoa.
+
+O token pessoal resolve isso preservando as duas coisas:
+
+```bash
+curl -s -X POST http://127.0.0.1:3000/api/v1/auth/personal-tokens   -H "authorization: Bearer $ACCESS_TOKEN" -H 'content-type: application/json'   -d '{"name":"agente do LibreChat","scopes":["*"],"expiresInDays":90}'
+```
+
+A resposta traz `token` (prefixo `ecj_pat_`). **É a única vez que ele sai do
+servidor** — não existe rota de leitura. Perdeu, emite outro e revoga o antigo.
+
+Quatro propriedades que valem saber:
+
+- **Age como a pessoa.** Mesmas permissões, mesma trilha de auditoria: quem
+  agiu continua sendo quem agiu.
+- **`scopes` é teto, não concessão.** A decisão continua sendo a interseção com
+  os papéis vivos. `["crm.customer.read"]` dá ao agente MENOS do que a pessoa
+  tem; `["*"]` não dá mais.
+- **Um token pessoal não emite outro.** Criar exige sessão de verdade — senão
+  um token vazado se renova para sempre e revogar o original não adianta.
+- **Revogar vale na requisição seguinte**, porque não há cache de credencial:
+
+```bash
+curl -X DELETE http://127.0.0.1:3000/api/v1/auth/personal-tokens/$ID   -H "authorization: Bearer $ACCESS_TOKEN"
+```
 
 ## Configuração no host
 
@@ -60,6 +92,36 @@ Claude Code (`.mcp.json` no projeto) ou Claude Desktop:
   }
 }
 ```
+
+### LibreChat
+
+O `librechat.yaml` — `customUserVars` faz cada pessoa colar o **próprio** token,
+que é o que preserva identidade e permissão por pessoa:
+
+```yaml
+mcpServers:
+  ecojotaduo:
+    type: streamable-http
+    url: http://host.docker.internal:3001/mcp
+    headers:
+      Authorization: 'Bearer {{ECOJOTADUO_TOKEN}}'
+    customUserVars:
+      ECOJOTADUO_TOKEN:
+        title: 'Token da ecoJotaduo'
+        description: 'Gere em Configurações → Tokens pessoais. Começa com ecj_pat_'
+    timeout: 60000
+```
+
+Com o LibreChat em Docker e a plataforma na máquina, o endereço é
+`host.docker.internal`. Com os dois no mesmo compose, use o nome do serviço.
+
+Duas coisas que aparecem na prática:
+
+- **Uma pessoa em duas empresas precisa de dois tokens** — e de duas entradas
+  em `mcpServers`. O token pertence a uma empresa; é o que impede o portador
+  de escolher o escopo.
+- **O limite de chamadas é por credencial** (`RATE_LIMIT_MCP_MAX`, 120/min por
+  padrão). Um agente em laço toma 429 sem afetar as outras pessoas.
 
 Para inspecionar o catálogo à mão, o inspector oficial:
 

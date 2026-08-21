@@ -47,3 +47,27 @@ export const refreshTokens = pgTable('identity_refresh_tokens', {
     .notNull()
     .defaultNow(),
 });
+
+/**
+ * Credencial de longa duração de uma PESSOA numa empresa.
+ *
+ * Presa a um tenant de propósito: a pessoa pode ter vínculo em várias, mas o
+ * token age em uma só — senão quem porta o token escolheria o escopo.
+ */
+export const personalAccessTokens = pgTable('identity_personal_access_tokens', {
+  id: uuid('id').primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id').notNull(),
+  name: text('name').notNull(),
+  tokenHash: text('token_hash').notNull().unique(),
+  hint: text('hint').notNull(),
+  scopes: text('scopes').array().notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

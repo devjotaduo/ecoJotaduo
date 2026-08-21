@@ -265,6 +265,29 @@ um provedor gerenciado que bloqueie extensões faria a migração falhar no boot
 esbuild, que não emite `design:paramtypes` — injeção por tipo funciona em produção mas
 quebra os testes E2E. Tokens ficam em `apps/api/src/bootstrap/tokens.ts`.
 
+### Tokens pessoais
+
+Credencial de longa duração de uma PESSOA numa empresa (`ecj_pat_…`), para o caso
+em que um programa age em nome dela de forma continuada — um agente num host MCP
+manda cabeçalho fixo e não refaz login a cada quinze minutos.
+
+O guarda aceita as duas credenciais e as converte nas MESMAS claims: daí para
+frente a cadeia de autorização é uma só. Um token pessoal não é caminho paralelo,
+é outra porta para a mesma porteira.
+
+Quatro regras que não se negociam:
+
+- **`scopes` é teto, não concessão.** A decisão continua sendo a interseção com os
+  papéis vivos — reduzir restringe o agente, e não há como ampliar.
+- **Um token pessoal não emite outro.** Emitir exige `credential === 'session'`;
+  senão um token vazado se renova para sempre e revogar o original não adianta.
+- **O valor sai uma vez.** Só o hash é guardado; não existe rota de leitura.
+- **Revogar vale na requisição seguinte** — não há cache de credencial.
+
+O contexto registra COMO a requisição se autenticou (`credential`:
+`session` | `personal-token` | `service`). Não confunda com `actor.kind`: um token
+pessoal e um login são a mesma pessoa, por credenciais de risco diferente.
+
 ### Limites, cabeçalhos e log (ADR-0014)
 
 O limite de requisições é **por credencial**, não por IP: um ERP roda atrás de NAT

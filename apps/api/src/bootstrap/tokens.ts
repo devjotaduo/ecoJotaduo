@@ -13,6 +13,7 @@ export const TOKEN_SERVICE = Symbol('TOKEN_SERVICE');
 export const MODULE_CATALOG = Symbol('MODULE_CATALOG');
 
 export const IDENTITY_API = Symbol('IDENTITY_API');
+export const PERSONAL_TOKENS_USE_CASE = Symbol('PERSONAL_TOKENS_USE_CASE');
 export const TENANCY_API = Symbol('TENANCY_API');
 
 export const SIGN_IN_USE_CASE = Symbol('SIGN_IN_USE_CASE');

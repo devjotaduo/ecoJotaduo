@@ -33,3 +33,22 @@ export {
   users,
 } from './adapters/persistence/schema';
 export { IdentityService } from './identity.service';
+
+// Tokens pessoais: credencial de longa duração de uma PESSOA numa empresa.
+export {
+  PersonalAccessTokenUseCase,
+  PersonalTokenInvalidError,
+  PersonalTokenNotFoundError,
+  PREFIXO_DE_TOKEN_PESSOAL,
+  ehTokenPessoal,
+  type GeradorDeToken,
+  type PortadorDoTokenPessoal,
+  type TokenPessoalEmitido,
+  type TokenPessoalResumo,
+} from './application/personal-access-token.use-case';
+export { DrizzlePersonalAccessTokenRepository } from './adapters/persistence/repositories';
+export { personalAccessTokens } from './adapters/persistence/schema';
+export type {
+  PersonalAccessTokenRecord,
+  PersonalAccessTokenRepository,
+} from './ports/repositories';
