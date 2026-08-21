@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
 import type { AuditLogger } from '@ecojotaduo/audit';
+import type { EventPublisher } from '@ecojotaduo/events';
+import type { UnitOfWork } from '@ecojotaduo/platform-kernel';
 
 import {
   CustomerNotInThisTenantError,
@@ -43,6 +45,7 @@ export class CreateProposalUseCase {
   constructor(
     private readonly propostas: ProposalRepository,
     private readonly clientes: CustomerDirectory,
+    private readonly uow: UnitOfWork,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -81,13 +84,15 @@ export class CreateProposalUseCase {
       proposta.replaceItems(montarItens(entrada.items, entrada.currency));
     }
 
-    await this.propostas.save(entrada.tenantId, proposta);
-    await this.audit.record({
-      action: 'commercial.proposal.created',
-      result: 'success',
-      resourceType: 'proposal',
-      resourceId: proposta.id,
-      metadata: { number: proposta.number, customerId: entrada.customerId },
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.propostas.save(entrada.tenantId, proposta);
+      await this.audit.record({
+        action: 'commercial.proposal.created',
+        result: 'success',
+        resourceType: 'proposal',
+        resourceId: proposta.id,
+        metadata: { number: proposta.number, customerId: entrada.customerId },
+      });
     });
 
     return proposta;
@@ -97,6 +102,7 @@ export class CreateProposalUseCase {
 export class UpdateProposalUseCase {
   constructor(
     private readonly propostas: ProposalRepository,
+    private readonly uow: UnitOfWork,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -123,13 +129,15 @@ export class UpdateProposalUseCase {
       proposta.replaceItems(montarItens(entrada.items, proposta.currency));
     }
 
-    await this.propostas.save(entrada.tenantId, proposta);
-    await this.audit.record({
-      action: 'commercial.proposal.updated',
-      result: 'success',
-      resourceType: 'proposal',
-      resourceId: proposta.id,
-      metadata: { totalCents: proposta.total.cents },
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.propostas.save(entrada.tenantId, proposta);
+      await this.audit.record({
+        action: 'commercial.proposal.updated',
+        result: 'success',
+        resourceType: 'proposal',
+        resourceId: proposta.id,
+        metadata: { totalCents: proposta.total.cents },
+      });
     });
 
     return proposta;
@@ -139,6 +147,8 @@ export class UpdateProposalUseCase {
 export class SendProposalUseCase {
   constructor(
     private readonly propostas: ProposalRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -153,17 +163,32 @@ export class SendProposalUseCase {
     );
 
     proposta.send();
-    await this.propostas.save(entrada.tenantId, proposta);
-    await this.audit.record({
-      action: 'commercial.proposal.sent',
-      result: 'success',
-      resourceType: 'proposal',
-      resourceId: proposta.id,
-      metadata: {
-        number: proposta.number,
-        totalCents: proposta.total.cents,
-        currency: proposta.currency,
-      },
+
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.propostas.save(entrada.tenantId, proposta);
+      await this.eventos.publish({
+        type: 'commercial.proposal.sent.v1',
+        resourceType: 'proposal',
+        resourceId: proposta.id,
+        payload: {
+          number: proposta.number,
+          customerId: proposta.customerId,
+          totalCents: proposta.total.cents,
+          currency: proposta.currency,
+          validUntil: proposta.validUntil.toISOString(),
+        },
+      });
+      await this.audit.record({
+        action: 'commercial.proposal.sent',
+        result: 'success',
+        resourceType: 'proposal',
+        resourceId: proposta.id,
+        metadata: {
+          number: proposta.number,
+          totalCents: proposta.total.cents,
+          currency: proposta.currency,
+        },
+      });
     });
 
     return proposta;
@@ -173,6 +198,8 @@ export class SendProposalUseCase {
 export class DecideProposalUseCase {
   constructor(
     private readonly propostas: ProposalRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -200,21 +227,41 @@ export class DecideProposalUseCase {
       proposta.reject();
     }
 
-    await this.propostas.save(entrada.tenantId, proposta);
-    await this.audit.record({
-      action:
-        decisao === 'accept'
-          ? 'commercial.proposal.accepted'
-          : 'commercial.proposal.rejected',
-      result: 'success',
-      resourceType: 'proposal',
-      resourceId: proposta.id,
-      // O valor fechado entra na trilha: é o que se audita numa venda.
-      metadata: {
-        number: proposta.number,
-        totalCents: proposta.total.cents,
-        currency: proposta.currency,
-      },
+    // O manifesto declara `approved` para o aceite: é a intenção de negócio
+    // que a plataforma publica, e não o nome interno da transição.
+    const fato =
+      decisao === 'accept'
+        ? 'commercial.proposal.approved.v1'
+        : 'commercial.proposal.rejected.v1';
+
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.propostas.save(entrada.tenantId, proposta);
+      await this.eventos.publish({
+        type: fato,
+        resourceType: 'proposal',
+        resourceId: proposta.id,
+        payload: {
+          number: proposta.number,
+          customerId: proposta.customerId,
+          totalCents: proposta.total.cents,
+          currency: proposta.currency,
+        },
+      });
+      await this.audit.record({
+        action:
+          decisao === 'accept'
+            ? 'commercial.proposal.accepted'
+            : 'commercial.proposal.rejected',
+        result: 'success',
+        resourceType: 'proposal',
+        resourceId: proposta.id,
+        // O valor fechado entra na trilha: é o que se audita numa venda.
+        metadata: {
+          number: proposta.number,
+          totalCents: proposta.total.cents,
+          currency: proposta.currency,
+        },
+      });
     });
 
     return proposta;

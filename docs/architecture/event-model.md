@@ -1,5 +1,12 @@
 # Modelo de eventos e processamento assíncrono
 
+> **Estado (Fase 8, ADR-0012)** — O outbox transacional está implementado em
+> `packages/events`, e os cinco módulos verticais publicam de verdade. O
+> dispatcher vive em `apps/worker`, com retry, backoff exponencial, DLQ e
+> replay. **Não há broker**: o outbox é a fila, por `for update skip locked` e
+> `available_at`. A entrega é **at-least-once** — handler idempotente é
+> requisito, não recomendação.
+
 ## Arquitetura: event bus interno + transactional outbox
 
 ```mermaid

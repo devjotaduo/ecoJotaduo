@@ -38,6 +38,7 @@ pnpm --filter @ecojotaduo/api seed:dev   # empresa "demo" + admin@demo.local
 pnpm --filter @ecojotaduo/api dev        # http://127.0.0.1:3000
 pnpm --filter @ecojotaduo/mcp-gateway dev # http://127.0.0.1:3001/mcp
 pnpm --filter @ecojotaduo/web dev        # http://127.0.0.1:5173 (proxy /api → 3000)
+pnpm --filter @ecojotaduo/worker dev     # drena o outbox e entrega os eventos
 ```
 
 O init do container só roda com o volume vazio. Se o papel `ecojotaduo_app` ou o banco
@@ -156,6 +157,27 @@ aconteceu). Falha interna **nunca** vira `isError` — ver `docs/api/mcp.md`.
 
 Ao criar uma tool: escreva o caso de uso, declare permissões, nome
 `dominio.entidade.acao`, e nunca aceite `tenantId` como parâmetro.
+
+### Eventos e trabalho de fundo
+
+O fato de negócio é gravado no **outbox, na mesma transação do dado** — é a
+única forma de ele não mentir. Quem precisa disso envolve as escritas em
+`uow.executar(tenantId, ...)`: o `withTenant` de cada repositório reusa a
+transação já aberta, sem mudar assinatura de ninguém. Uma unidade pertence a
+**uma empresa**; `withTenant` com outro tenant lá dentro lança
+`EscopoCruzadoError`.
+
+**Não existe broker.** O outbox É a fila (`for update skip locked`,
+`available_at` para o backoff, `status = 'dead'` para a DLQ). Ver ADR-0012 antes
+de propor BullMQ ou Kafka.
+
+O `apps/worker` monta o mesmo `criarNucleo` e liga só o dispatcher. A entrega é
+**at-least-once**: escreva handler idempotente. Handler novo entra no registro
+explícito da composição — nada de descobrir e executar código em disco.
+
+Evento **nunca leva dado pessoal ou segredo**: ele fica guardado, atravessa
+processos e pode sair da plataforma. `crm.customer.created.v1` leva o nome, e
+não documento, e-mail nem telefone — há teste para isso.
 
 ### Plugins
 

@@ -112,6 +112,7 @@ export function migracoesDaPlataforma(): {
 }[] {
   return [
     { moduleId: 'audit', directory: diretorioDeMigracoes('packages/audit') },
+    { moduleId: 'events', directory: diretorioDeMigracoes('packages/events') },
     {
       moduleId: 'identity',
       directory: diretorioDeMigracoes('modules/identity'),
@@ -230,6 +231,7 @@ function papelDaAplicacao(): string {
 
 const TABELAS = [
   'audit_events',
+  'platform_outbox',
   'operations_rentals',
   'operations_rental_numbers',
   'assets_asset_holds',

@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
 import type { AuditLogger } from '@ecojotaduo/audit';
+import type { EventPublisher } from '@ecojotaduo/events';
+import type { UnitOfWork } from '@ecojotaduo/platform-kernel';
 
 import { Appointment, type AppointmentStatus } from '../domain/appointment';
 import {
@@ -19,6 +21,8 @@ export class ScheduleAppointmentUseCase {
   constructor(
     private readonly clientes: CustomerRepository,
     private readonly agendamentos: AppointmentRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -60,17 +64,28 @@ export class ScheduleAppointmentUseCase {
       }
     }
 
-    await this.agendamentos.save(entrada.tenantId, agendamento);
-
-    await this.audit.record({
-      action: 'crm.appointment.scheduled',
-      result: 'success',
-      resourceType: 'appointment',
-      resourceId: agendamento.id,
-      metadata: {
-        customerId: cliente.id,
-        scheduledFor: agendamento.scheduledFor.toISOString(),
-      },
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.agendamentos.save(entrada.tenantId, agendamento);
+      await this.eventos.publish({
+        type: 'crm.appointment.scheduled.v1',
+        resourceType: 'appointment',
+        resourceId: agendamento.id,
+        payload: {
+          customerId: cliente.id,
+          title: agendamento.title,
+          scheduledFor: agendamento.scheduledFor.toISOString(),
+        },
+      });
+      await this.audit.record({
+        action: 'crm.appointment.scheduled',
+        result: 'success',
+        resourceType: 'appointment',
+        resourceId: agendamento.id,
+        metadata: {
+          customerId: cliente.id,
+          scheduledFor: agendamento.scheduledFor.toISOString(),
+        },
+      });
     });
 
     return agendamento;
@@ -81,6 +96,8 @@ export class ScheduleAppointmentUseCase {
 export class CloseAppointmentUseCase {
   constructor(
     private readonly agendamentos: AppointmentRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -137,12 +154,20 @@ export class CloseAppointmentUseCase {
     agendamento: Appointment,
     acao: string,
   ): Promise<Appointment> {
-    await this.agendamentos.save(tenantId, agendamento);
-    await this.audit.record({
-      action: acao,
-      result: 'success',
-      resourceType: 'appointment',
-      resourceId: agendamento.id,
+    await this.uow.executar(tenantId, async () => {
+      await this.agendamentos.save(tenantId, agendamento);
+      await this.eventos.publish({
+        type: `${acao}.v1`,
+        resourceType: 'appointment',
+        resourceId: agendamento.id,
+        payload: { customerId: agendamento.customerId },
+      });
+      await this.audit.record({
+        action: acao,
+        result: 'success',
+        resourceType: 'appointment',
+        resourceId: agendamento.id,
+      });
     });
     return agendamento;
   }

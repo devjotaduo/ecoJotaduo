@@ -1,4 +1,6 @@
 import { NoopAuditLogger } from '@ecojotaduo/audit';
+import { NoopEventPublisher } from '@ecojotaduo/events';
+import { NoopUnitOfWork } from '@ecojotaduo/platform-kernel';
 import {
   createDatabase,
   runMigrations,
@@ -36,6 +38,11 @@ import { customers } from '../src/adapters/persistence/schema';
 
 // Sem banco no CI, falha em vez de passar pulado.
 exigirBancoEmCI();
+
+// Dublês: estes testes verificam persistência e regra, não atomicidade
+// nem publicação — a unidade real tem suíte própria em `packages/events`.
+const uow = new NoopUnitOfWork();
+const eventos = new NoopEventPublisher();
 
 const CNPJ = '11.222.333/0001-81';
 const AMANHA = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -86,7 +93,7 @@ describe.skipIf(!temBancoDeTeste)('CRM (integração)', () => {
   });
 
   function criarCliente(tenantId: string) {
-    return new CreateCustomerUseCase(clientes, audit).execute({
+    return new CreateCustomerUseCase(clientes, uow, eventos, audit).execute({
       tenantId,
       name: 'Construtora Alfa',
       document: CNPJ,
@@ -139,7 +146,13 @@ describe.skipIf(!temBancoDeTeste)('CRM (integração)', () => {
     it('monta o histórico juntando notas e agendamentos, do mais recente ao mais antigo', async () => {
       const cliente = await criarCliente(empresaA.tenantId);
 
-      await new AddCustomerNoteUseCase(clientes, notas, audit).execute({
+      await new AddCustomerNoteUseCase(
+        clientes,
+        notas,
+        uow,
+        eventos,
+        audit,
+      ).execute({
         tenantId: empresaA.tenantId,
         customerId: cliente.id,
         body: 'Cliente pediu orçamento de escavadeira',
@@ -148,6 +161,8 @@ describe.skipIf(!temBancoDeTeste)('CRM (integração)', () => {
       await new ScheduleAppointmentUseCase(
         clientes,
         agendamentos,
+        uow,
+        eventos,
         audit,
       ).execute({
         tenantId: empresaA.tenantId,
@@ -182,6 +197,8 @@ describe.skipIf(!temBancoDeTeste)('CRM (integração)', () => {
       return new ScheduleAppointmentUseCase(
         clientes,
         agendamentos,
+        uow,
+        eventos,
         audit,
       ).execute({
         tenantId,

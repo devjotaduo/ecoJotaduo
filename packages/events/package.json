@@ -1,14 +1,22 @@
 {
-  "name": "@ecojotaduo/operations",
-  "version": "0.1.0",
+  "name": "@ecojotaduo/events",
+  "version": "0.0.0",
   "private": true,
-  "description": "Modulo Operacoes: locacoes nascidas de contrato ativo, com reserva do equipamento no patrimonio",
+  "description": "Outbox transacional, contrato de eventos de integracao e dispatcher com retry e DLQ",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./drizzle": {
+      "types": "./dist/drizzle.d.ts",
+      "default": "./dist/drizzle.js"
+    },
+    "./dispatcher": {
+      "types": "./dist/dispatcher.d.ts",
+      "default": "./dist/dispatcher.js"
     },
     "./package.json": "./package.json"
   },
@@ -23,18 +31,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@ecojotaduo/audit": "workspace:*",
     "@ecojotaduo/database": "workspace:*",
-    "@ecojotaduo/events": "workspace:*",
-    "@ecojotaduo/http-kit": "workspace:*",
-    "@ecojotaduo/mcp-kit": "workspace:*",
-    "@ecojotaduo/permissions": "workspace:*",
-    "@ecojotaduo/platform-kernel": "workspace:*",
     "@ecojotaduo/tenant-context": "workspace:*",
-    "@nestjs/common": "^11.2.1",
-    "@nestjs/swagger": "^11.4.7",
-    "drizzle-orm": "^0.45.2",
-    "zod": "^4.4.3"
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@ecojotaduo/eslint-config": "workspace:*",

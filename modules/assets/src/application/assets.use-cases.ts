@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
 import type { AuditLogger } from '@ecojotaduo/audit';
+import type { EventPublisher } from '@ecojotaduo/events';
+import type { UnitOfWork } from '@ecojotaduo/platform-kernel';
 
 import {
   Asset,
@@ -42,6 +44,8 @@ export interface AtivoComSituacao {
 export class RegisterAssetUseCase {
   constructor(
     private readonly ativos: AssetRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -72,13 +76,25 @@ export class RegisterAssetUseCase {
       notes: entrada.notes,
     });
 
-    await this.ativos.save(entrada.tenantId, ativo);
-    await this.audit.record({
-      action: 'assets.asset.registered',
-      result: 'success',
-      resourceType: 'asset',
-      resourceId: ativo.id,
-      metadata: { code: ativo.code, category: ativo.category },
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.ativos.save(entrada.tenantId, ativo);
+      await this.eventos.publish({
+        type: 'assets.asset.registered.v1',
+        resourceType: 'asset',
+        resourceId: ativo.id,
+        payload: {
+          code: ativo.code,
+          name: ativo.name,
+          category: ativo.category,
+        },
+      });
+      await this.audit.record({
+        action: 'assets.asset.registered',
+        result: 'success',
+        resourceType: 'asset',
+        resourceId: ativo.id,
+        metadata: { code: ativo.code, category: ativo.category },
+      });
     });
 
     return ativo;
@@ -88,6 +104,7 @@ export class RegisterAssetUseCase {
 export class UpdateAssetUseCase {
   constructor(
     private readonly ativos: AssetRepository,
+    private readonly uow: UnitOfWork,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -104,13 +121,16 @@ export class UpdateAssetUseCase {
     const ativo = await exigirAtivo(this.ativos, tenantId, assetId);
 
     ativo.update(mudancas);
-    await this.ativos.save(tenantId, ativo);
-    await this.audit.record({
-      action: 'assets.asset.updated',
-      result: 'success',
-      resourceType: 'asset',
-      resourceId: ativo.id,
-      metadata: { code: ativo.code },
+
+    await this.uow.executar(tenantId, async () => {
+      await this.ativos.save(tenantId, ativo);
+      await this.audit.record({
+        action: 'assets.asset.updated',
+        result: 'success',
+        resourceType: 'asset',
+        resourceId: ativo.id,
+        metadata: { code: ativo.code },
+      });
     });
 
     return ativo;
@@ -195,6 +215,8 @@ export class HoldAssetUseCase {
   constructor(
     private readonly ativos: AssetRepository,
     private readonly bloqueios: AssetHoldRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -235,19 +257,33 @@ export class HoldAssetUseCase {
       notes: entrada.notes,
     });
 
-    await this.bloqueios.save(entrada.tenantId, bloqueio);
-    await this.audit.record({
-      action: 'assets.asset.held',
-      result: 'success',
-      resourceType: 'asset',
-      resourceId: ativo.id,
-      metadata: {
-        holdId: bloqueio.id,
-        code: ativo.code,
-        reason: bloqueio.reason,
-        startsAt: bloqueio.startsAt.toISOString(),
-        endsAt: bloqueio.endsAt.toISOString(),
-      },
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.bloqueios.save(entrada.tenantId, bloqueio);
+      await this.eventos.publish({
+        type: 'assets.asset.unavailable.v1',
+        resourceType: 'asset',
+        resourceId: ativo.id,
+        payload: {
+          holdId: bloqueio.id,
+          code: ativo.code,
+          reason: bloqueio.reason,
+          startsAt: bloqueio.startsAt.toISOString(),
+          endsAt: bloqueio.endsAt.toISOString(),
+        },
+      });
+      await this.audit.record({
+        action: 'assets.asset.held',
+        result: 'success',
+        resourceType: 'asset',
+        resourceId: ativo.id,
+        metadata: {
+          holdId: bloqueio.id,
+          code: ativo.code,
+          reason: bloqueio.reason,
+          startsAt: bloqueio.startsAt.toISOString(),
+          endsAt: bloqueio.endsAt.toISOString(),
+        },
+      });
     });
 
     return bloqueio;
@@ -257,6 +293,8 @@ export class HoldAssetUseCase {
 export class ReleaseHoldUseCase {
   constructor(
     private readonly bloqueios: AssetHoldRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -273,13 +311,22 @@ export class ReleaseHoldUseCase {
     }
 
     bloqueio.release();
-    await this.bloqueios.save(entrada.tenantId, bloqueio);
-    await this.audit.record({
-      action: 'assets.asset.released',
-      result: 'success',
-      resourceType: 'asset',
-      resourceId: bloqueio.assetId,
-      metadata: { holdId: bloqueio.id, reason: bloqueio.reason },
+
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.bloqueios.save(entrada.tenantId, bloqueio);
+      await this.eventos.publish({
+        type: 'assets.asset.available.v1',
+        resourceType: 'asset',
+        resourceId: bloqueio.assetId,
+        payload: { holdId: bloqueio.id, reason: bloqueio.reason },
+      });
+      await this.audit.record({
+        action: 'assets.asset.released',
+        result: 'success',
+        resourceType: 'asset',
+        resourceId: bloqueio.assetId,
+        metadata: { holdId: bloqueio.id, reason: bloqueio.reason },
+      });
     });
 
     return bloqueio;
@@ -290,6 +337,8 @@ export class RetireAssetUseCase {
   constructor(
     private readonly ativos: AssetRepository,
     private readonly bloqueios: AssetHoldRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -315,13 +364,22 @@ export class RetireAssetUseCase {
     }
 
     ativo.retire(entrada.reason ?? null, agora);
-    await this.ativos.save(entrada.tenantId, ativo);
-    await this.audit.record({
-      action: 'assets.asset.retired',
-      result: 'success',
-      resourceType: 'asset',
-      resourceId: ativo.id,
-      metadata: { code: ativo.code, reason: ativo.retireReason },
+
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.ativos.save(entrada.tenantId, ativo);
+      await this.eventos.publish({
+        type: 'assets.asset.retired.v1',
+        resourceType: 'asset',
+        resourceId: ativo.id,
+        payload: { code: ativo.code, reason: ativo.retireReason },
+      });
+      await this.audit.record({
+        action: 'assets.asset.retired',
+        result: 'success',
+        resourceType: 'asset',
+        resourceId: ativo.id,
+        metadata: { code: ativo.code, reason: ativo.retireReason },
+      });
     });
 
     return ativo;

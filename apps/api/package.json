@@ -23,6 +23,7 @@
     "@ecojotaduo/contracts": "workspace:*",
     "@ecojotaduo/crm": "workspace:*",
     "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/events": "workspace:*",
     "@ecojotaduo/http-kit": "workspace:*",
     "@ecojotaduo/identity": "workspace:*",
     "@ecojotaduo/operations": "workspace:*",

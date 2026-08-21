@@ -2,6 +2,7 @@ import type { TenantId, UserId } from '@ecojotaduo/tenant-context';
 import { sql } from 'drizzle-orm';
 
 import type { Database, TenantTransaction } from './client';
+import { comUnidadeAtiva, transacaoDaUnidade } from './unit-of-work';
 
 export interface TenantScope {
   readonly tenantId: TenantId;
@@ -19,6 +20,43 @@ export interface TenantScope {
  * em vez de dados de outra empresa.
  */
 export async function withTenant<T>(
+  db: Database,
+  escopo: TenantScope,
+  fn: (tx: TenantTransaction) => Promise<T>,
+): Promise<T> {
+  // Dentro de uma unidade de trabalho, reusa a transação já aberta: é isso
+  // que permite gravar o dado e o evento de forma atômica, sem que nenhum
+  // repositório precise receber `tx` por parâmetro. Fora dela, nada muda —
+  // cada chamada continua abrindo a sua.
+  const daUnidade = transacaoDaUnidade(escopo.tenantId);
+  if (daUnidade) {
+    return fn(daUnidade);
+  }
+  return abrirTransacaoDoTenant(db, escopo, fn);
+}
+
+/**
+ * Uma transação, várias escritas: tudo o que rodar dentro de `fn` — inclusive
+ * `withTenant` chamado por repositórios lá no fundo — compartilha a mesma
+ * transação e o mesmo commit.
+ */
+export function comUnidadeDeTrabalho<T>(
+  db: Database,
+  escopo: TenantScope,
+  fn: () => Promise<T>,
+): Promise<T> {
+  // Já dentro de uma: participa da que existe, em vez de abrir outra. Sem
+  // isto, um caso de uso que chama outro perderia a atomicidade em silêncio.
+  const daUnidade = transacaoDaUnidade(escopo.tenantId);
+  if (daUnidade) {
+    return fn();
+  }
+  return abrirTransacaoDoTenant(db, escopo, (tx) =>
+    comUnidadeAtiva(escopo.tenantId, tx, fn),
+  );
+}
+
+function abrirTransacaoDoTenant<T>(
   db: Database,
   escopo: TenantScope,
   fn: (tx: TenantTransaction) => Promise<T>,

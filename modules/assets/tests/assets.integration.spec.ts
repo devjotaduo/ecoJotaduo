@@ -1,4 +1,6 @@
 import { NoopAuditLogger } from '@ecojotaduo/audit';
+import { NoopEventPublisher } from '@ecojotaduo/events';
+import { NoopUnitOfWork } from '@ecojotaduo/platform-kernel';
 import {
   createDatabase,
   runMigrations,
@@ -43,6 +45,11 @@ import {
 
 exigirBancoEmCI();
 
+// Dublês: estes testes verificam persistência e regra, não atomicidade
+// nem publicação — a unidade real tem suíte própria em `packages/events`.
+const uow = new NoopUnitOfWork();
+const eventos = new NoopEventPublisher();
+
 /** `exclusion_violation`: a restrição GiST recusou o período sobreposto. */
 const SQLSTATE_EXCLUSAO = '23P01';
 /** `unique_violation`. */
@@ -79,12 +86,12 @@ describe.skipIf(!temBancoDeTeste)('Ativos (integração)', () => {
     const audit = new NoopAuditLogger();
     ativos = new DrizzleAssetRepository(handle.db);
     bloqueiosRepo = new DrizzleAssetHoldRepository(handle.db);
-    cadastrar = new RegisterAssetUseCase(ativos, audit);
+    cadastrar = new RegisterAssetUseCase(ativos, uow, eventos, audit);
     obter = new GetAssetUseCase(ativos, bloqueiosRepo);
     pesquisar = new SearchAssetsUseCase(ativos, bloqueiosRepo);
-    bloquear = new HoldAssetUseCase(ativos, bloqueiosRepo, audit);
-    liberar = new ReleaseHoldUseCase(bloqueiosRepo, audit);
-    baixar = new RetireAssetUseCase(ativos, bloqueiosRepo, audit);
+    bloquear = new HoldAssetUseCase(ativos, bloqueiosRepo, uow, eventos, audit);
+    liberar = new ReleaseHoldUseCase(bloqueiosRepo, uow, eventos, audit);
+    baixar = new RetireAssetUseCase(ativos, bloqueiosRepo, uow, eventos, audit);
     disponibilidade = new CheckAvailabilityUseCase(ativos, bloqueiosRepo);
     superficiePublica = new AssetsService(
       ativos,

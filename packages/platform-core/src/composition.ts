@@ -68,13 +68,23 @@ import {
   type ContractsUseCases,
   type ProposalDirectory,
 } from '@ecojotaduo/contracts';
-import { createDatabase, type DatabaseHandle } from '@ecojotaduo/database';
+import {
+  createDatabase,
+  DrizzleUnitOfWork,
+  type DatabaseHandle,
+} from '@ecojotaduo/database';
+import type { EventHandler, EventPublisher } from '@ecojotaduo/events';
+import {
+  DrizzleEventPublisher,
+  DrizzleOutbox,
+} from '@ecojotaduo/events/drizzle';
 import { McpCatalog } from '@ecojotaduo/mcp-kit';
 import {
   definirPluginDeNotificacoes,
   notificationsMcpContribution,
   SendNotificationUseCase,
   NOTIFICATIONS_PLUGIN_ID,
+  NotificadorDeLocacao,
   type ConfiguracaoDeNotificacoes,
   type LeitorDeClientes,
   type PoliticaDeDestino,
@@ -153,6 +163,12 @@ export interface NucleoDaPlataforma {
   readonly catalogo: ResolvedModules;
   readonly tokens: TokenService;
   readonly audit: AuditLogger;
+  /** Publica no outbox, na mesma transação do dado. */
+  readonly eventos: EventPublisher;
+  /** Leitura e reentrega do outbox — usada pelo worker. */
+  readonly outbox: DrizzleOutbox;
+  /** Handlers que a instalação registra para os eventos publicados. */
+  readonly handlersDeEventos: readonly EventHandler[];
   readonly identity: IdentityPublicApi;
   readonly tenancy: TenancyPublicApi;
   readonly signIn: SignInUseCase;
@@ -251,6 +267,11 @@ export function criarNucleo(
   });
   const emissor = emissorDeToken(tokens);
   const audit = new DrizzleAuditLogger(db);
+  // Uma transação para o dado, o evento e a trilha: é o que impede o
+  // outbox de guardar fatos que o banco desfez.
+  const uow = new DrizzleUnitOfWork(db);
+  const eventos = new DrizzleEventPublisher(db);
+  const outboxRepo = new DrizzleOutbox(db);
 
   // --- identity -----------------------------------------------------------
   const usuarios = new DrizzleUserRepository(db);
@@ -299,22 +320,40 @@ export function criarNucleo(
   // Uma instância de cada caso de uso, compartilhada por REST e MCP. É esta
   // linha que garante, na prática, que as duas bordas não divirjam.
   const crm: CrmCompleto = {
-    criarCliente: new CreateCustomerUseCase(clientesRepo, audit),
-    atualizarCliente: new UpdateCustomerUseCase(clientesRepo, audit),
+    criarCliente: new CreateCustomerUseCase(clientesRepo, uow, eventos, audit),
+    atualizarCliente: new UpdateCustomerUseCase(
+      clientesRepo,
+      uow,
+      eventos,
+      audit,
+    ),
     obterCliente: new GetCustomerUseCase(
       clientesRepo,
       notasRepo,
       agendamentosRepo,
     ),
     pesquisarClientes: new SearchCustomersUseCase(clientesRepo),
-    adicionarNota: new AddCustomerNoteUseCase(clientesRepo, notasRepo, audit),
+    adicionarNota: new AddCustomerNoteUseCase(
+      clientesRepo,
+      notasRepo,
+      uow,
+      eventos,
+      audit,
+    ),
     listarNotas: new ListCustomerNotesUseCase(clientesRepo, notasRepo),
     agendar: new ScheduleAppointmentUseCase(
       clientesRepo,
       agendamentosRepo,
+      uow,
+      eventos,
       audit,
     ),
-    encerrarAgendamento: new CloseAppointmentUseCase(agendamentosRepo, audit),
+    encerrarAgendamento: new CloseAppointmentUseCase(
+      agendamentosRepo,
+      uow,
+      eventos,
+      audit,
+    ),
     listarAgenda: new ListAgendaUseCase(agendamentosRepo),
   };
 
@@ -419,13 +458,19 @@ export function criarNucleo(
     criarProposta: new CreateProposalUseCase(
       propostasRepo,
       diretorioDeClientes,
+      uow,
       audit,
     ),
-    atualizarProposta: new UpdateProposalUseCase(propostasRepo, audit),
+    atualizarProposta: new UpdateProposalUseCase(propostasRepo, uow, audit),
     obterProposta: new GetProposalUseCase(propostasRepo, diretorioDeClientes),
     pesquisarPropostas: new SearchProposalsUseCase(propostasRepo),
-    enviarProposta: new SendProposalUseCase(propostasRepo, audit),
-    decidirProposta: new DecideProposalUseCase(propostasRepo, audit),
+    enviarProposta: new SendProposalUseCase(propostasRepo, uow, eventos, audit),
+    decidirProposta: new DecideProposalUseCase(
+      propostasRepo,
+      uow,
+      eventos,
+      audit,
+    ),
   };
 
   // --- contratos ----------------------------------------------------------
@@ -442,12 +487,13 @@ export function criarNucleo(
     formalizar: new CreateContractUseCase(
       contratosRepo,
       diretorioDePropostas,
+      uow,
       audit,
     ),
     obter: new GetContractUseCase(contratosRepo),
     pesquisar: new SearchContractsUseCase(contratosRepo),
-    ativar: new ActivateContractUseCase(contratosRepo, audit),
-    encerrar: new CloseContractUseCase(contratosRepo, audit),
+    ativar: new ActivateContractUseCase(contratosRepo, uow, eventos, audit),
+    encerrar: new CloseContractUseCase(contratosRepo, uow, eventos, audit),
   };
 
   // --- ativos -------------------------------------------------------------
@@ -457,13 +503,25 @@ export function criarNucleo(
   const ativosRepo = new DrizzleAssetRepository(db);
   const bloqueiosRepo = new DrizzleAssetHoldRepository(db);
   const assets: AssetsUseCases = {
-    cadastrar: new RegisterAssetUseCase(ativosRepo, audit),
-    atualizar: new UpdateAssetUseCase(ativosRepo, audit),
+    cadastrar: new RegisterAssetUseCase(ativosRepo, uow, eventos, audit),
+    atualizar: new UpdateAssetUseCase(ativosRepo, uow, audit),
     obter: new GetAssetUseCase(ativosRepo, bloqueiosRepo),
     pesquisar: new SearchAssetsUseCase(ativosRepo, bloqueiosRepo),
-    bloquear: new HoldAssetUseCase(ativosRepo, bloqueiosRepo, audit),
-    liberar: new ReleaseHoldUseCase(bloqueiosRepo, audit),
-    baixar: new RetireAssetUseCase(ativosRepo, bloqueiosRepo, audit),
+    bloquear: new HoldAssetUseCase(
+      ativosRepo,
+      bloqueiosRepo,
+      uow,
+      eventos,
+      audit,
+    ),
+    liberar: new ReleaseHoldUseCase(bloqueiosRepo, uow, eventos, audit),
+    baixar: new RetireAssetUseCase(
+      ativosRepo,
+      bloqueiosRepo,
+      uow,
+      eventos,
+      audit,
+    ),
     disponibilidade: new CheckAvailabilityUseCase(ativosRepo, bloqueiosRepo),
   };
 
@@ -524,20 +582,43 @@ export function criarNucleo(
       locacoesRepo,
       diretorioDeContratos,
       diretorioDeAtivos,
+      uow,
       audit,
     ),
     obter: new GetRentalUseCase(locacoesRepo),
     pesquisar: new SearchRentalsUseCase(locacoesRepo),
-    retirar: new StartRentalUseCase(locacoesRepo, audit),
-    devolver: new FinishRentalUseCase(locacoesRepo, diretorioDeAtivos, audit),
-    cancelar: new CancelRentalUseCase(locacoesRepo, diretorioDeAtivos, audit),
+    retirar: new StartRentalUseCase(locacoesRepo, uow, eventos, audit),
+    devolver: new FinishRentalUseCase(
+      locacoesRepo,
+      diretorioDeAtivos,
+      uow,
+      eventos,
+      audit,
+    ),
+    cancelar: new CancelRentalUseCase(
+      locacoesRepo,
+      diretorioDeAtivos,
+      uow,
+      eventos,
+      audit,
+    ),
   };
+
+  // --- consumidores de evento ---------------------------------------------
+  // Registro explícito, como o de módulos: nada de descobrir handler em disco
+  // e executar (ver ADR-0005). O dispatcher entrega só a quem está aqui.
+  const handlers: EventHandler[] = [
+    new NotificadorDeLocacao(notificacoes, runtimeDeNotificacoes),
+  ];
 
   return {
     handle,
     catalogo,
     tokens,
     audit,
+    eventos,
+    outbox: outboxRepo,
+    handlersDeEventos: handlers,
     identity,
     crm,
     commercial,

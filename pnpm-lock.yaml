@@ -44,6 +44,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@ecojotaduo/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
@@ -255,6 +258,43 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.2(@types/node@24.13.3))
 
+  apps/worker:
+    dependencies:
+      '@ecojotaduo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@ecojotaduo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
+      '@ecojotaduo/platform-core':
+        specifier: workspace:*
+        version: link:../../packages/platform-core
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ecojotaduo/test-support':
+        specifier: workspace:*
+        version: link:../../tooling/test-support
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.2(@types/node@24.13.3))
+
   modules/assets:
     dependencies:
       '@ecojotaduo/audit':
@@ -263,6 +303,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@ecojotaduo/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
@@ -324,6 +367,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@ecojotaduo/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
@@ -385,6 +431,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@ecojotaduo/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
@@ -446,6 +495,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@ecojotaduo/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
@@ -547,6 +599,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../packages/events
       '@ecojotaduo/http-kit':
         specifier: workspace:*
         version: link:../../packages/http-kit
@@ -870,6 +925,43 @@ importers:
         specifier: ^8.67.0
         version: 8.67.0(eslint@10.8.1)(typescript@5.9.3)
 
+  packages/events:
+    dependencies:
+      '@ecojotaduo/database':
+        specifier: workspace:*
+        version: link:../database
+      '@ecojotaduo/tenant-context':
+        specifier: workspace:*
+        version: link:../tenant-context
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(postgres@3.4.9)
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@ecojotaduo/test-support':
+        specifier: workspace:*
+        version: link:../../tooling/test-support
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.2(@types/node@24.13.3))
+
   packages/http-kit:
     dependencies:
       '@nestjs/common':
@@ -976,6 +1068,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../database
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../events
       '@ecojotaduo/identity':
         specifier: workspace:*
         version: link:../../modules/identity
@@ -1107,6 +1202,9 @@ importers:
       '@ecojotaduo/audit':
         specifier: workspace:*
         version: link:../../../packages/audit
+      '@ecojotaduo/events':
+        specifier: workspace:*
+        version: link:../../../packages/events
       '@ecojotaduo/http-kit':
         specifier: workspace:*
         version: link:../../../packages/http-kit

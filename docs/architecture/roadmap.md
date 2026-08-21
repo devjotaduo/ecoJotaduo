@@ -14,7 +14,7 @@ executados de verdade, documentação atualizada e riscos declarados. Nenhum mó
 | **5. MCP Gateway** ✅                     | Capacidades para agentes              | `apps/mcp-gateway` com Streamable HTTP sem sessão, `packages/mcp-kit` (contrato + catálogo autorizado), 7 tools, 2 resources, 1 prompt, auditoria, E2E com o cliente oficial, docs de conexão | Host autorizado descobre e executa apenas as capacidades do seu tenant — verificado em E2E           | Fluxo OAuth 2.1 do MCP ainda não implementado    |
 | **6. Module Registry e Plugin SDK** ✅    | Extensão controlada                   | `packages/plugin-sdk` (manifesto validado + runtime), `modules/plugins` (catálogo, instalação por empresa, segredos cifrados, health), plugin `notifications-example` com REST e MCP          | Ativar/desativar plugin em uma empresa não afeta outras — verificado em E2E                          | Plugin externo (out-of-process) ainda não existe |
 | **7. Expansão dos módulos**               | Verticais de negócio                  | Ordem: Commercial → Contracts → Assets → Operations → Billing → Finance → Inventory → Maintenance → RH; cada um com domínio, REST, MCP, eventos, UI, testes, auditoria                        | Cada módulo entrega ao menos um fluxo de negócio completo                                            | Módulos rasos em paralelo — um vertical por vez  |
-| **8. Eventos, integrações e jobs**        | Confiabilidade assíncrona             | Outbox + dispatcher, BullMQ, retries, idempotência, DLQ, webhooks assinados, replay, circuit breaker, rate limit                                                                              | Falha temporária de integração não desfaz transação nem derruba API                                  | Semântica de retry mal definida                  |
+| **8. Eventos, integrações e jobs** ✅     | Confiabilidade assíncrona             | Outbox + dispatcher, BullMQ, retries, idempotência, DLQ, webhooks assinados, replay, circuit breaker, rate limit                                                                              | Falha temporária de integração não desfaz transação nem derruba API                                  | Semântica de retry mal definida                  |
 | **9. MCP Apps e UIs de plugin**           | Interfaces interativas                | App exemplo (form + dashboard), CSP, sandbox, validação de mensagens, fallback textual                                                                                                        | Host sem suporte a Apps continua usando a tool estruturada                                           | Depender de host específico                      |
 | **10. Observabilidade e segurança**       | Confiança operacional                 | OTel completo, dashboards, alertas, auditoria consultável, rate limiting, headers, secret management, backup/restore testado, runbooks, carga                                                 | Responder: quem, qual tenant, qual interface, qual use case, quanto tempo, resultado, correlation ID | Instrumentação tardia — base já na Fase 1        |
 | **11. Implantação e escala**              | Escala horizontal                     | Imagens Docker, staging/prod, migrations controladas, readiness, graceful shutdown, zero-downtime, deploy independente api/mcp/worker                                                         | API e MCP escalam sem estado local                                                                   | Migrations incompatíveis — expand/contract       |
@@ -56,7 +56,10 @@ Ficou **fora** desta entrega, deliberadamente:
    ✅ **Operations** (programar sob contrato → retirar → devolver → cancelar).
    Os demais verticais (Billing, Finance, Inventory, Maintenance, RH) foram
    **pulados a pedido**: os quatro entregues já provam o padrão de módulo e a
-   comunicação entre eles. Próximo: **Fase 8**, eventos e jobs.
+   comunicação entre eles.
+9. ✅ Fase 8 — Outbox transacional, unidade de trabalho, dispatcher com retry,
+   backoff, DLQ e replay; `apps/worker` como terceiro composition root.
+   Próximo: **Fase 9** (MCP Apps) ou **Fase 10** (observabilidade e segurança).
 
 ### Fase 5 — escopo entregue
 
@@ -229,10 +232,11 @@ Ficou **fora**, deliberadamente:
 | Troca de equipamento na mesma locação   | Encerrar e programar outra cobre o caso, e mantém o histórico honesto   | Se a operação pedir   |
 | Eventos publicados                      | Declarados no manifesto, sem barramento até a Fase 8                    | Fase 8                |
 
-**Dívida assumida:** reservar no patrimônio e gravar a locação são duas
-transações. A reserva vem primeiro (o conflito recusa antes de existir locação)
-e há compensação se a gravação falhar — mas compensação não é atomicidade. A
-unidade de trabalho transacional entra na Fase 8.
+**Dívida assumida — e paga na Fase 8:** reservar no patrimônio e gravar a
+locação eram duas transações, com compensação se a gravação falhasse.
+Compensação que também falha deixa o equipamento bloqueado sem nenhuma locação
+que explique o bloqueio. Com a unidade de trabalho (ADR-0012), as duas caem
+juntas e a compensação deixou de ser necessária.
 
 ### `apps/web` — primeira tela (ADR-0011)
 
@@ -244,17 +248,61 @@ O pátio de equipamentos entrou junto com o terceiro vertical, com o filtro de
 disponibilidade por data — a tela que torna visível que a situação é derivada. As
 locações entraram com o quarto, mostrando os dias de atraso na própria lista.
 
+### Fase 8 — eventos, outbox e worker (ADR-0012)
+
+Vinte e quatro eventos estavam declarados em manifesto e nenhum era publicado.
+Agora os cinco módulos verticais publicam de verdade, e o fato de negócio chega
+a um consumidor sem que a API espere por ele.
+
+Quatro decisões que valem registro:
+
+- **O evento vai na MESMA transação do dado.** Foi preciso criar uma unidade de
+  trabalho de verdade: `comUnidadeDeTrabalho` abre a transação e a registra num
+  `AsyncLocalStorage`, e o `withTenant` de sempre a reusa quando já está dentro
+  de uma. Nenhum repositório mudou de assinatura. Verificado por falsificação:
+  removido o reuso, exatamente os testes de atomicidade quebram — e o sintoma é
+  o outbox guardando um fato que o banco desfez.
+
+- **O outbox é a fila; não há broker.** O roadmap previa BullMQ, e ele não foi
+  usado: com consumidores no mesmo processo, um broker seria um segundo lugar
+  onde a mensagem pode estar. `for update skip locked`, `available_at`, backoff
+  exponencial e `status = 'dead'` cobrem concorrência, retry, espera e DLQ.
+  BullMQ entra quando aparecer consumidor fora deste processo ou job que não
+  seja evento.
+
+- **O worker enxerga todas as empresas sem furar a RLS.** Uma função
+  `security definer` devolve apenas o `tenant_id` de quem tem pendência —
+  nenhum payload. O dispatcher entra em cada empresa por `withTenant`, e daí em
+  diante a RLS vale integralmente.
+
+- **At-least-once, com registro por handler.** Handler idempotente é requisito.
+  O `delivered_to` evita o caso comum: com dois consumidores e falha em um, o
+  retry não repete quem já deu certo.
+
+A dívida de Operações fechou junto: reservar o equipamento e gravar a locação
+eram duas transações com compensação, e agora caem na mesma unidade.
+
+Ficou **fora**, deliberadamente (detalhe no ADR-0012):
+
+| Item                                    | Por quê                                                             | Quando                       |
+| --------------------------------------- | ------------------------------------------------------------------- | ---------------------------- |
+| BullMQ / broker externo                 | O outbox já é a fila; broker seria um segundo lugar para a mensagem | Ao surgir consumidor externo |
+| Chave de idempotência na entrada da API | Sem retry automático de cliente hoje                                | Fase 10                      |
+| Circuit breaker e rate limit de saída   | O backoff já contém um destino instável                             | Fase 10                      |
+| Consumo de evento entre módulos         | Nenhum precisa hoje; o primeiro consumidor real é um plugin         | Quando um pedir              |
+| Retenção / expurgo do outbox            | Sem volume que justifique; apagar cedo perde histórico              | Fase 11                      |
+| Ordenação estrita por agregado          | Nenhum handler depende de ordem                                     | Quando um depender           |
+
 ### Dívidas conhecidas ao fim da Fase 2
 
-| Item                                                                                                                | Impacto                                       | Quando resolver                                      |
-| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------- |
-| Resolver o acesso abre **5** transações por requisição (tenant, vínculo, papéis, contratações, plugins habilitados) | Latência extra em toda rota autenticada       | Vencida desde a Fase 3; agrupar em uma transação     |
-| ABAC ainda é só o gancho de política (só RBAC + escopos estão em uso)                                               | Regras de alçada por valor não existem        | Fase 7, com Comercial/Financeiro                     |
-| Sem rate limiting no login                                                                                          | Força bruta só é contida pelo custo do scrypt | Fase 10                                              |
-| Rotação de refresh token não é atômica (emite e depois revoga)                                                      | Janela mínima de corrida em uso concorrente   | Fase 8, junto com a unidade de trabalho transacional |
-| Sem cache — a regra de segmentação por tenant existe, mas não tem sujeito                                           | Nenhum                                        | Ao introduzir o primeiro cache                       |
-| Negação de acesso não é auditada (nem no REST nem no MCP)                                                           | Agente sondando o catálogo não deixa rastro   | Fase 10, nas duas bordas de uma vez                  |
-| Sem rate limiting por credencial no gateway MCP                                                                     | Agente em laço custa banco                    | Fase 10, junto com o do login                        |
-| Webhook de plugin: janela de DNS rebinding entre resolver e conectar                                                | SSRF residual em cenário elaborado            | Ao introduzir camada de saída controlada (Fase 10)   |
-| Locação: reservar no patrimônio e gravar são duas transações (há compensação, não atomicidade)                      | Falha rara deixa reserva órfã                 | Fase 8, com a unidade de trabalho transacional       |
-| `SECRETS_KEY` não tem rotação                                                                                       | Trocar a chave hoje invalida os segredos      | Quando houver o segundo ambiente de produção         |
+| Item                                                                                                                | Impacto                                       | Quando resolver                                                |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------- |
+| Resolver o acesso abre **5** transações por requisição (tenant, vínculo, papéis, contratações, plugins habilitados) | Latência extra em toda rota autenticada       | Vencida desde a Fase 3; agrupar em uma transação               |
+| ABAC ainda é só o gancho de política (só RBAC + escopos estão em uso)                                               | Regras de alçada por valor não existem        | Fase 7, com Comercial/Financeiro                               |
+| Sem rate limiting no login                                                                                          | Força bruta só é contida pelo custo do scrypt | Fase 10                                                        |
+| Rotação de refresh token não é atômica (emite e depois revoga)                                                      | Janela mínima de corrida em uso concorrente   | A unidade de trabalho já existe (Fase 8); falta aplicá-la aqui |
+| Sem cache — a regra de segmentação por tenant existe, mas não tem sujeito                                           | Nenhum                                        | Ao introduzir o primeiro cache                                 |
+| Negação de acesso não é auditada (nem no REST nem no MCP)                                                           | Agente sondando o catálogo não deixa rastro   | Fase 10, nas duas bordas de uma vez                            |
+| Sem rate limiting por credencial no gateway MCP                                                                     | Agente em laço custa banco                    | Fase 10, junto com o do login                                  |
+| Webhook de plugin: janela de DNS rebinding entre resolver e conectar                                                | SSRF residual em cenário elaborado            | Ao introduzir camada de saída controlada (Fase 10)             |
+| `SECRETS_KEY` não tem rotação                                                                                       | Trocar a chave hoje invalida os segredos      | Quando houver o segundo ambiente de produção                   |

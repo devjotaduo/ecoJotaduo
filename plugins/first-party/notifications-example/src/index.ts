@@ -21,3 +21,4 @@ export {
 } from './domain/assinatura';
 export { NotificationsController } from './adapters/http/notifications.controller';
 export { notificationsMcpContribution } from './adapters/mcp/contribution';
+export { NotificadorDeLocacao } from './adapters/events/rental-notifier';

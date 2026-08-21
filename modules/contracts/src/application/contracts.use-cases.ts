@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
 import type { AuditLogger } from '@ecojotaduo/audit';
+import type { EventPublisher } from '@ecojotaduo/events';
+import type { UnitOfWork } from '@ecojotaduo/platform-kernel';
 
 import { Contract } from '../domain/contract';
 import {
@@ -29,6 +31,7 @@ export class CreateContractUseCase {
   constructor(
     private readonly contratos: ContractRepository,
     private readonly propostas: ProposalDirectory,
+    private readonly uow: UnitOfWork,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -72,18 +75,20 @@ export class CreateContractUseCase {
       notes: entrada.notes,
     });
 
-    await this.contratos.save(entrada.tenantId, contrato);
-    await this.audit.record({
-      action: 'contracts.contract.created',
-      result: 'success',
-      resourceType: 'contract',
-      resourceId: contrato.id,
-      metadata: {
-        number: contrato.number,
-        proposalNumber: proposta.number,
-        valueCents: contrato.valueCents,
-        currency: contrato.currency,
-      },
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.contratos.save(entrada.tenantId, contrato);
+      await this.audit.record({
+        action: 'contracts.contract.created',
+        result: 'success',
+        resourceType: 'contract',
+        resourceId: contrato.id,
+        metadata: {
+          number: contrato.number,
+          proposalNumber: proposta.number,
+          valueCents: contrato.valueCents,
+          currency: contrato.currency,
+        },
+      });
     });
 
     return contrato;
@@ -93,6 +98,8 @@ export class CreateContractUseCase {
 export class ActivateContractUseCase {
   constructor(
     private readonly contratos: ContractRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -107,18 +114,35 @@ export class ActivateContractUseCase {
     );
 
     contrato.activate();
-    await this.contratos.save(entrada.tenantId, contrato);
-    await this.audit.record({
-      action: 'contracts.contract.activated',
-      result: 'success',
-      resourceType: 'contract',
-      resourceId: contrato.id,
-      metadata: {
-        number: contrato.number,
-        valueCents: contrato.valueCents,
-        currency: contrato.currency,
-        endsOn: contrato.endsOn.toISOString(),
-      },
+
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.contratos.save(entrada.tenantId, contrato);
+      await this.eventos.publish({
+        type: 'contracts.contract.activated.v1',
+        resourceType: 'contract',
+        resourceId: contrato.id,
+        payload: {
+          number: contrato.number,
+          customerId: contrato.customerId,
+          proposalId: contrato.proposalId,
+          valueCents: contrato.valueCents,
+          currency: contrato.currency,
+          startsOn: contrato.startsOn.toISOString(),
+          endsOn: contrato.endsOn.toISOString(),
+        },
+      });
+      await this.audit.record({
+        action: 'contracts.contract.activated',
+        result: 'success',
+        resourceType: 'contract',
+        resourceId: contrato.id,
+        metadata: {
+          number: contrato.number,
+          valueCents: contrato.valueCents,
+          currency: contrato.currency,
+          endsOn: contrato.endsOn.toISOString(),
+        },
+      });
     });
 
     return contrato;
@@ -128,6 +152,8 @@ export class ActivateContractUseCase {
 export class CloseContractUseCase {
   constructor(
     private readonly contratos: ContractRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -163,21 +189,37 @@ export class CloseContractUseCase {
       contrato.cancel(entrada.reason ?? null);
     }
 
-    await this.contratos.save(entrada.tenantId, contrato);
-    await this.audit.record({
-      action:
-        modo === 'finish'
-          ? 'contracts.contract.finished'
-          : 'contracts.contract.canceled',
-      result: 'success',
-      resourceType: 'contract',
-      resourceId: contrato.id,
-      metadata: {
-        number: contrato.number,
-        valueCents: contrato.valueCents,
-        currency: contrato.currency,
-        reason: contrato.closeReason,
-      },
+    const fato =
+      modo === 'finish'
+        ? 'contracts.contract.finished'
+        : 'contracts.contract.canceled';
+
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.contratos.save(entrada.tenantId, contrato);
+      await this.eventos.publish({
+        type: `${fato}.v1`,
+        resourceType: 'contract',
+        resourceId: contrato.id,
+        payload: {
+          number: contrato.number,
+          customerId: contrato.customerId,
+          valueCents: contrato.valueCents,
+          currency: contrato.currency,
+          reason: contrato.closeReason,
+        },
+      });
+      await this.audit.record({
+        action: fato,
+        result: 'success',
+        resourceType: 'contract',
+        resourceId: contrato.id,
+        metadata: {
+          number: contrato.number,
+          valueCents: contrato.valueCents,
+          currency: contrato.currency,
+          reason: contrato.closeReason,
+        },
+      });
     });
 
     return contrato;

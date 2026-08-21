@@ -1,0 +1,29 @@
+{
+  "name": "@ecojotaduo/worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Worker de fundo: entrega os eventos do outbox aos handlers registrados, com retry e DLQ",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env --enable-source-maps dist/main.js",
+    "start": "node --enable-source-maps dist/main.js"
+  },
+  "dependencies": {
+    "@ecojotaduo/config": "workspace:*",
+    "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/events": "workspace:*",
+    "@ecojotaduo/platform-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/test-support": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

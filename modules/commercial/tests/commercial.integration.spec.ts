@@ -1,4 +1,6 @@
 import { NoopAuditLogger } from '@ecojotaduo/audit';
+import { NoopEventPublisher } from '@ecojotaduo/events';
+import { NoopUnitOfWork } from '@ecojotaduo/platform-kernel';
 import {
   createDatabase,
   runMigrations,
@@ -35,6 +37,11 @@ import {
 import { proposals } from '../src/adapters/persistence/schema';
 
 exigirBancoEmCI();
+
+// Dublês: estes testes verificam persistência e regra, não atomicidade
+// nem publicação — a unidade real tem suíte própria em `packages/events`.
+const uow = new NoopUnitOfWork();
+const eventos = new NoopEventPublisher();
 
 const CLIENTE_A = '11111111-1111-4111-8111-111111111111';
 const CLIENTE_B = '22222222-2222-4222-8222-222222222222';
@@ -79,10 +86,10 @@ describe.skipIf(!temBancoDeTeste)('Comercial (integração)', () => {
 
     const audit = new NoopAuditLogger();
     propostas = new DrizzleProposalRepository(handle.db);
-    criar = new CreateProposalUseCase(propostas, clientes, audit);
-    atualizar = new UpdateProposalUseCase(propostas, audit);
-    enviar = new SendProposalUseCase(propostas, audit);
-    decidir = new DecideProposalUseCase(propostas, audit);
+    criar = new CreateProposalUseCase(propostas, clientes, uow, audit);
+    atualizar = new UpdateProposalUseCase(propostas, uow, audit);
+    enviar = new SendProposalUseCase(propostas, uow, eventos, audit);
+    decidir = new DecideProposalUseCase(propostas, uow, eventos, audit);
     pesquisar = new SearchProposalsUseCase(propostas);
   });
 

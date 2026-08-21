@@ -14,7 +14,7 @@ import { catalogoDeModulos } from '@ecojotaduo/platform-core';
  *
  * Conecta como DONO das tabelas (DATABASE_ADMIN_URL) — a aplicação em si roda
  * com um papel restrito, sem DDL. A ordem vem do grafo de dependências entre
- * módulos, resolvido pelo kernel; migrações da plataforma (auditoria) vêm
+ * módulos, resolvido pelo kernel; migrações da plataforma (auditoria e outbox) vêm
  * antes das dos módulos.
  */
 export async function migrar(): Promise<void> {
@@ -31,6 +31,10 @@ export async function migrar(): Promise<void> {
     {
       moduleId: 'audit',
       directory: resolveMigrationsDirectory(require, '@ecojotaduo/audit'),
+    },
+    {
+      moduleId: 'events',
+      directory: resolveMigrationsDirectory(require, '@ecojotaduo/events'),
     },
     ...catalogo.migrationSources.map((fonte) => ({
       moduleId: fonte.moduleId,

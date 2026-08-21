@@ -21,14 +21,15 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@ecojotaduo/audit": "workspace:*",
     "@ecojotaduo/assets": "workspace:*",
+    "@ecojotaduo/audit": "workspace:*",
     "@ecojotaduo/auth": "workspace:*",
     "@ecojotaduo/commercial": "workspace:*",
     "@ecojotaduo/config": "workspace:*",
     "@ecojotaduo/contracts": "workspace:*",
     "@ecojotaduo/crm": "workspace:*",
     "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/events": "workspace:*",
     "@ecojotaduo/identity": "workspace:*",
     "@ecojotaduo/mcp-kit": "workspace:*",
     "@ecojotaduo/operations": "workspace:*",

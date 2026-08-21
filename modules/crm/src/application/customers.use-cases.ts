@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 
 import type { AuditLogger } from '@ecojotaduo/audit';
+import type { EventPublisher } from '@ecojotaduo/events';
+import type { UnitOfWork } from '@ecojotaduo/platform-kernel';
 
 import { Customer } from '../domain/customer';
 import { CustomerDocument } from '../domain/document';
@@ -29,6 +31,8 @@ export interface CriarClienteEntrada {
 export class CreateCustomerUseCase {
   constructor(
     private readonly clientes: CustomerRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -47,14 +51,24 @@ export class CreateCustomerUseCase {
     }
 
     const cliente = Customer.create({ id: randomUUID(), ...entrada });
-    await this.clientes.save(entrada.tenantId, cliente);
 
-    await this.audit.record({
-      action: 'crm.customer.created',
-      result: 'success',
-      resourceType: 'customer',
-      resourceId: cliente.id,
-      metadata: { name: cliente.name },
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.clientes.save(entrada.tenantId, cliente);
+      await this.eventos.publish({
+        type: 'crm.customer.created.v1',
+        resourceType: 'customer',
+        resourceId: cliente.id,
+        // Só identificação: documento, e-mail e telefone são dados pessoais e
+        // o evento fica guardado, atravessa processos e pode ir para fora.
+        payload: { name: cliente.name },
+      });
+      await this.audit.record({
+        action: 'crm.customer.created',
+        result: 'success',
+        resourceType: 'customer',
+        resourceId: cliente.id,
+        metadata: { name: cliente.name },
+      });
     });
 
     return cliente;
@@ -64,6 +78,8 @@ export class CreateCustomerUseCase {
 export class UpdateCustomerUseCase {
   constructor(
     private readonly clientes: CustomerRepository,
+    private readonly uow: UnitOfWork,
+    private readonly eventos: EventPublisher,
     private readonly audit: AuditLogger,
   ) {}
 
@@ -100,13 +116,20 @@ export class UpdateCustomerUseCase {
       email: entrada.email,
       phone: entrada.phone,
     });
-    await this.clientes.save(entrada.tenantId, cliente);
-
-    await this.audit.record({
-      action: 'crm.customer.updated',
-      result: 'success',
-      resourceType: 'customer',
-      resourceId: cliente.id,
+    await this.uow.executar(entrada.tenantId, async () => {
+      await this.clientes.save(entrada.tenantId, cliente);
+      await this.eventos.publish({
+        type: 'crm.customer.updated.v1',
+        resourceType: 'customer',
+        resourceId: cliente.id,
+        payload: { name: cliente.name },
+      });
+      await this.audit.record({
+        action: 'crm.customer.updated',
+        result: 'success',
+        resourceType: 'customer',
+        resourceId: cliente.id,
+      });
     });
 
     return cliente;

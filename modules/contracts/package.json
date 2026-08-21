@@ -25,6 +25,7 @@
   "dependencies": {
     "@ecojotaduo/audit": "workspace:*",
     "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/events": "workspace:*",
     "@ecojotaduo/http-kit": "workspace:*",
     "@ecojotaduo/mcp-kit": "workspace:*",
     "@ecojotaduo/permissions": "workspace:*",

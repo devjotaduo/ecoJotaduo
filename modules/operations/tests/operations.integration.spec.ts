@@ -1,6 +1,8 @@
 import { NoopAuditLogger } from '@ecojotaduo/audit';
+import { NoopEventPublisher, type EventPublisher } from '@ecojotaduo/events';
 import {
   createDatabase,
+  DrizzleUnitOfWork,
   runMigrations,
   withTenant,
   type DatabaseHandle,
@@ -68,6 +70,7 @@ describe.skipIf(!temBancoDeTeste)('Operações (integração)', () => {
   let devolver: FinishRentalUseCase;
   let cancelar: CancelRentalUseCase;
   let pesquisar: SearchRentalsUseCase;
+  let eventos: NoopEventPublisher;
 
   /** Reservas criadas no "patrimônio" e as que continuam abertas. */
   let reservas: string[];
@@ -138,11 +141,20 @@ describe.skipIf(!temBancoDeTeste)('Operações (integração)', () => {
     handle = createDatabase({ url: urlDaAplicacao(), quiet: true });
 
     const audit = new NoopAuditLogger();
+    // Unidade de trabalho REAL: é ela que faz gravação e evento caírem juntos.
+    const uow = new DrizzleUnitOfWork(handle.db);
+    eventos = new NoopEventPublisher();
     locacoes = new DrizzleRentalRepository(handle.db);
-    programar = new ScheduleRentalUseCase(locacoes, contratos, ativos, audit);
-    retirar = new StartRentalUseCase(locacoes, audit);
-    devolver = new FinishRentalUseCase(locacoes, ativos, audit);
-    cancelar = new CancelRentalUseCase(locacoes, ativos, audit);
+    programar = new ScheduleRentalUseCase(
+      locacoes,
+      contratos,
+      ativos,
+      uow,
+      audit,
+    );
+    retirar = new StartRentalUseCase(locacoes, uow, eventos, audit);
+    devolver = new FinishRentalUseCase(locacoes, ativos, uow, eventos, audit);
+    cancelar = new CancelRentalUseCase(locacoes, ativos, uow, eventos, audit);
     pesquisar = new SearchRentalsUseCase(locacoes);
   });
 
@@ -156,6 +168,7 @@ describe.skipIf(!temBancoDeTeste)('Operações (integração)', () => {
     await limparDados(dono);
     reservas = [];
     liberadas = [];
+    eventos.eventos.length = 0;
     empresaA = await semearTenant(dono, {
       slug: 'empresa-a',
       email: 'ana@empresa-a.com.br',
@@ -305,34 +318,53 @@ describe.skipIf(!temBancoDeTeste)('Operações (integração)', () => {
       expect(liberadas).toHaveLength(0);
     });
 
-    it('se a gravação falhar, a reserva é DESFEITA', async () => {
-      // Sem a compensação, o equipamento ficaria bloqueado sem nenhuma locação
-      // que explicasse o bloqueio — e ninguém saberia por que ele não sai.
-      const quebrado = new ScheduleRentalUseCase(
-        {
-          ...locacoes,
-          save: () => Promise.reject(new Error('banco fora do ar')),
-          findById: (tenantId, id) => locacoes.findById(tenantId, id),
-          search: (tenantId, filtro) => locacoes.search(tenantId, filtro),
-          reservarNumero: (tenantId) => locacoes.reservarNumero(tenantId),
-        },
-        contratos,
+    it('gravação e evento caem juntos quando o evento falha', async () => {
+      // Sem a unidade de trabalho, a locação ficaria gravada e o consumidor
+      // nunca saberia dela — ou pior, o inverso.
+      const publisherQuebrado: EventPublisher = {
+        publish: () => Promise.reject(new Error('outbox fora do ar')),
+      };
+      const devolverQuebrado = new FinishRentalUseCase(
+        locacoes,
         ativos,
+        new DrizzleUnitOfWork(handle.db),
+        publisherQuebrado,
         new NoopAuditLogger(),
       );
 
-      await expect(
-        quebrado.execute({
-          tenantId: empresaA.tenantId,
-          contractId: CONTRATO_ATIVO,
-          assetId: EQUIPAMENTO,
-          startsAt: daquiA(1),
-          endsAt: daquiA(10),
-        }),
-      ).rejects.toThrow('banco fora do ar');
+      const locacao = await novaLocacao();
+      await retirar.execute({
+        tenantId: empresaA.tenantId,
+        rentalId: locacao.id,
+      });
 
-      expect(reservas).toHaveLength(1);
-      expect(liberadas).toEqual(reservas);
+      await expect(
+        devolverQuebrado.execute({
+          tenantId: empresaA.tenantId,
+          rentalId: locacao.id,
+        }),
+      ).rejects.toThrow('outbox fora do ar');
+
+      // A devolução NÃO foi gravada: o rollback levou tudo.
+      const relida = await locacoes.findById(empresaA.tenantId, locacao.id);
+      expect(relida?.status).toBe('active');
+    });
+
+    it('publica o fato de negócio a cada transição', async () => {
+      const locacao = await novaLocacao();
+      await retirar.execute({
+        tenantId: empresaA.tenantId,
+        rentalId: locacao.id,
+      });
+      await devolver.execute({
+        tenantId: empresaA.tenantId,
+        rentalId: locacao.id,
+      });
+
+      expect(eventos.eventos.map((evento) => evento.type)).toEqual([
+        'operations.rental.started.v1',
+        'operations.rental.finished.v1',
+      ]);
     });
 
     it('uma reserva serve a UMA locação — a restrição do banco garante', async () => {

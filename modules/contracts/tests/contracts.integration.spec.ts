@@ -1,4 +1,6 @@
 import { NoopAuditLogger } from '@ecojotaduo/audit';
+import { NoopEventPublisher } from '@ecojotaduo/events';
+import { NoopUnitOfWork } from '@ecojotaduo/platform-kernel';
 import {
   createDatabase,
   runMigrations,
@@ -37,6 +39,11 @@ import {
 import { contracts } from '../src/adapters/persistence/schema';
 
 exigirBancoEmCI();
+
+// Dublês: estes testes verificam persistência e regra, não atomicidade
+// nem publicação — a unidade real tem suíte própria em `packages/events`.
+const uow = new NoopUnitOfWork();
+const eventos = new NoopEventPublisher();
 
 const PROPOSTA_ACEITA = '11111111-1111-4111-8111-111111111111';
 const PROPOSTA_ENVIADA = '22222222-2222-4222-8222-222222222222';
@@ -99,9 +106,9 @@ describe.skipIf(!temBancoDeTeste)('Contratos (integração)', () => {
 
     const audit = new NoopAuditLogger();
     contratos = new DrizzleContractRepository(handle.db);
-    formalizar = new CreateContractUseCase(contratos, propostas, audit);
-    ativar = new ActivateContractUseCase(contratos, audit);
-    encerrar = new CloseContractUseCase(contratos, audit);
+    formalizar = new CreateContractUseCase(contratos, propostas, uow, audit);
+    ativar = new ActivateContractUseCase(contratos, uow, eventos, audit);
+    encerrar = new CloseContractUseCase(contratos, uow, eventos, audit);
     pesquisar = new SearchContractsUseCase(contratos);
   });
 
