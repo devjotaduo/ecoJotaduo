@@ -60,7 +60,7 @@ as suítes que dependem de banco se declaram **puladas** (nunca passam em silên
 ## Estrutura
 
 ```text
-apps/          composition roots (api = REST, mcp-gateway = MCP; worker na Fase 8)
+apps/          api (REST), mcp-gateway (MCP), web (React/Vite); worker na Fase 8
 packages/      kernel compartilhado: config, database, auth, permissions,
                tenant-context, audit, platform-kernel, platform-core, http-kit,
                mcp-kit, plugin-sdk, api-client, tsconfig, eslint-config

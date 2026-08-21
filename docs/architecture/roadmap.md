@@ -30,7 +30,7 @@ Ficou **fora** desta entrega, deliberadamente:
 
 | Item                          | Por quê                                                | Quando                     |
 | ----------------------------- | ------------------------------------------------------ | -------------------------- |
-| Tela React (`apps/web`)       | O pedido foi de recursos mínimos; o SDK já está pronto | Próxima fase de produto    |
+| Tela React (`apps/web`)       | O pedido foi de recursos mínimos; o SDK já está pronto | ✅ entregue após a Fase 7  |
 | Gateway MCP rodando           | As tools existem e são testadas; falta o transporte    | ✅ entregue na Fase 5      |
 | Eventos publicados via outbox | Declarados no manifesto, ainda não emitidos            | Fase 8                     |
 | Reagendar (mudar horário)     | Cancelar + agendar cobre o caso                        | Quando houver demanda real |
@@ -139,6 +139,12 @@ Ficou **fora**, deliberadamente:
 | Contrato sem proposta (avulso)  | Contradiz a regra que define o módulo                       | Se o negócio pedir, com ADR |
 | Anexos (documento assinado)     | Depende de Documents, transversal ainda não implementado    | Fase 9+                     |
 | Eventos publicados              | Declarados no manifesto, sem barramento até a Fase 8        | Fase 8                      |
+
+### `apps/web` — primeira tela (ADR-0011)
+
+Entregue junto do segundo vertical: login, carteira de clientes com linha do tempo,
+funil de propostas (criar → enviar → decidir) e contratos (formalizar → ativar →
+encerrar). Consome **apenas** o SDK gerado — nenhum tipo de API escrito à mão.
 
 ### Dívidas conhecidas ao fim da Fase 2
 

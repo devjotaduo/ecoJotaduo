@@ -1,0 +1,309 @@
+/* Estilos do aplicativo. Sem framework: são poucas telas e nenhuma delas
+   precisa de mais do que um punhado de regras. */
+
+:root {
+  --tinta: #17202a;
+  --tinta-fraca: #5b6b7c;
+  --fundo: #f4f6f8;
+  --superficie: #ffffff;
+  --borda: #dde3ea;
+  --acento: #1f6feb;
+  --perigo: #b42318;
+  --raio: 8px;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  color: var(--tinta);
+  background: var(--fundo);
+}
+
+.carregando,
+.estado {
+  padding: 2rem;
+  color: var(--tinta-fraca);
+}
+
+/* Login ------------------------------------------------------------------ */
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.login__caixa {
+  display: grid;
+  gap: 1rem;
+  width: min(22rem, 90vw);
+  padding: 2rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.login__caixa h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.login__subtitulo {
+  margin: -0.5rem 0 0;
+  color: var(--tinta-fraca);
+}
+
+/* Estrutura -------------------------------------------------------------- */
+.cabecalho {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: var(--superficie);
+  border-bottom: 1px solid var(--borda);
+}
+
+.marca {
+  font-size: 1.1rem;
+}
+
+.navegacao {
+  display: flex;
+  gap: 1rem;
+}
+
+.navegacao a {
+  color: var(--tinta-fraca);
+  text-decoration: none;
+  padding: 0.25rem 0;
+  border-bottom: 2px solid transparent;
+}
+
+.navegacao a.active {
+  color: var(--acento);
+  border-bottom-color: var(--acento);
+}
+
+.cabecalho__conta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.cabecalho__empresa {
+  color: var(--tinta-fraca);
+}
+
+.pagina {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+
+/* Cartão ----------------------------------------------------------------- */
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  padding: 1.25rem;
+}
+
+.cartao__cabecalho {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.cartao__cabecalho h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Formulário ------------------------------------------------------------- */
+.formulario {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 28rem;
+}
+
+.linha {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.campo {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.campo__rotulo {
+  font-size: 0.85rem;
+  color: var(--tinta-fraca);
+}
+
+.campo__entrada {
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  color: inherit;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+}
+
+.campo__entrada:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
+}
+
+.campo__dica {
+  font-size: 0.8rem;
+  color: var(--tinta-fraca);
+}
+
+.botao {
+  padding: 0.5rem 0.9rem;
+  font: inherit;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.botao:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.botao--primario {
+  background: var(--acento);
+  color: #fff;
+}
+
+.botao--secundario {
+  background: var(--superficie);
+  border-color: var(--borda);
+  color: var(--tinta);
+}
+
+.botao--perigo {
+  background: var(--superficie);
+  border-color: var(--perigo);
+  color: var(--perigo);
+}
+
+/* Tabela ----------------------------------------------------------------- */
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabela th,
+.tabela td {
+  padding: 0.55rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--borda);
+}
+
+.tabela th {
+  font-size: 0.8rem;
+  color: var(--tinta-fraca);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tabela .numero {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.tabela a {
+  color: var(--acento);
+}
+
+/* Miúdos ----------------------------------------------------------------- */
+.ficha {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.4rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.ficha dt {
+  color: var(--tinta-fraca);
+}
+
+.ficha dd {
+  margin: 0;
+}
+
+.etiqueta {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.8rem;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+}
+
+.badge-vigor {
+  margin-left: 0.4rem;
+  font-size: 0.75rem;
+  color: #1a7f37;
+}
+
+.aviso {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+}
+
+.aviso--erro {
+  color: var(--perigo);
+  background: #fdf2f1;
+  border: 1px solid #f4c7c3;
+}
+
+.aviso--informacao {
+  color: var(--tinta-fraca);
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+}
+
+.linha-do-tempo {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linha-do-tempo li {
+  display: grid;
+  gap: 0.15rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--borda);
+}
+
+.linha-do-tempo time {
+  font-size: 0.8rem;
+  color: var(--tinta-fraca);
+}
+
+.linha-do-tempo p {
+  margin: 0;
+  color: var(--tinta-fraca);
+}

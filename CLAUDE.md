@@ -37,6 +37,7 @@ pnpm --filter @ecojotaduo/api migrate    # aplica migrações (conecta como dono
 pnpm --filter @ecojotaduo/api seed:dev   # empresa "demo" + admin@demo.local
 pnpm --filter @ecojotaduo/api dev        # http://127.0.0.1:3000
 pnpm --filter @ecojotaduo/mcp-gateway dev # http://127.0.0.1:3001/mcp
+pnpm --filter @ecojotaduo/web dev        # http://127.0.0.1:5173 (proxy /api → 3000)
 ```
 
 O init do container só roda com o volume vazio. Se o papel `ecojotaduo_app` ou o banco
@@ -48,7 +49,8 @@ seguido de `up -d`.
 Monólito modular em monorepo pnpm + Turborepo (ADR-0001). Três camadas de pastas:
 
 - `apps/` — **composition roots**. Cada app monta os mesmos módulos com adaptadores de
-  uma borda diferente (`api` = REST, `mcp-gateway` = MCP; futuramente `worker`).
+  uma borda diferente (`api` = REST, `mcp-gateway` = MCP; futuramente `worker`). O
+  `web` é a exceção: não monta módulo nenhum — é cliente do SDK.
 - `modules/` — domínios de negócio, um pacote pnpm cada, em arquitetura hexagonal.
 - `packages/` — kernel compartilhado (config, database, auth, permissions,
   tenant-context, audit, platform-kernel, http-kit, mcp-kit, plugin-sdk,
@@ -174,6 +176,23 @@ configuração, auditoria — devolve o valor, só as chaves. Chamada de saída 
 pela empresa passa por guarda anti-SSRF; sem ela seria `call_any_url` com outro nome.
 
 Ver `docs/api/plugins.md` e ADR-0010.
+
+### Aplicação web
+
+`apps/web` consome **apenas** `@ecojotaduo/api-client`: nenhum tipo de API escrito à
+mão. Mudar um campo no servidor quebra a compilação da tela, e não a tela em produção.
+
+Duas regras que não se negociam ali (ADR-0011):
+
+- **A interface esconde; o servidor barra.** `pode('crm.customer.create')` some com o
+  botão que só levaria a 403 — é conveniência, nunca barreira. Se o espelho divergir
+  do servidor, quem está certo é o servidor.
+- **Access token só em memória.** Só o refresh token vai para o `sessionStorage`, e
+  ele passa por rotação com detecção de reuso. Não protege contra XSS — a correção
+  durável é cookie `httpOnly` + CSRF, declarada no roadmap.
+
+Em desenvolvimento o Vite encaminha `/api` para a API: mesma origem, sem abrir CORS no
+servidor por conveniência do front.
 
 ### Contrato da API (OpenAPI 3.1) e SDK
 

@@ -20,7 +20,9 @@ export default tseslint.config(
     ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**'],
   },
   {
-    files: ['**/*.ts'],
+    // `.tsx` junto: sem isso o aplicativo web ficaria sem lint nenhum, que é
+    // pior do que lint frouxo.
+    files: ['**/*.ts', '**/*.tsx'],
     extends: [
       eslintJs.configs.recommended,
       ...tseslint.configs.recommendedTypeChecked,
