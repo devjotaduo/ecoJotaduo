@@ -55,6 +55,7 @@ describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
 
     process.env.DATABASE_URL = urlDaAplicacao();
     process.env.JWT_SECRET = 'segredo-de-teste-com-mais-de-32-bytes-1234';
+    process.env.SECRETS_KEY = Buffer.alloc(32, 7).toString('base64');
     process.env.NODE_ENV = 'test';
 
     const modulo = await Test.createTestingModule({

@@ -3,6 +3,7 @@ import type { AccessGrant } from '@ecojotaduo/permissions';
 import { entitlementIsValid } from '../domain/tenant';
 import { NoActiveMembershipError, TenantNotFoundError } from '../domain/errors';
 import type {
+  EntitlementContributor,
   EntitlementRepository,
   MembershipRepository,
   TenantRepository,
@@ -26,6 +27,8 @@ export class ResolveAccessGrantUseCase {
     private readonly tenants: TenantRepository,
     private readonly memberships: MembershipRepository,
     private readonly entitlements: EntitlementRepository,
+    /** Extensões (plugins) que também concedem acesso quando habilitadas. */
+    private readonly contribuidores: readonly EntitlementContributor[] = [],
   ) {}
 
   async execute(entrada: {
@@ -48,9 +51,10 @@ export class ResolveAccessGrantUseCase {
       throw new NoActiveMembershipError();
     }
 
-    const [permissions, entitlements] = await Promise.all([
+    const [permissions, entitlements, extras] = await Promise.all([
       this.memberships.listPermissions(tenant.id, membership.id),
       this.entitlements.list(tenant.id),
+      this.extras(tenant.id),
     ]);
 
     const agora = entrada.agora ?? new Date();
@@ -59,9 +63,12 @@ export class ResolveAccessGrantUseCase {
       grant: {
         permissions,
         scopes: entrada.scopes,
-        entitlements: entitlements
-          .filter((entitlement) => entitlementIsValid(entitlement, agora))
-          .map((entitlement) => entitlement.moduleId),
+        entitlements: [
+          ...entitlements
+            .filter((entitlement) => entitlementIsValid(entitlement, agora))
+            .map((entitlement) => entitlement.moduleId),
+          ...extras,
+        ],
       },
       membershipId: membership.id,
       tenantName: tenant.name,
@@ -83,15 +90,41 @@ export class ResolveAccessGrantUseCase {
     }
     tenant.assertActive();
 
-    const entitlements = await this.entitlements.list(tenant.id);
+    const [entitlements, extras] = await Promise.all([
+      this.entitlements.list(tenant.id),
+      this.extras(tenant.id),
+    ]);
     const agora = entrada.agora ?? new Date();
 
     return {
       permissions: entrada.scopes,
       scopes: entrada.scopes,
-      entitlements: entitlements
-        .filter((entitlement) => entitlementIsValid(entitlement, agora))
-        .map((entitlement) => entitlement.moduleId),
+      entitlements: [
+        ...entitlements
+          .filter((entitlement) => entitlementIsValid(entitlement, agora))
+          .map((entitlement) => entitlement.moduleId),
+        ...extras,
+      ],
     };
+  }
+
+  /**
+   * Entitlements vindos de extensões (hoje, plugins habilitados).
+   *
+   * Uma consulta a mais por requisição — a dívida de "resolver acesso abre N
+   * transações" cresce e está registrada no roadmap. O caminho contrário
+   * (guardar o resultado num token) seria pior: desabilitar um plugin
+   * demoraria a valer, que é exatamente o que esta cadeia existe para evitar.
+   */
+  private async extras(tenantId: string): Promise<string[]> {
+    if (this.contribuidores.length === 0) {
+      return [];
+    }
+    const listas = await Promise.all(
+      this.contribuidores.map((contribuidor) =>
+        contribuidor.listEntitlements(tenantId),
+      ),
+    );
+    return listas.flat();
   }
 }

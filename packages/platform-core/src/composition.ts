@@ -30,6 +30,33 @@ import {
 import { createDatabase, type DatabaseHandle } from '@ecojotaduo/database';
 import { McpCatalog } from '@ecojotaduo/mcp-kit';
 import {
+  definirPluginDeNotificacoes,
+  notificationsMcpContribution,
+  SendNotificationUseCase,
+  NOTIFICATIONS_PLUGIN_ID,
+  type ConfiguracaoDeNotificacoes,
+  type LeitorDeClientes,
+  type PoliticaDeDestino,
+} from '@ecojotaduo/plugin-notifications-example';
+import type {
+  PluginRuntime,
+  PluginRuntimeProvider,
+} from '@ecojotaduo/plugin-sdk';
+import {
+  ChangePluginStatusUseCase,
+  CofreDeSegredosDoPlugin,
+  ConfigurePluginUseCase,
+  DrizzlePluginInstallationRepository,
+  DrizzlePluginSecretRepository,
+  InstallPluginUseCase,
+  ListEnabledPluginsUseCase,
+  ListPluginsUseCase,
+  PluginCatalog,
+  ResolvePluginRuntimeUseCase,
+} from '@ecojotaduo/plugins';
+import { lerChaveDeSegredos } from '@ecojotaduo/auth';
+import { pluginEntitlement } from '@ecojotaduo/permissions';
+import {
   DrizzleRefreshTokenRepository,
   DrizzleServiceAccountRepository,
   DrizzleUserRepository,
@@ -84,6 +111,28 @@ export interface NucleoDaPlataforma {
    * só o liga ao transporte.
    */
   readonly mcp: McpCatalog;
+  readonly plugins: PluginsCompleto;
+}
+
+/** Registry de plugins e a borda do plugin de exemplo. */
+export interface PluginsCompleto {
+  readonly catalogo: PluginCatalog;
+  readonly instalar: InstallPluginUseCase;
+  readonly configurar: ConfigurePluginUseCase;
+  readonly status: ChangePluginStatusUseCase;
+  readonly listar: ListPluginsUseCase;
+  readonly resolverRuntime: ResolvePluginRuntimeUseCase;
+  readonly notificacoes: SendNotificationUseCase;
+  readonly runtimeDeNotificacoes: PluginRuntimeProvider<ConfiguracaoDeNotificacoes>;
+}
+
+export interface OpcoesDoNucleo {
+  /**
+   * Política de destino dos webhooks de plugin. O padrão recusa a rede
+   * interna; os testes E2E injetam uma que aceita o servidor local, para
+   * exercitar a entrega sem sair da máquina.
+   */
+  readonly politicaDeDestinoDeWebhook?: PoliticaDeDestino;
 }
 
 /**
@@ -120,7 +169,10 @@ function emissorDeToken(tokens: TokenService): AccessTokenIssuer {
  * Nenhuma regra de negócio aqui — só a ligação entre adaptadores concretos e
  * casos de uso. É esta função que garante, na prática, regra de negócio única.
  */
-export function criarNucleo(env: Env): NucleoDaPlataforma {
+export function criarNucleo(
+  env: Env,
+  opcoes: OpcoesDoNucleo = {},
+): NucleoDaPlataforma {
   const catalogo = catalogoDeModulos();
   const handle = createDatabase({
     url: env.DATABASE_URL,
@@ -154,6 +206,13 @@ export function criarNucleo(env: Env): NucleoDaPlataforma {
     usuarios,
   );
 
+  // --- plugins ------------------------------------------------------------
+  // Montado antes do tenancy: um plugin habilitado é entitlement, e a
+  // resolução de acesso precisa da fonte pronta.
+  const instalacoesRepo = new DrizzlePluginInstallationRepository(db);
+  const segredosRepo = new DrizzlePluginSecretRepository(db);
+  const plugsHabilitados = new ListEnabledPluginsUseCase(instalacoesRepo);
+
   // --- tenancy ------------------------------------------------------------
   const tenantsRepo = new DrizzleTenantRepository(db);
   const entitlementsRepo = new DrizzleEntitlementRepository(db);
@@ -161,6 +220,12 @@ export function criarNucleo(env: Env): NucleoDaPlataforma {
     tenantsRepo,
     new DrizzleMembershipRepository(db),
     entitlementsRepo,
+    [
+      {
+        listEntitlements: async (tenantId) =>
+          (await plugsHabilitados.execute(tenantId)).map(pluginEntitlement),
+      },
+    ],
   );
 
   // --- crm ----------------------------------------------------------------
@@ -190,6 +255,94 @@ export function criarNucleo(env: Env): NucleoDaPlataforma {
     listarAgenda: new ListAgendaUseCase(agendamentosRepo),
   };
 
+  // --- plugins (continuação, agora que o CRM existe) -----------------------
+  const definicaoDeNotificacoes = definirPluginDeNotificacoes(
+    opcoes.politicaDeDestinoDeWebhook,
+  );
+  const catalogoDePlugins = new PluginCatalog([definicaoDeNotificacoes], {
+    eventosConhecidos: catalogo.ordered.flatMap((manifest) =>
+      manifest.events.map((evento) => evento.type),
+    ),
+  });
+  const cofre = new CofreDeSegredosDoPlugin(
+    lerChaveDeSegredos(env.SECRETS_KEY),
+  );
+  const resolverRuntime = new ResolvePluginRuntimeUseCase(
+    catalogoDePlugins,
+    instalacoesRepo,
+    segredosRepo,
+    cofre,
+  );
+
+  /**
+   * O plugin lê o cliente por uma PORTA, não importando o módulo CRM: é assim
+   * que ele continuaria funcionando se um dia virasse externo. A permissão
+   * `crm.customer.read` é conferida dentro do caso de uso do plugin, contra o
+   * que a instalação concedeu.
+   */
+  const leitorDeClientes: LeitorDeClientes = {
+    nomeDoCliente: async (tenantId, customerId) => {
+      const { customer } = await crm.obterCliente.execute({
+        tenantId,
+        customerId,
+        historicoLimite: 1,
+      });
+      return customer.name;
+    },
+  };
+
+  const runtimeDeNotificacoes: PluginRuntimeProvider<ConfiguracaoDeNotificacoes> =
+    {
+      // A configuração já foi validada pelo schema do plugin ao ser gravada;
+      // aqui só se recupera o tipo que o `PluginRuntime` genérico perdeu.
+      carregar: async (entrada) =>
+        (await resolverRuntime.execute({
+          ...entrada,
+          pluginId: NOTIFICATIONS_PLUGIN_ID,
+        })) as PluginRuntime<ConfiguracaoDeNotificacoes>,
+    };
+
+  const notificacoes = new SendNotificationUseCase(
+    leitorDeClientes,
+    audit,
+    globalThis.fetch,
+    opcoes.politicaDeDestinoDeWebhook,
+  );
+
+  const plugins: PluginsCompleto = {
+    catalogo: catalogoDePlugins,
+    instalar: new InstallPluginUseCase(
+      catalogoDePlugins,
+      instalacoesRepo,
+      audit,
+    ),
+    configurar: new ConfigurePluginUseCase(
+      catalogoDePlugins,
+      instalacoesRepo,
+      segredosRepo,
+      cofre,
+      audit,
+    ),
+    status: new ChangePluginStatusUseCase(
+      catalogoDePlugins,
+      instalacoesRepo,
+      segredosRepo,
+      audit,
+    ),
+    listar: new ListPluginsUseCase(
+      catalogoDePlugins,
+      instalacoesRepo,
+      segredosRepo,
+      {
+        verificar: (tenantId, pluginId) =>
+          resolverRuntime.verificarSaude(tenantId, pluginId),
+      },
+    ),
+    resolverRuntime,
+    notificacoes,
+    runtimeDeNotificacoes,
+  };
+
   return {
     handle,
     catalogo,
@@ -197,7 +350,14 @@ export function criarNucleo(env: Env): NucleoDaPlataforma {
     audit,
     identity,
     crm,
-    mcp: new McpCatalog([crmMcpContribution(crm)]),
+    plugins,
+    // A tool do plugin entra no MESMO catálogo das tools de módulo. Quem
+    // decide se ela aparece é o entitlement `plugin.<id>`, não código de
+    // exceção no gateway.
+    mcp: new McpCatalog([
+      crmMcpContribution(crm),
+      notificationsMcpContribution(notificacoes, runtimeDeNotificacoes),
+    ]),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),
     signIn: new SignInUseCase(identity, tenantsRepo, resolverAcesso, emissor),
     refreshSession: new RefreshSessionUseCase(

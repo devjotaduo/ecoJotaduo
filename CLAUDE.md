@@ -51,7 +51,9 @@ Monólito modular em monorepo pnpm + Turborepo (ADR-0001). Três camadas de past
   uma borda diferente (`api` = REST, `mcp-gateway` = MCP; futuramente `worker`).
 - `modules/` — domínios de negócio, um pacote pnpm cada, em arquitetura hexagonal.
 - `packages/` — kernel compartilhado (config, database, auth, permissions,
-  tenant-context, audit, platform-kernel, http-kit, mcp-kit, platform-core).
+  tenant-context, audit, platform-kernel, http-kit, mcp-kit, plugin-sdk,
+  platform-core).
+- `plugins/first-party/` — extensões confiáveis, ativáveis por empresa.
 
 A montagem dos módulos de domínio é **uma só**, em
 `packages/platform-core/src/composition.ts` (`criarNucleo`). Todo app chama essa
@@ -145,6 +147,26 @@ aconteceu). Falha interna **nunca** vira `isError` — ver `docs/api/mcp.md`.
 
 Ao criar uma tool: escreva o caso de uso, declare permissões, nome
 `dominio.entidade.acao`, e nunca aceite `tenantId` como parâmetro.
+
+### Plugins
+
+Um plugin **habilitado numa empresa é um entitlement** (`plugin.<id>`). Por isso a
+rota REST e a tool MCP dele não têm nenhum `if (habilitado)`: usam
+`@RequirePermissions('plugin.<id>.<recurso>.<acao>')` e o catálogo MCP de sempre.
+Desabilitar remove o entitlement e a capacidade some das duas bordas na requisição
+seguinte. `moduleOf` recorta `plugin.<id>` (e não `plugin`) justamente para que
+habilitar um plugin não libere os outros.
+
+O plugin age com a **interseção** entre o que foi concedido na instalação e os módulos
+ainda contratados — nunca com as permissões de quem o chamou. Verifique com
+`exigirPermissaoDoPlugin(runtime, ...)` antes de tocar a plataforma.
+
+**Segredo de integração nunca sai do servidor**: cifrado por empresa (AES-256-GCM,
+`SECRETS_KEY` obrigatória no boot), e nenhum caminho de leitura — listagem,
+configuração, auditoria — devolve o valor, só as chaves. Chamada de saída configurada
+pela empresa passa por guarda anti-SSRF; sem ela seria `call_any_url` com outro nome.
+
+Ver `docs/api/plugins.md` e ADR-0010.
 
 ### Contrato da API (OpenAPI 3.1) e SDK
 

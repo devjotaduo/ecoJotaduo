@@ -38,6 +38,19 @@ export interface EntitlementRepository {
   revoke(tenantId: string, moduleId: string): Promise<void>;
 }
 
+/**
+ * Fonte adicional de entitlements da empresa.
+ *
+ * Existe para que "plugin habilitado" vire autorização sem que o tenancy
+ * precise conhecer o módulo de plugins: quem liga as pontas é o composition
+ * root. A direção declarada de dependências continua valendo — tenancy não
+ * importa `@ecojotaduo/plugins`, consome esta porta.
+ */
+export interface EntitlementContributor {
+  /** Já no formato de entitlement (ex.: `plugin.notifications-example`). */
+  listEntitlements(tenantId: string): Promise<string[]>;
+}
+
 /** Emissão do access token — mantém a criptografia fora da camada de aplicação. */
 export interface AccessTokenIssuer {
   issue(entrada: {

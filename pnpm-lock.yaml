@@ -50,6 +50,15 @@ importers:
       '@ecojotaduo/platform-kernel':
         specifier: workspace:*
         version: link:../../packages/platform-kernel
+      '@ecojotaduo/plugin-notifications-example':
+        specifier: workspace:*
+        version: link:../../plugins/first-party/notifications-example
+      '@ecojotaduo/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
+      '@ecojotaduo/plugins':
+        specifier: workspace:*
+        version: link:../../modules/plugins
       '@ecojotaduo/tenancy':
         specifier: workspace:*
         version: link:../../modules/tenancy
@@ -276,6 +285,70 @@ importers:
       eslint:
         specifier: ^10.8.1
         version: 10.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
+
+  modules/plugins:
+    dependencies:
+      '@ecojotaduo/audit':
+        specifier: workspace:*
+        version: link:../../packages/audit
+      '@ecojotaduo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@ecojotaduo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@ecojotaduo/http-kit':
+        specifier: workspace:*
+        version: link:../../packages/http-kit
+      '@ecojotaduo/permissions':
+        specifier: workspace:*
+        version: link:../../packages/permissions
+      '@ecojotaduo/platform-kernel':
+        specifier: workspace:*
+        version: link:../../packages/platform-kernel
+      '@ecojotaduo/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../packages/plugin-sdk
+      '@ecojotaduo/tenant-context':
+        specifier: workspace:*
+        version: link:../../packages/tenant-context
+      '@nestjs/common':
+        specifier: ^11.2.1
+        version: 11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/swagger':
+        specifier: ^11.4.7
+        version: 11.4.7(@nestjs/common@11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.1(@nestjs/common@11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(postgres@3.4.9)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ecojotaduo/test-support':
+        specifier: workspace:*
+        version: link:../../tooling/test-support
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -592,9 +665,21 @@ importers:
       '@ecojotaduo/mcp-kit':
         specifier: workspace:*
         version: link:../mcp-kit
+      '@ecojotaduo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
       '@ecojotaduo/platform-kernel':
         specifier: workspace:*
         version: link:../platform-kernel
+      '@ecojotaduo/plugin-notifications-example':
+        specifier: workspace:*
+        version: link:../../plugins/first-party/notifications-example
+      '@ecojotaduo/plugin-sdk':
+        specifier: workspace:*
+        version: link:../plugin-sdk
+      '@ecojotaduo/plugins':
+        specifier: workspace:*
+        version: link:../../modules/plugins
       '@ecojotaduo/tenancy':
         specifier: workspace:*
         version: link:../../modules/tenancy
@@ -643,6 +728,37 @@ importers:
         specifier: ^4.1.11
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
 
+  packages/plugin-sdk:
+    dependencies:
+      '@ecojotaduo/permissions':
+        specifier: workspace:*
+        version: link:../permissions
+      '@ecojotaduo/platform-kernel':
+        specifier: workspace:*
+        version: link:../platform-kernel
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
+
   packages/tenant-context:
     devDependencies:
       '@ecojotaduo/eslint-config':
@@ -665,6 +781,58 @@ importers:
         version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
 
   packages/tsconfig: {}
+
+  plugins/first-party/notifications-example:
+    dependencies:
+      '@ecojotaduo/audit':
+        specifier: workspace:*
+        version: link:../../../packages/audit
+      '@ecojotaduo/http-kit':
+        specifier: workspace:*
+        version: link:../../../packages/http-kit
+      '@ecojotaduo/mcp-kit':
+        specifier: workspace:*
+        version: link:../../../packages/mcp-kit
+      '@ecojotaduo/permissions':
+        specifier: workspace:*
+        version: link:../../../packages/permissions
+      '@ecojotaduo/platform-kernel':
+        specifier: workspace:*
+        version: link:../../../packages/platform-kernel
+      '@ecojotaduo/plugin-sdk':
+        specifier: workspace:*
+        version: link:../../../packages/plugin-sdk
+      '@ecojotaduo/tenant-context':
+        specifier: workspace:*
+        version: link:../../../packages/tenant-context
+      '@nestjs/common':
+        specifier: ^11.2.1
+        version: 11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/swagger':
+        specifier: ^11.4.7
+        version: 11.4.7(@nestjs/common@11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.1(@nestjs/common@11.2.1(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../../../packages/eslint-config
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../../../packages/tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(vite@8.2.2(@types/node@24.13.3))
 
   tooling/test-support:
     dependencies:

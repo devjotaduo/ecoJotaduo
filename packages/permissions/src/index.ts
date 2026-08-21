@@ -49,10 +49,28 @@ export class ForbiddenError extends Error {
   }
 }
 
-/** Módulo a que a permissão pertence (primeiro segmento). */
+/** Prefixo das capacidades contribuídas por plugin: `plugin.<id>.<recurso>.<acao>`. */
+export const PLUGIN_PREFIX = 'plugin';
+
+/**
+ * Unidade de contratação a que a permissão pertence — o "módulo" da decisão.
+ *
+ * Normalmente é o primeiro segmento (`crm.customer.read` → `crm`). Capacidade
+ * de plugin é a exceção: a unidade é `plugin.<id>`, não `plugin`. Se fosse só
+ * o primeiro segmento, habilitar UM plugin numa empresa liberaria todos os
+ * outros de uma vez — o entitlement viraria uma chave-mestra.
+ */
 export function moduleOf(permission: Permission): string {
-  const separador = permission.indexOf('.');
-  return separador === -1 ? permission : permission.slice(0, separador);
+  const partes = permission.split('.');
+  if (partes[0] === PLUGIN_PREFIX && partes.length > 1) {
+    return `${PLUGIN_PREFIX}.${partes[1]}`;
+  }
+  return partes[0] ?? permission;
+}
+
+/** Entitlement que representa um plugin habilitado para a empresa. */
+export function pluginEntitlement(pluginId: string): string {
+  return `${PLUGIN_PREFIX}.${pluginId}`;
 }
 
 /**

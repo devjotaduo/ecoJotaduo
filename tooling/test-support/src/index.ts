@@ -84,6 +84,7 @@ export function migracoesDaPlataforma(): {
       directory: diretorioDeMigracoes('modules/identity'),
     },
     { moduleId: 'tenancy', directory: diretorioDeMigracoes('modules/tenancy') },
+    { moduleId: 'plugins', directory: diretorioDeMigracoes('modules/plugins') },
     { moduleId: 'crm', directory: diretorioDeMigracoes('modules/crm') },
   ];
 }
@@ -114,6 +115,8 @@ export async function reservarBancoDeTestes(): Promise<() => Promise<void>> {
 
 const TABELAS = [
   'audit_events',
+  'plugin_secrets',
+  'plugin_installations',
   'tenancy_module_entitlements',
   'tenancy_membership_roles',
   'tenancy_memberships',

@@ -6,6 +6,7 @@ import {
   ForbiddenError,
   moduleOf,
   permissionMatches,
+  pluginEntitlement,
   type AccessGrant,
 } from './index';
 
@@ -138,5 +139,46 @@ describe('moduleOf', () => {
   it('extrai o primeiro segmento', () => {
     expect(moduleOf('crm.customer.read')).toBe('crm');
     expect(moduleOf('platform')).toBe('platform');
+  });
+
+  it('capacidade de plugin pertence ao plugin, não ao prefixo', () => {
+    expect(moduleOf('plugin.notifications-example.message.send')).toBe(
+      'plugin.notifications-example',
+    );
+  });
+});
+
+describe('capacidades de plugin', () => {
+  const comUmPlugin: AccessGrant = {
+    permissions: ['*'],
+    scopes: ['*'],
+    entitlements: ['plugin.notifications-example'],
+  };
+
+  it('habilitar um plugin não libera os outros', () => {
+    // Sem o recorte de `moduleOf`, o entitlement seria `plugin` e este
+    // segundo plugin passaria de carona.
+    expect(
+      authorize(comUmPlugin, 'plugin.notifications-example.message.send')
+        .allowed,
+    ).toBe(true);
+    const negado = authorize(comUmPlugin, 'plugin.whatsapp.message.send');
+    expect(negado.allowed).toBe(false);
+    expect(negado.allowed === false && negado.reason).toBe('entitlement');
+  });
+
+  it('o papel ainda precisa conceder a permissão da capacidade', () => {
+    const semPapel: AccessGrant = { ...comUmPlugin, permissions: ['crm.*'] };
+    const negado = authorize(
+      semPapel,
+      'plugin.notifications-example.message.send',
+    );
+    expect(negado.allowed === false && negado.reason).toBe('permission');
+  });
+
+  it('pluginEntitlement casa com o módulo derivado da permissão', () => {
+    expect(pluginEntitlement('notifications-example')).toBe(
+      moduleOf('plugin.notifications-example.message.send'),
+    );
   });
 });

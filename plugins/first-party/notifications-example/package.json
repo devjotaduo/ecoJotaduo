@@ -1,0 +1,43 @@
+{
+  "name": "@ecojotaduo/plugin-notifications-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plugin first-party de exemplo: entrega mensagens em webhook assinado por empresa",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ecojotaduo/audit": "workspace:*",
+    "@ecojotaduo/http-kit": "workspace:*",
+    "@ecojotaduo/mcp-kit": "workspace:*",
+    "@ecojotaduo/permissions": "workspace:*",
+    "@ecojotaduo/platform-kernel": "workspace:*",
+    "@ecojotaduo/plugin-sdk": "workspace:*",
+    "@ecojotaduo/tenant-context": "workspace:*",
+    "@nestjs/common": "^11.2.1",
+    "@nestjs/swagger": "^11.4.7",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.8.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  }
+}

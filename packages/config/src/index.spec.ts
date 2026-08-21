@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import { InvalidEnvError, loadEnv } from './index';
@@ -5,6 +7,7 @@ import { InvalidEnvError, loadEnv } from './index';
 const MINIMO = {
   DATABASE_URL: 'postgresql://app:pwd@localhost:5432/ecojotaduo',
   JWT_SECRET: 'x'.repeat(32),
+  SECRETS_KEY: randomBytes(32).toString('base64'),
 };
 
 describe('loadEnv', () => {
@@ -26,6 +29,7 @@ describe('loadEnv', () => {
       expect(erro).toBeInstanceOf(InvalidEnvError);
       expect((erro as Error).message).toContain('DATABASE_URL');
       expect((erro as Error).message).toContain('JWT_SECRET');
+      expect((erro as Error).message).toContain('SECRETS_KEY');
     }
   });
 
@@ -56,6 +60,13 @@ describe('loadEnv', () => {
     expect(() =>
       loadEnv({ ...MINIMO, ACCESS_TOKEN_TTL_SECONDS: '86400' }),
     ).toThrow(InvalidEnvError);
+  });
+
+  it('recusa chave de segredos com tamanho errado em vez de esticá-la', () => {
+    // Aceitar chave curta daria cifra fraca sem nenhum sinal em runtime.
+    expect(() =>
+      loadEnv({ ...MINIMO, SECRETS_KEY: randomBytes(16).toString('base64') }),
+    ).toThrow(/SECRETS_KEY/);
   });
 
   it('aceita ambiente completo válido', () => {

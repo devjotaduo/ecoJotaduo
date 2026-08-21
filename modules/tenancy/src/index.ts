@@ -32,6 +32,7 @@ export { ManageEntitlementsUseCase } from './application/manage-entitlements.use
 
 export type {
   AccessTokenIssuer,
+  EntitlementContributor,
   EntitlementRepository,
   MembershipRepository,
   TenantRepository,

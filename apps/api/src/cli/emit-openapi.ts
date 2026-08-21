@@ -23,6 +23,10 @@ export async function emitirOpenApi(): Promise<string> {
   process.env.DATABASE_URL ??=
     'postgresql://openapi:openapi@127.0.0.1:5432/openapi';
   process.env.JWT_SECRET ??= 'x'.repeat(48);
+  // Valor descartável: nada é cifrado aqui, mas o boot valida o ambiente
+  // inteiro — e é bom que valide, senão a geração mascararia configuração
+  // faltando em produção.
+  process.env.SECRETS_KEY ??= Buffer.alloc(32).toString('base64');
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,

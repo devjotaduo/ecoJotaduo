@@ -48,8 +48,14 @@ frontend).
 }
 ```
 
-O JSON Schema oficial viverá em `packages/plugin-sdk/schemas/manifest.schema.json`
-(Fase 6) e será aplicado na instalação e no CI.
+A validação vive em `packages/plugin-sdk/src/manifest.ts` (schema **Zod**, aplicado no
+boot do catálogo — manifesto quebrado derruba o deploy, não a primeira instalação).
+Além do formato, ela recusa: plugin que pede permissão sobre a própria capacidade
+(seria escalada de acesso na instalação) e evento declarado em `subscribesTo` que
+nenhum módulo publica (senão o erro de digitação ficaria em silêncio).
+
+O arquivo `manifest.schema.json` versionado só faz sentido para autor **externo**, que
+ainda não existe; ele é emitido do mesmo Zod quando o primeiro chegar (ADR-0010).
 
 ## Ciclo de vida por tenant
 
@@ -59,9 +65,18 @@ available → installed → configured → enabled → healthy
                                     disabled → uninstalled
 ```
 
-Registrado por instalação: tenant, versão, configuração, permissões concedidas, data,
-status, health check, última execução, erros, auditoria e migrações aplicadas.
-Ativar/desativar um plugin em um tenant **não** afeta outros tenants.
+Implementado na Fase 6 como `installed → configured → enabled ⇄ disabled`, em
+`plugin_installations`. Dois estados do desenho original NÃO viraram coluna:
+`available` é ausência de linha, e `healthy` é resultado de health check — guardá-lo
+seria guardar uma informação que muda sozinha e passa a mentir.
+
+Registrado por instalação: empresa, versão, configuração, permissões concedidas, datas
+e status. O health check roda sob demanda, delegado ao próprio plugin.
+
+**Habilitar é o que liga a capacidade**: uma instalação `enabled` contribui o
+entitlement `plugin.<id>` para o `AccessGrant`, e as bordas existentes (REST e MCP)
+passam a enxergar a capacidade sem código novo. Ativar ou desativar em uma empresa
+**não** afeta as outras — é o critério de aceite da fase, verificado em E2E.
 
 ## Integração de plugins externos — contratos controlados
 
@@ -71,7 +86,23 @@ Ativar/desativar um plugin em um tenant **não** afeta outros tenants.
   Redis interno).
 - **MCP remoto**: expõem servidor MCP próprio, federado pelo gateway com namespace
   `plugin.<id>.*`, filtros, timeout, circuit breaker e auditoria.
-- **plugin-sdk**: tipos, cliente e helpers oficiais para tudo acima.
+- **plugin-sdk**: manifesto, runtime da chamada, verificação de permissão e health
+  check. Deliberadamente pequeno: cresce quando um segundo plugin exigir, não antes
+  (o risco nomeado desta fase é generalização precoce).
+
+### Credenciais de integração
+
+Ficam cifradas por empresa (AES-256-GCM, chave em `SECRETS_KEY`), com empresa, plugin e
+chave no cabeçalho autenticado da cifra. **Nenhum caminho de leitura devolve valor** —
+listagem mostra só as chaves configuradas, e a auditoria também. O valor sai do banco
+uma única vez, para a memória do plugin, durante a chamada.
+
+### Saída para a internet
+
+Toda chamada de saída configurada pela empresa passa por guarda anti-SSRF: HTTPS
+obrigatório, resolução de nome e recusa de endereço interno. Sem isso, "entregar no
+endereço que a empresa configurou" seria a ferramenta `call_any_url` proibida com outro
+nome.
 
 ## Interfaces de plugin
 

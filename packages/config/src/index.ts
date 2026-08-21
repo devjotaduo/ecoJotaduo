@@ -34,6 +34,20 @@ export const envSchema = z.object({
     .default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
 
+  /**
+   * Chave que cifra os segredos de integração guardados por empresa (AES-256).
+   * 32 bytes em base64 — gere com `openssl rand -base64 32`.
+   *
+   * Obrigatória, e não opcional com fallback: uma plataforma que aceita subir
+   * sem chave acaba guardando token de terceiro em claro sem ninguém notar.
+   */
+  SECRETS_KEY: z
+    .string()
+    .refine(
+      (valor) => Buffer.from(valor, 'base64').length === 32,
+      'precisa ser 32 bytes em base64 (openssl rand -base64 32)',
+    ),
+
   /** Reservado para BullMQ (Fase 8). */
   REDIS_URL: z.url().optional(),
 });

@@ -1,4 +1,5 @@
 import { crmManifest } from '@ecojotaduo/crm';
+import { pluginsManifest } from '@ecojotaduo/plugins';
 import { identityManifest } from '@ecojotaduo/identity';
 import {
   resolveModules,
@@ -16,6 +17,7 @@ import { tenancyManifest } from '@ecojotaduo/tenancy';
 export const modulosInstalados = [
   identityManifest,
   tenancyManifest,
+  pluginsManifest,
   crmManifest,
 ];
 

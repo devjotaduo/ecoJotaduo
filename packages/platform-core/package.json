@@ -28,7 +28,11 @@
     "@ecojotaduo/database": "workspace:*",
     "@ecojotaduo/identity": "workspace:*",
     "@ecojotaduo/mcp-kit": "workspace:*",
+    "@ecojotaduo/permissions": "workspace:*",
     "@ecojotaduo/platform-kernel": "workspace:*",
+    "@ecojotaduo/plugin-notifications-example": "workspace:*",
+    "@ecojotaduo/plugin-sdk": "workspace:*",
+    "@ecojotaduo/plugins": "workspace:*",
     "@ecojotaduo/tenancy": "workspace:*"
   },
   "devDependencies": {

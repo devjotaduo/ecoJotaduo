@@ -63,9 +63,9 @@ as suítes que dependem de banco se declaram **puladas** (nunca passam em silên
 apps/          composition roots (api = REST, mcp-gateway = MCP; worker na Fase 8)
 packages/      kernel compartilhado: config, database, auth, permissions,
                tenant-context, audit, platform-kernel, platform-core, http-kit,
-               mcp-kit, api-client, tsconfig, eslint-config
-modules/       módulos de domínio hexagonais (identity, tenancy, crm)
-plugins/       plugins first-party (a partir da Fase 6)
+               mcp-kit, plugin-sdk, api-client, tsconfig, eslint-config
+modules/       módulos de domínio hexagonais (identity, tenancy, plugins, crm)
+plugins/       plugins first-party (notifications-example)
 tooling/       apoio a testes e geração de código
 docs/          arquitetura, ADRs, API, runbooks
 docker/        infraestrutura local

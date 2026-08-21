@@ -12,6 +12,18 @@ import {
   CRM_SEARCH_CUSTOMERS,
   CRM_UPDATE_CUSTOMER,
 } from '@ecojotaduo/crm';
+import {
+  NotificationsController,
+  NOTIFICATIONS_RUNTIME,
+  NOTIFICATIONS_SEND,
+} from '@ecojotaduo/plugin-notifications-example';
+import {
+  PluginsController,
+  PLUGINS_CHANGE_STATUS,
+  PLUGINS_CONFIGURE,
+  PLUGINS_INSTALL,
+  PLUGINS_LIST,
+} from '@ecojotaduo/plugins';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
@@ -61,6 +73,18 @@ function doCrm<K extends keyof NucleoDaPlataforma['crm']>(
   };
 }
 
+/** Idem, para o registry de plugins e a borda do plugin de exemplo. */
+function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
+  token: symbol,
+  chave: K,
+) {
+  return {
+    provide: token,
+    useFactory: (nucleo: NucleoDaPlataforma) => nucleo.plugins[chave],
+    inject: [PLATFORM_CORE],
+  };
+}
+
 /**
  * Composition root da API REST.
  *
@@ -77,6 +101,11 @@ function doCrm<K extends keyof NucleoDaPlataforma['crm']>(
     // Controllers do CRM vêm do próprio módulo: ele é dono da sua borda REST.
     CrmCustomersController,
     CrmAppointmentsController,
+    // Administração de extensões e a borda do plugin de exemplo — este
+    // segundo é o que prova que capacidade de plugin só existe quando a
+    // empresa habilita.
+    PluginsController,
+    NotificationsController,
   ],
   providers: [
     { provide: ENV, useFactory: (): Env => loadEnv() },
@@ -106,6 +135,12 @@ function doCrm<K extends keyof NucleoDaPlataforma['crm']>(
     doCrm(CRM_SCHEDULE_APPOINTMENT, 'agendar'),
     doCrm(CRM_CLOSE_APPOINTMENT, 'encerrarAgendamento'),
     doCrm(CRM_LIST_AGENDA, 'listarAgenda'),
+    doPlugins(PLUGINS_LIST, 'listar'),
+    doPlugins(PLUGINS_INSTALL, 'instalar'),
+    doPlugins(PLUGINS_CONFIGURE, 'configurar'),
+    doPlugins(PLUGINS_CHANGE_STATUS, 'status'),
+    doPlugins(NOTIFICATIONS_SEND, 'notificacoes'),
+    doPlugins(NOTIFICATIONS_RUNTIME, 'runtimeDeNotificacoes'),
     DatabaseLifecycle,
     { provide: APP_GUARD, useClass: AccessGuard },
   ],
