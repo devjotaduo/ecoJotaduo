@@ -147,6 +147,49 @@ services:
     # Sem healthcheck HTTP: o worker não serve porta. O sinal de saúde dele é
     # o outbox drenando — ver o runbook de eventos não entregues.
 
+  # O CRM como processo próprio (Fase 12, ADR-0016). Desligado por padrão:
+  #
+  #   docker compose ... --profile crm-extraido up -d
+  #
+  # e `CRM_SERVICE_URL=http://crm-service:3002` no `.env.prod`. Sem a variável
+  # o serviço até sobe, mas ninguém fala com ele — a plataforma continua com o
+  # CRM em processo. São as duas metades da mesma decisão, e é de propósito
+  # que estejam separadas: dá para subir o serviço e observá-lo antes de
+  # mandar tráfego para ele.
+  #
+  # Sem porta publicada. A fronteira é interna: quem chama é a plataforma, com
+  # token assinado de audiência interna e vida de 60 segundos.
+  crm-service:
+    profiles: ['crm-extraido']
+    image: ecojotaduo/crm-service:${TAG:-latest}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        APP: crm-service
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      CRM_SERVICE_PORT: 3002
+      # Pode apontar para OUTRO banco: nenhuma tabela `crm_*` tem chave
+      # estrangeira para fora do módulo, e há teste travando essa propriedade.
+      DATABASE_URL: ${CRM_DATABASE_URL:-postgresql://${APP_DB_USER}:${APP_DB_PASSWORD}@postgres:5432/${POSTGRES_DB}}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
   web:
     image: ecojotaduo/web:${TAG:-latest}
     build:

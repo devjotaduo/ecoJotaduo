@@ -3,6 +3,11 @@ import { randomUUID } from 'node:crypto';
 import type { AuditLogger } from '@ecojotaduo/audit';
 import { DrizzleAuditLogger } from '@ecojotaduo/audit/drizzle';
 import {
+  CrmHttpClient,
+  type EmissorDeTokenInterno,
+} from '@ecojotaduo/crm/remote';
+import {
+  AUDIENCIA_INTERNA,
   createOpaqueToken,
   hashOpaqueToken,
   hashPassword,
@@ -41,6 +46,7 @@ import {
   UpdateCustomerUseCase,
   crmMcpContribution,
   CrmService,
+  type CrmPublicApi,
   type CrmUseCases,
 } from '@ecojotaduo/crm';
 import {
@@ -227,6 +233,36 @@ export interface CommercialCompleto extends CommercialUseCases {
 }
 
 /** Adapta o TokenService (criptografia) à porta esperada pelos casos de uso. */
+/**
+ * Emissor dos tokens de chamada ENTRE SERVIÇOS.
+ *
+ * Audiência própria e vida curta: o token existe para uma chamada. Um access
+ * token de usuário não é aceito pelo serviço interno, e este não abre a API
+ * pública — a separação é verificada em `aud`, não confiada à convenção.
+ *
+ * O escopo é o mínimo que a chamada precisa. Se o serviço interno crescer,
+ * é aqui que se decide o que cada chamada pode pedir.
+ */
+function emissorInternoDeToken(env: Env): EmissorDeTokenInterno {
+  const tokens = new TokenService({
+    secret: env.JWT_SECRET,
+    issuer: env.JWT_ISSUER,
+    audience: AUDIENCIA_INTERNA,
+    // Sessenta segundos: um token interno vazado não sobrevive à investigação.
+    accessTokenTtlSeconds: 60,
+  });
+  return {
+    emitirParaEmpresa: (tenantId) =>
+      tokens.issue({
+        sub: 'platform',
+        tid: tenantId,
+        kind: 'service',
+        scope: ['crm.customer.read'],
+        jti: randomUUID(),
+      }).token,
+  };
+}
+
 function emissorDeToken(tokens: TokenService): AccessTokenIssuer {
   return {
     issue: (entrada) =>
@@ -449,10 +485,22 @@ export function criarNucleo(
   // --- comercial ----------------------------------------------------------
   // A proposta é sempre PARA um cliente: a referência é conferida contra a
   // superfície pública do CRM, nunca contra a tabela dele.
+  //
+  // E é AQUI que a extração acontece — nesta linha, e em nenhuma outra. Sem
+  // `CRM_SERVICE_URL`, o CRM roda em processo. Com ele, o mesmo contrato passa
+  // a ser atendido por HTTP contra um serviço que pode ter banco próprio.
+  // Nenhum caso de uso muda, nenhuma assinatura muda, nenhum teste de negócio
+  // muda: é o que o ADR-0001 prometeu desde o começo (ADR-0016).
+  const crmApi: CrmPublicApi = env.CRM_SERVICE_URL
+    ? new CrmHttpClient({
+        baseUrl: env.CRM_SERVICE_URL,
+        emissor: emissorInternoDeToken(env),
+      })
+    : new CrmService(clientesRepo);
+
   const diretorioDeClientes: CustomerDirectory = {
     findName: async (tenantId, customerId) =>
-      (await new CrmService(clientesRepo).findCustomer(tenantId, customerId))
-        ?.name ?? null,
+      (await crmApi.findCustomer(tenantId, customerId))?.name ?? null,
   };
   const propostasRepo = new DrizzleProposalRepository(db);
   const commercial: CommercialCompleto = {

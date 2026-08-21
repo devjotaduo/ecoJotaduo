@@ -382,6 +382,23 @@ são N migrações concorrentes, e rollback tentaria migrar para trás. Migraç�
 precisa ser compatível para trás (expand/contract) — durante o rolling, código velho
 e novo falam com o mesmo banco.
 
+### Extração seletiva (ADR-0016)
+
+O CRM é o caso provado: `apps/crm-service` monta o MESMO `CrmService` e troca só a
+borda. `CRM_SERVICE_URL` ausente = em processo; presente = por HTTP. A escolha é uma
+linha em `composition.ts`, e **o padrão continua sendo o monólito** — extrair sem
+necessidade concreta troca uma chamada de função por um problema distribuído.
+
+Quem for repetir o padrão para outro módulo precisa das três coisas que o tornaram
+possível: contrato público estável, **nenhuma FK para fora do módulo** (há teste em
+`pg_constraint` travando isso no CRM) e a empresa viajando no `tid` de um token
+assinado de audiência interna — nunca como parâmetro, que seria buraco de
+multi-tenancy.
+
+E lembre da distinção que decide regra de negócio: cliente inexistente é `null`;
+serviço fora do ar é erro. Devolver `null` numa falha de rede faria o Comercial
+recusar proposta dizendo que o cliente não existe.
+
 Um módulo só está pronto quando entrega um fluxo de negócio completo — tabela + CRUD
 não conta. Uma fase só está pronta com lint, typecheck, testes e build executados de
 verdade e documentação atualizada.

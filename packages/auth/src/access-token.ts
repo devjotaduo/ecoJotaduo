@@ -9,6 +9,17 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
  * HS256 por RS256). Ver docs/adr/0007-auth-mvp.md.
  */
 const ALGORITMO = 'HS256';
+
+/**
+ * Audiência dos tokens de chamada ENTRE SERVIÇOS da plataforma.
+ *
+ * Distinta da audiência da API pública de propósito. Um token de usuário não
+ * pode ser reapresentado a um serviço interno, e um token interno — de vida
+ * curta e escopo mínimo — não abre a API pública. É a regra de "nunca usar o
+ * token de um serviço como token de outro", imposta pela verificação de `aud`
+ * em vez de por convenção.
+ */
+export const AUDIENCIA_INTERNA = 'ecojotaduo-internal';
 const TIPO = 'JWT';
 const TAMANHO_MINIMO_SEGREDO = 32;
 

@@ -148,3 +148,58 @@ diferentes fariam o navegador não enviá-lo.
   acidente que ninguém percebe até a auditoria.
 
 O processo roda como usuário `node`, não root.
+
+## Extrair o CRM (opcional — ADR-0016)
+
+O CRM pode rodar como processo próprio, atendendo o mesmo contrato. **Não é o
+padrão**: extrair sem necessidade concreta troca uma chamada de função por um
+problema distribuído (latência, timeout, indisponibilidade). O ADR-0001 lista o
+que conta como justificativa — escala divergente, isolamento de falha,
+requisito regulatório, equipe própria, ciclo de deploy próprio.
+
+O procedimento tem três passos, e a ordem importa:
+
+```bash
+# 1. Sobe o serviço. Ninguém fala com ele ainda.
+docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod \
+  --profile crm-extraido up -d
+
+# 2. Confirme que ele atende, pela rede interna.
+docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod \
+  exec crm-service node -e "fetch('http://127.0.0.1:3002/health/ready').then(r=>r.text()).then(console.log)"
+
+# 3. SÓ ENTÃO aponte a plataforma para ele:
+#    CRM_SERVICE_URL=http://crm-service:3002  em docker/.env.prod
+docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod \
+  --profile crm-extraido up -d
+```
+
+Separar "subir" de "usar" é o que permite observar o serviço antes de depender
+dele. E voltar atrás é apagar a variável — o CRM volta a rodar em processo, sem
+migração nem deploy especial.
+
+### Banco próprio (passo seguinte, opcional)
+
+`CRM_DATABASE_URL` aponta o serviço para outro banco. Funciona porque nenhuma
+tabela `crm_*` tem chave estrangeira para fora do módulo — há teste travando
+essa propriedade. Mover os dados é procedimento de operação:
+
+```bash
+pg_dump "$ADMIN" --format=custom --table='crm_*' --file=crm.dump
+createdb -T template0 ecojotaduo_crm
+pg_restore --dbname=ecojotaduo_crm --no-owner crm.dump
+# e o papel restrito precisa de grant no banco novo — ver runbooks.md
+```
+
+**Enquanto os dois bancos existirem, um deles está desatualizado.** Faça o
+corte com a escrita do CRM parada, ou aceite a janela conscientemente.
+
+### O que a fronteira nova exige
+
+A plataforma chama o serviço com token assinado de audiência interna
+(`ecojotaduo-internal`), vida de 60 segundos, e a empresa no `tid` — nunca por
+parâmetro. Os dois processos compartilham `JWT_SECRET`, então **eles precisam
+receber o mesmo valor**. Um serviço com equipe própria pediria chave
+assimétrica; enquanto o dono é o mesmo, segredo compartilhado basta.
+
+A porta do serviço **não é publicada**: só a rede interna do compose alcança.

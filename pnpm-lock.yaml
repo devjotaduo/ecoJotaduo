@@ -117,6 +117,9 @@ importers:
       '@ecojotaduo/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@ecojotaduo/crm-service':
+        specifier: workspace:*
+        version: link:../crm-service
       '@ecojotaduo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -135,6 +138,55 @@ importers:
       eslint:
         specifier: ^10.8.1
         version: 10.8.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.11
+        version: 4.1.11(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.2(@types/node@24.13.3))
+
+  apps/crm-service:
+    dependencies:
+      '@ecojotaduo/auth':
+        specifier: workspace:*
+        version: link:../../packages/auth
+      '@ecojotaduo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@ecojotaduo/crm':
+        specifier: workspace:*
+        version: link:../../modules/crm
+      '@ecojotaduo/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@ecojotaduo/platform-kernel':
+        specifier: workspace:*
+        version: link:../../packages/platform-kernel
+      '@ecojotaduo/tenant-context':
+        specifier: workspace:*
+        version: link:../../packages/tenant-context
+      fastify:
+        specifier: 5.12.1
+        version: 5.12.1
+    devDependencies:
+      '@ecojotaduo/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ecojotaduo/test-support':
+        specifier: workspace:*
+        version: link:../../tooling/test-support
+      '@ecojotaduo/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/node':
+        specifier: ^24.0.0
+        version: 24.13.3
+      eslint:
+        specifier: ^10.8.1
+        version: 10.8.1
+      postgres:
+        specifier: ^3.4.9
+        version: 3.4.9
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

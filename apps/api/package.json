@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@ecojotaduo/api-client": "workspace:*",
+    "@ecojotaduo/crm-service": "workspace:*",
     "@ecojotaduo/eslint-config": "workspace:*",
     "@ecojotaduo/test-support": "workspace:*",
     "@ecojotaduo/tsconfig": "workspace:*",

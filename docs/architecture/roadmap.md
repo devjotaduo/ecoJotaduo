@@ -68,7 +68,10 @@ Ficou **fora** desta entrega, deliberadamente:
     segurança, log estruturado por requisição e runbooks.
 12. ✅ Fase 11 — Implantação: quatro imagens, compose de produção com Caddy,
     migração como passo explícito de deploy, e o CI construindo e subindo a
-    pilha. Próximo: **Fase 12** (extração seletiva).
+    pilha.
+13. ✅ Fase 12 — Extração seletiva: o CRM roda como processo próprio, com banco
+    próprio, atendendo o MESMO contrato. Ligável por `CRM_SERVICE_URL`; o
+    padrão continua sendo o monólito.
 
 ### Fase 5 — escopo entregue
 
@@ -435,6 +438,57 @@ Ficou **fora**, com motivo no ADR-0015:
 | Teste de carga                    | Faz sentido contra a pilha empacotada — que passou a existir agora                   | Fase 12                  |
 | Store compartilhado de rate limit | Só importa com réplicas permanentes                                                  | Com réplicas fixas       |
 | Backup automatizado               | O procedimento manual está no runbook; agendar exige decidir onde guardar fora da VM | Com o primeiro deploy    |
+
+### Fase 12 — Extração seletiva (ADR-0016)
+
+O ADR-0001 prometeu, na primeira fase, que extrair um módulo seria "mudança de
+infraestrutura, não reescrita". Esta fase cobra a promessa.
+
+**O que passou a existir**
+
+| Peça                             | O que é                                                           |
+| -------------------------------- | ----------------------------------------------------------------- |
+| `apps/crm-service`               | O MESMO `CrmService`, servido por HTTP em processo próprio        |
+| `@ecojotaduo/crm/remote`         | `CrmHttpClient` — a outra forma de satisfazer `CrmPublicApi`      |
+| `CRM_SERVICE_URL`                | Ausente: em processo. Presente: por HTTP. Uma linha na composição |
+| Perfil `crm-extraido` no compose | O serviço sobe sem que ninguém fale com ele, até você mandar      |
+
+**O que foi provado, e como**
+
+| Afirmação               | Prova                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| O contrato não muda     | As mesmas asserções contra os dois adaptadores (`describe.each`), com o mesmo resultado |
+| O banco pode ser outro  | O serviço sobe contra um banco com **só** as tabelas `crm_*`                            |
+| Nada trava a separação  | Teste em `pg_constraint`: nenhuma tabela `crm_*` referencia tabela de outro módulo      |
+| O negócio não muda      | O fluxo de proposta funciona com o CRM fora do processo, inclusive as recusas           |
+| A chamada realmente sai | O serviço conta as requisições; sem a troca de adaptador o contador fica em zero        |
+
+Esse último ponto foi o que quase escapou: como o serviço roda contra o mesmo
+banco no E2E da plataforma, em processo e por HTTP dão a MESMA resposta — o
+teste passaria mesmo se a chamada nunca saísse do monólito. O contador é o que
+transforma "passou" em "passou pela rede".
+
+**A fronteira que muda é a de confiança.** Em processo, `tenantId` vinha de
+código do mesmo build. Por HTTP ele chega de fora, e aceitá-lo como parâmetro
+seria abrir um buraco de multi-tenancy. A empresa viaja no `tid` de um token
+assinado, com audiência própria (`ecojotaduo-internal`), `kind: service`
+exigido, vida de 60 segundos e escopo mínimo. Falsificado: sem a verificação,
+dois testes reprovam.
+
+**Achado de brinde:** variável de ambiente vazia derrubava o boot. Os modelos
+versionados apresentam as opcionais em branco, e `CRM_SERVICE_URL=` fazia o
+`z.url()` recusar com "Invalid URL" — verdadeiro e inútil. Vazio passou a valer
+como ausente; obrigatória vazia continua falhando alto.
+
+Ficou **fora**, com motivo no ADR-0016:
+
+| Item                             | Por quê                                                                                  | Quando                        |
+| -------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------- |
+| Mover a borda REST/MCP do CRM    | A fronteira que interessa provar é entre módulos; as bordas públicas são cópia do padrão | Se o CRM for extraído de fato |
+| Migração de dados entre bancos   | O teste prova que o esquema é separável; mover linhas é operação, não desenho            | Na extração real              |
+| Chave assimétrica / mTLS         | Segredo compartilhado basta enquanto os dois serviços têm o mesmo dono                   | Com equipe ou repo próprio    |
+| Repetição e disjuntor no cliente | Leitura idempotente com timeout curto; repetir esconde a indisponibilidade               | Se a chamada crescer          |
+| Extrair um segundo módulo        | O padrão está provado; repetir sem necessidade é custo sem benefício                     | Com justificativa (ADR-0001)  |
 
 ### Dívidas conhecidas ao fim da Fase 2
 

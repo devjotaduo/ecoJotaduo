@@ -71,6 +71,17 @@ export const envSchema = z.object({
   /** Teto por credencial no gateway MCP: um agente em laço custa banco. */
   RATE_LIMIT_MCP_MAX: z.coerce.number().int().min(1).default(120),
 
+  /**
+   * Extração seletiva do CRM (Fase 12, ADR-0016).
+   *
+   * **Ausente**: o CRM roda em processo, como sempre. **Presente**: o mesmo
+   * contrato passa a ser atendido por HTTP contra o serviço deste endereço.
+   * A escolha é uma linha no composition root — nenhum caso de uso muda.
+   */
+  CRM_SERVICE_URL: z.url().optional(),
+  /** Porta do processo `apps/crm-service`, quando ele é quem sobe. */
+  CRM_SERVICE_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
+
   // Não há `REDIS_URL`, e a ausência é decisão: o outbox É a fila (ADR-0012) e
   // o rate limit conta em memória (ADR-0014). A variável ficou "reservada"
   // desde a Fase 0 para uma fila que nunca precisou existir — config morta
@@ -88,9 +99,28 @@ export class InvalidEnvError extends Error {
   }
 }
 
+/**
+ * Trata variável vazia como AUSENTE.
+ *
+ * Num arquivo `.env`, `FOO=` e não declarar `FOO` querem dizer a mesma coisa
+ * para quem escreve — e é assim que os modelos versionados apresentam as
+ * opcionais, com o valor em branco esperando ser preenchido. Sem isto, deixar
+ * uma linha em branco derruba o boot com "Invalid URL", que é uma mensagem
+ * verdadeira e completamente inútil.
+ */
+function semVazias(source: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const limpo: NodeJS.ProcessEnv = {};
+  for (const [chave, valor] of Object.entries(source)) {
+    if (valor !== '') {
+      limpo[chave] = valor;
+    }
+  }
+  return limpo;
+}
+
 /** Valida e retorna o ambiente. Lança InvalidEnvError com todas as violações. */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const result = envSchema.safeParse(source);
+  const result = envSchema.safeParse(semVazias(source));
   if (!result.success) {
     throw new InvalidEnvError(
       result.error.issues.map(

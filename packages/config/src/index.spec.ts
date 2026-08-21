@@ -69,6 +69,23 @@ describe('loadEnv', () => {
     ).toThrow(/SECRETS_KEY/);
   });
 
+  it('variável opcional VAZIA é o mesmo que ausente', () => {
+    // Os modelos versionados apresentam as opcionais com o valor em branco.
+    // Sem este tratamento, deixar a linha como está derruba o boot com
+    // "Invalid URL" — verdadeiro e completamente inútil.
+    const env = loadEnv({ ...MINIMO, CRM_SERVICE_URL: '' });
+
+    expect(env.CRM_SERVICE_URL).toBeUndefined();
+  });
+
+  it('variável OBRIGATÓRIA vazia continua derrubando o boot', () => {
+    // O tratamento acima não pode virar tolerância: falta de segredo tem de
+    // falhar cedo e alto.
+    expect(() => loadEnv({ ...MINIMO, JWT_SECRET: '' })).toThrow(
+      InvalidEnvError,
+    );
+  });
+
   it('aceita ambiente completo válido', () => {
     const env = loadEnv({
       ...MINIMO,

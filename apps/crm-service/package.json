@@ -1,0 +1,43 @@
+{
+  "name": "@ecojotaduo/crm-service",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CRM extraído: o mesmo módulo, servido como processo próprio (Fase 12)",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests",
+    "dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env --enable-source-maps dist/main.js",
+    "start": "node --enable-source-maps dist/main.js",
+    "migrate": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/migrate.js"
+  },
+  "dependencies": {
+    "@ecojotaduo/auth": "workspace:*",
+    "@ecojotaduo/config": "workspace:*",
+    "@ecojotaduo/crm": "workspace:*",
+    "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/platform-kernel": "workspace:*",
+    "@ecojotaduo/tenant-context": "workspace:*",
+    "fastify": "5.12.1"
+  },
+  "devDependencies": {
+    "@ecojotaduo/eslint-config": "workspace:*",
+    "@ecojotaduo/test-support": "workspace:*",
+    "@ecojotaduo/tsconfig": "workspace:*",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.8.1",
+    "postgres": "^3.4.9",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  }
+}
