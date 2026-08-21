@@ -7,6 +7,7 @@ import {
 } from '@ecojotaduo/platform-core';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { ErrorCode } from '@modelcontextprotocol/sdk/types.js';
+import rateLimit from '@fastify/rate-limit';
 import Fastify, {
   type FastifyInstance,
   type FastifyReply,
@@ -21,6 +22,7 @@ import {
 } from '@ecojotaduo/tenancy';
 
 import { autorizar, NaoAutenticadoError } from './authorize';
+import { opcoesDeRateLimit } from './rate-limit';
 import { criarServidorMcp } from './server';
 
 export const ROTA_MCP = '/mcp';
@@ -40,10 +42,28 @@ export interface Gateway {
  *
  * Fastify puro, sem NestJS: o gateway tem uma rota só, e o ciclo de vida de
  * DI de um framework de aplicação não pagaria por si.
+ *
+ * Assíncrona por causa do plugin de rate limit: ele precisa estar carregado
+ * ANTES das rotas, senão o hook não vale para elas.
  */
-export function criarGateway(env: Env): Gateway {
+/** Status que o próprio erro declara, quando declara (plugins do Fastify). */
+function statusDeclarado(erro: unknown): number | undefined {
+  if (erro instanceof Error && 'statusCode' in erro) {
+    const status = (erro as { statusCode?: unknown }).statusCode;
+    return typeof status === 'number' ? status : undefined;
+  }
+  return undefined;
+}
+
+export async function criarGateway(env: Env): Promise<Gateway> {
   const nucleo = criarNucleo(env);
   const app = Fastify({ logger: env.NODE_ENV !== 'test' });
+
+  // `await` e não `void`: o registro de plugin é adiado até o boot, e um hook
+  // que chega depois das rotas simplesmente não vale para elas. Sem esperar
+  // aqui, o limitador ficava carregado e inerte — pior que não existir, porque
+  // parece protegido.
+  await app.register(rateLimit, opcoesDeRateLimit(env));
 
   app.get('/health', () => ({ status: 'ok', service: 'mcp-gateway' }));
 
@@ -54,6 +74,17 @@ export function criarGateway(env: Env): Gateway {
    * MCP não pode ser a frouxa. O motivo real fica no log.
    */
   app.setErrorHandler((erro, _requisicao, resposta) => {
+    // Recusa por excesso: o plugin de rate limit declara o próprio status, e
+    // devolvê-la como 500 diria "o servidor quebrou" quando o servidor está
+    // justamente se protegendo — o cliente precisa saber que é para esperar.
+    if (statusDeclarado(erro) === 429) {
+      void enviarErro(
+        resposta,
+        429,
+        'Limite de chamadas excedido para esta credencial. Tente novamente em instantes.',
+      );
+      return;
+    }
     app.log.error(erro);
     void enviarErro(resposta, 500, 'Erro inesperado ao processar a chamada.');
   });
@@ -91,7 +122,7 @@ export function criarGateway(env: Env): Gateway {
       return;
     }
 
-    const server = criarServidorMcp(nucleo.mcp, sessao);
+    const server = criarServidorMcp(nucleo.mcp, sessao, nucleo.audit);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
     });

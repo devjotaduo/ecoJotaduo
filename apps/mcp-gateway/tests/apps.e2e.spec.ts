@@ -87,7 +87,7 @@ describe.skipIf(!temBancoDeTeste)('MCP Apps (E2E)', () => {
     process.env.SECRETS_KEY = Buffer.alloc(32, 7).toString('base64');
     process.env.NODE_ENV = 'test';
 
-    gateway = criarGateway(loadEnv());
+    gateway = await criarGateway(loadEnv());
     nucleo = gateway.nucleo;
     await gateway.app.listen({ port: 0, host: '127.0.0.1' });
     const { port } = gateway.app.server.address() as AddressInfo;

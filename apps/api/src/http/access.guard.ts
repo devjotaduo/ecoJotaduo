@@ -1,5 +1,6 @@
+import { registrarNegacao, type AuditLogger } from '@ecojotaduo/audit';
 import { TokenService, type AccessTokenClaims } from '@ecojotaduo/auth';
-import { assertAllAllowed } from '@ecojotaduo/permissions';
+import { assertAllAllowed, ForbiddenError } from '@ecojotaduo/permissions';
 import type { TenancyPublicApi } from '@ecojotaduo/tenancy';
 import {
   authenticateContext,
@@ -17,7 +18,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { FastifyRequest } from 'fastify';
 
-import { TENANCY_API, TOKEN_SERVICE } from '../bootstrap/tokens';
+import { AUDIT_LOGGER, TENANCY_API, TOKEN_SERVICE } from '../bootstrap/tokens';
 
 import { PERMISSIONS_KEY, PUBLIC_KEY } from '@ecojotaduo/http-kit';
 
@@ -30,6 +31,11 @@ import { PERMISSIONS_KEY, PUBLIC_KEY } from '@ecojotaduo/http-kit';
  *
  * O acesso é resolvido do banco a cada requisição: revogar um papel ou
  * suspender um vínculo tem efeito imediato, sem esperar o token expirar.
+ *
+ * A recusa por permissão é auditada aqui. A recusa por token, vínculo ou
+ * empresa NÃO é: nesses casos ainda não há empresa autenticada no contexto,
+ * e gravar a trilha exigiria escolher um tenant a partir de um token que
+ * pode ser forjado — inventaria rastro em vez de registrá-lo.
  */
 @Injectable()
 export class AccessGuard implements CanActivate {
@@ -39,6 +45,7 @@ export class AccessGuard implements CanActivate {
     @Inject(Reflector) private readonly reflector: Reflector,
     @Inject(TOKEN_SERVICE) private readonly tokens: TokenService,
     @Inject(TENANCY_API) private readonly tenancy: TenancyPublicApi,
+    @Inject(AUDIT_LOGGER) private readonly audit: AuditLogger,
   ) {}
 
   async canActivate(execucao: ExecutionContext): Promise<boolean> {
@@ -81,7 +88,22 @@ export class AccessGuard implements CanActivate {
     );
     if (exigidas?.length) {
       // Lança ForbiddenError (403) — tratado pelo filtro de Problem Details.
-      assertAllAllowed(grant, exigidas);
+      // A recusa deixa rastro ANTES de subir: sem isso, alguém sondando rotas
+      // proibidas não aparece em lugar nenhum, que é justamente o padrão que
+      // se quer enxergar antes de um incidente, e não depois.
+      try {
+        assertAllAllowed(grant, exigidas);
+      } catch (erro) {
+        if (erro instanceof ForbiddenError) {
+          await registrarNegacao(this.audit, {
+            alvo: `${requisicao.method} ${requisicao.routeOptions?.url ?? requisicao.url}`,
+            required: erro.required,
+            reason: erro.reason,
+            moduleId: erro.moduleId,
+          });
+        }
+        throw erro;
+      }
     }
 
     return true;

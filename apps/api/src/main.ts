@@ -10,6 +10,7 @@ import {
 
 import { AppModule } from './app.module';
 import { ProblemDetailsFilter } from './http/problem-details.filter';
+import { registrarLimiteDeRequisicoes } from './http/rate-limit';
 import { registrarContextoDeRequisicao } from './http/request-context';
 
 export async function bootstrap(): Promise<NestFastifyApplication> {
@@ -22,6 +23,7 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
   );
 
   registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+  await registrarLimiteDeRequisicoes(app, env);
   app.useGlobalFilters(new ProblemDetailsFilter());
   // Dispara o OnApplicationShutdown de DatabaseLifecycle em SIGTERM/SIGINT.
   app.enableShutdownHooks();

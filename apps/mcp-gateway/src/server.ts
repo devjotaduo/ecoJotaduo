@@ -1,4 +1,9 @@
-import { jsonSchemaDeZod, type McpCatalog } from '@ecojotaduo/mcp-kit';
+import { registrarNegacao, type AuditLogger } from '@ecojotaduo/audit';
+import {
+  AcessoNegadoError,
+  jsonSchemaDeZod,
+  type McpCatalog,
+} from '@ecojotaduo/mcp-kit';
 import { runWithContext } from '@ecojotaduo/tenant-context';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
@@ -41,6 +46,7 @@ const INSTRUCOES = [
 export function criarServidorMcp(
   catalogo: McpCatalog,
   sessao: SessaoMcp,
+  audit: AuditLogger,
 ): Server {
   const server = new Server(
     { name: NOME_DO_GATEWAY, version: VERSAO_DO_GATEWAY },
@@ -57,6 +63,38 @@ export function criarServidorMcp(
    */
   const executar = <T>(fn: () => Promise<T>): Promise<T> =>
     runWithContext(sessao.contexto, fn);
+
+  /**
+   * Como `protocolo`, mas deixa rastro quando o catálogo recusa.
+   *
+   * Descoberta e execução passam pela mesma decisão, então um agente que
+   * adivinhe o nome de uma tool fora do recorte da empresa aparece na trilha
+   * — que é exatamente o padrão de sondagem que se quer conseguir enxergar.
+   * As listagens não precisam disto: elas filtram, não recusam.
+   */
+  const protocoloAuditado = <Req, Res>(
+    alvo: (requisicao: Req) => string,
+    handler: (requisicao: Req) => Res | Promise<Res>,
+  ) =>
+    protocolo(async (requisicao: Req) => {
+      try {
+        return await handler(requisicao);
+      } catch (erro) {
+        if (erro instanceof AcessoNegadoError) {
+          // Dentro do contexto: é dele que a auditoria tira empresa, ator e
+          // correlação — a recusa acontece fora de `executar`, de propósito.
+          await executar(() =>
+            registrarNegacao(audit, {
+              alvo: alvo(requisicao),
+              required: erro.required,
+              reason: erro.reason,
+              moduleId: erro.moduleId,
+            }),
+          );
+        }
+        throw erro;
+      }
+    });
 
   /** A interface está no recorte desta empresa e desta credencial? */
   const appVisivel = (uri: string): boolean =>
@@ -84,31 +122,36 @@ export function criarServidorMcp(
 
   server.setRequestHandler(
     CallToolRequestSchema,
-    protocolo(async (requisicao) => {
-      // Autorização e validação ficam FORA do try: falha aqui é erro de
-      // protocolo, não resultado de tool — a chamada não chegou a acontecer.
-      const tool = catalogo.acharTool(sessao.grant, requisicao.params.name);
-      const entrada = tool.inputSchema.parse(requisicao.params.arguments ?? {});
-
-      try {
-        const resultado = await executar(() =>
-          tool.handle(entrada as never, sessao.capacidade),
+    protocoloAuditado(
+      (requisicao) => `tool:${requisicao.params.name}`,
+      async (requisicao) => {
+        // Autorização e validação ficam FORA do try: falha aqui é erro de
+        // protocolo, não resultado de tool — a chamada não chegou a acontecer.
+        const tool = catalogo.acharTool(sessao.grant, requisicao.params.name);
+        const entrada = tool.inputSchema.parse(
+          requisicao.params.arguments ?? {},
         );
-        // `content` é o resultado de sempre — é o que um host sem suporte a
-        // MCP Apps lê, e nada de negócio depende da interface. O
-        // `structuredContent` é a MESMA resposta, na forma que a interface
-        // consome sem reparsear texto.
-        return {
-          content: [conteudoDeTexto(resultado)],
-          ...(ehObjeto(resultado) ? { structuredContent: resultado } : {}),
-          ...(tool.appUri && appVisivel(tool.appUri)
-            ? { _meta: { [RESOURCE_URI_META_KEY]: tool.appUri } }
-            : {}),
-        };
-      } catch (erro) {
-        return comoErroDeTool(erro);
-      }
-    }),
+
+        try {
+          const resultado = await executar(() =>
+            tool.handle(entrada as never, sessao.capacidade),
+          );
+          // `content` é o resultado de sempre — é o que um host sem suporte a
+          // MCP Apps lê, e nada de negócio depende da interface. O
+          // `structuredContent` é a MESMA resposta, na forma que a interface
+          // consome sem reparsear texto.
+          return {
+            content: [conteudoDeTexto(resultado)],
+            ...(ehObjeto(resultado) ? { structuredContent: resultado } : {}),
+            ...(tool.appUri && appVisivel(tool.appUri)
+              ? { _meta: { [RESOURCE_URI_META_KEY]: tool.appUri } }
+              : {}),
+          };
+        } catch (erro) {
+          return comoErroDeTool(erro);
+        }
+      },
+    ),
   );
 
   /**
@@ -145,36 +188,46 @@ export function criarServidorMcp(
 
   server.setRequestHandler(
     ReadResourceRequestSchema,
-    protocolo(async (requisicao) => {
-      const { uri } = requisicao.params;
+    protocoloAuditado(
+      (requisicao) => `resource:${requisicao.params.uri}`,
+      async (requisicao) => {
+        const { uri } = requisicao.params;
 
-      // Interface interativa: o documento é montado aqui, com a CSP e o
-      // runtime do protocolo. A autorização é a mesma das outras capacidades
-      // — app fora do recorte da empresa não é legível nem com a URI em mãos.
-      if (uri.startsWith('ui://')) {
-        const app = catalogo.acharApp(sessao.grant, uri);
+        // Interface interativa: o documento é montado aqui, com a CSP e o
+        // runtime do protocolo. A autorização é a mesma das outras capacidades
+        // — app fora do recorte da empresa não é legível nem com a URI em mãos.
+        if (uri.startsWith('ui://')) {
+          const app = catalogo.acharApp(sessao.grant, uri);
+          return {
+            contents: [
+              {
+                uri,
+                mimeType: RESOURCE_MIME_TYPE,
+                text: montarDocumentoDoApp(app),
+              },
+            ],
+          };
+        }
+
+        const { resource, variaveis } = catalogo.acharResource(
+          sessao.grant,
+          uri,
+        );
+        const conteudo = await executar(() =>
+          resource.read(variaveis, sessao.capacidade),
+        );
+
         return {
           contents: [
             {
               uri,
-              mimeType: RESOURCE_MIME_TYPE,
-              text: montarDocumentoDoApp(app),
+              mimeType: resource.mimeType,
+              text: JSON.stringify(conteudo),
             },
           ],
         };
-      }
-
-      const { resource, variaveis } = catalogo.acharResource(sessao.grant, uri);
-      const conteudo = await executar(() =>
-        resource.read(variaveis, sessao.capacidade),
-      );
-
-      return {
-        contents: [
-          { uri, mimeType: resource.mimeType, text: JSON.stringify(conteudo) },
-        ],
-      };
-    }),
+      },
+    ),
   );
 
   server.setRequestHandler(
@@ -190,19 +243,25 @@ export function criarServidorMcp(
 
   server.setRequestHandler(
     GetPromptRequestSchema,
-    protocolo(async (requisicao) => {
-      const prompt = catalogo.acharPrompt(sessao.grant, requisicao.params.name);
-      const montado = await executar(() =>
-        prompt.build(requisicao.params.arguments ?? {}, sessao.capacidade),
-      );
+    protocoloAuditado(
+      (requisicao) => `prompt:${requisicao.params.name}`,
+      async (requisicao) => {
+        const prompt = catalogo.acharPrompt(
+          sessao.grant,
+          requisicao.params.name,
+        );
+        const montado = await executar(() =>
+          prompt.build(requisicao.params.arguments ?? {}, sessao.capacidade),
+        );
 
-      return {
-        description: montado.description,
-        messages: [
-          { role: 'user' as const, content: conteudoDeTexto(montado.text) },
-        ],
-      };
-    }),
+        return {
+          description: montado.description,
+          messages: [
+            { role: 'user' as const, content: conteudoDeTexto(montado.text) },
+          ],
+        };
+      },
+    ),
   );
 
   return server;

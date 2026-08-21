@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { loadEnv } from '@ecojotaduo/config';
 import { runMigrations } from '@ecojotaduo/database';
 import type { NucleoDaPlataforma } from '@ecojotaduo/platform-core';
+import { ACAO_DE_NEGACAO } from '@ecojotaduo/audit';
 import {
   conexaoDoDono,
   exigirBancoEmCI,
@@ -108,7 +109,7 @@ describe.skipIf(!temBancoDeTeste)('Gateway MCP (E2E)', () => {
     process.env.SECRETS_KEY = Buffer.alloc(32, 7).toString('base64');
     process.env.NODE_ENV = 'test';
 
-    gateway = criarGateway(loadEnv());
+    gateway = await criarGateway(loadEnv());
     nucleo = gateway.nucleo;
     // Porta efêmera: o cliente MCP fala HTTP de verdade, não injeção.
     await gateway.app.listen({ port: 0, host: '127.0.0.1' });
@@ -379,6 +380,69 @@ describe.skipIf(!temBancoDeTeste)('Gateway MCP (E2E)', () => {
 
       expect(trilha).toHaveLength(1);
       expect(trilha[0]?.channel).toBe('mcp');
+      await cliente.close();
+    });
+
+    /** Recusas do catálogo, na trilha da empresa que tentou. */
+    async function negacoes(tenantId: string) {
+      return dono<
+        {
+          resource_id: string | null;
+          result: string;
+          channel: string;
+          metadata: { required?: string; reason?: string; moduleId?: string };
+        }[]
+      >`
+        select resource_id, result, channel, metadata from audit_events
+        where tenant_id = ${tenantId} and action = ${ACAO_DE_NEGACAO}
+        order by occurred_at
+      `;
+    }
+
+    it('tool adivinhada fora do recorte da empresa deixa rastro', async () => {
+      const cliente = await conectarComo(semCrm);
+
+      // O nome nunca apareceu na listagem desta empresa. Descoberta e execução
+      // passam pela mesma decisão — e agora a tentativa também aparece.
+      await expect(
+        cliente.callTool({
+          name: 'crm.customer.search',
+          arguments: {},
+        }),
+      ).rejects.toThrow();
+
+      const trilha = await negacoes(semCrm.tenantId);
+      expect(trilha).toHaveLength(1);
+      expect(trilha[0]?.result).toBe('denied');
+      expect(trilha[0]?.channel).toBe('mcp');
+      expect(trilha[0]?.resource_id).toBe('tool:crm.customer.search');
+      expect(trilha[0]?.metadata.reason).toBe('entitlement');
+      expect(trilha[0]?.metadata.moduleId).toBe('crm');
+      await cliente.close();
+    });
+
+    it('resource adivinhado também deixa rastro', async () => {
+      const cliente = await conectarComo(semCrm);
+
+      await expect(
+        cliente.readResource({
+          uri: 'crm://customers/019a0000-0000-7000-8000-000000000001',
+        }),
+      ).rejects.toThrow();
+
+      const trilha = await negacoes(semCrm.tenantId);
+      expect(trilha).toHaveLength(1);
+      expect(trilha[0]?.resource_id).toContain('resource:crm://customers/');
+      await cliente.close();
+    });
+
+    it('listar não é recusa: filtrar não vira rastro de negação', async () => {
+      const cliente = await conectarComo(semCrm);
+
+      // O catálogo desta empresa é vazio, mas ninguém foi barrado — listar
+      // deixa ver o que existe, e encher a trilha disso a tornaria inútil.
+      expect((await cliente.listTools()).tools).toEqual([]);
+      expect(await negacoes(semCrm.tenantId)).toHaveLength(0);
       await cliente.close();
     });
   });

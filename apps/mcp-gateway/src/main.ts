@@ -5,7 +5,7 @@ import { criarGateway, ROTA_MCP, type Gateway } from './gateway';
 export async function bootstrap(): Promise<Gateway> {
   // Fail-fast: ambiente inválido derruba o boot com mensagem clara.
   const env = loadEnv();
-  const gateway = criarGateway(env);
+  const gateway = await criarGateway(env);
 
   // Drena o pool de conexões antes de sair. Sem isto, um deploy sem downtime
   // derrubaria chamadas de agente em andamento junto com o processo.

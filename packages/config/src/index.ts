@@ -48,6 +48,29 @@ export const envSchema = z.object({
       'precisa ser 32 bytes em base64 (openssl rand -base64 32)',
     ),
 
+  /**
+   * Rate limiting (Fase 10). O limite é POR INSTÂNCIA: o contador vive na
+   * memória do processo, porque a plataforma deliberadamente não tem Redis
+   * (ADR-0012). Com N réplicas o teto efetivo é N vezes maior — o que ainda
+   * contém força bruta e laço de agente, e a troca por um store compartilhado
+   * é configuração, não reescrita.
+   */
+  RATE_LIMIT_WINDOW_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(3600)
+    .default(60),
+  /** Teto geral por origem nas rotas autenticadas. */
+  RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
+  /**
+   * Teto do login, bem mais apertado: é a única rota pública que valida
+   * segredo, e o custo do scrypt sozinho não contém uma botnet paciente.
+   */
+  RATE_LIMIT_LOGIN_MAX: z.coerce.number().int().min(1).default(10),
+  /** Teto por credencial no gateway MCP: um agente em laço custa banco. */
+  RATE_LIMIT_MCP_MAX: z.coerce.number().int().min(1).default(120),
+
   /** Reservado para BullMQ (Fase 8). */
   REDIS_URL: z.url().optional(),
 });

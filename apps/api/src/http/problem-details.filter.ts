@@ -29,6 +29,15 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 const BASE = 'https://jotaduo.com/ecojotaduo/errors';
 
+/** Status que o próprio erro declara, quando declara (plugins do Fastify). */
+function statusDeRecusa(excecao: unknown): number | undefined {
+  if (excecao instanceof Error && 'statusCode' in excecao) {
+    const status = (excecao as { statusCode?: unknown }).statusCode;
+    return typeof status === 'number' ? status : undefined;
+  }
+  return undefined;
+}
+
 const TITULO_POR_PROBLEMA: Record<ProblemKind, string> = {
   'invalid-request': 'Requisição inválida',
   forbidden: 'Acesso negado',
@@ -115,6 +124,19 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         'Não autenticado',
         401,
         'Credenciais inválidas ou sessão expirada.',
+      );
+    }
+
+    // Recusa por excesso de requisições. Vem do plugin de rate limit como um
+    // `Error` com `statusCode` — não é erro de domínio (por isso não estende
+    // `DomainError`) nem `HttpException` do Nest, então precisa desta ponte
+    // para não cair no 500 genérico.
+    if (statusDeRecusa(excecao) === 429) {
+      return problema(
+        'too-many-requests',
+        'Requisições demais',
+        429,
+        'Você excedeu o limite de requisições. Tente novamente em instantes.',
       );
     }
 
