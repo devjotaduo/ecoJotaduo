@@ -368,6 +368,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/contracts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista contratos por cliente, situação ou título */
+        get: operations["searchContracts"];
+        put?: never;
+        /** Formaliza um contrato a partir de uma proposta aceita */
+        post: operations["createContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contractId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtém um contrato com vigência e situação */
+        get: operations["getContract"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contractId}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Coloca o contrato em vigor */
+        post: operations["activateContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contractId}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Encerra um contrato ativo */
+        post: operations["finishContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/contracts/{contractId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancela um contrato ativo antes do fim previsto */
+        post: operations["cancelContract"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plugins": {
         parameters: {
             query?: never;
@@ -2604,6 +2690,575 @@ export interface operations {
                         updatedAt: string;
                         sentAt: string | null;
                         decidedAt: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    searchContracts: {
+        parameters: {
+            query?: {
+                customerId?: string;
+                status?: "draft" | "active" | "finished" | "canceled";
+                termo?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de contratos. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            number: number;
+                            /** Format: uuid */
+                            customerId: string;
+                            /** Format: uuid */
+                            proposalId: string;
+                            title: string;
+                            /** @enum {string} */
+                            status: "draft" | "active" | "finished" | "canceled" | "expired";
+                            /** @enum {string} */
+                            storedStatus: "draft" | "active" | "finished" | "canceled";
+                            inForce: boolean;
+                            currency: string;
+                            valueCents: number;
+                            /** Format: date-time */
+                            startsOn: string;
+                            /** Format: date-time */
+                            endsOn: string;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            activatedAt: string | null;
+                            closedAt: string | null;
+                            closeReason: string | null;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    createContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    proposalId: string;
+                    /** Format: date-time */
+                    startsOn: string;
+                    /** Format: date-time */
+                    endsOn: string;
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Contrato criado em rascunho. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        proposalId: string;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "active" | "finished" | "canceled" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "active" | "finished" | "canceled";
+                        inForce: boolean;
+                        currency: string;
+                        valueCents: number;
+                        /** Format: date-time */
+                        startsOn: string;
+                        /** Format: date-time */
+                        endsOn: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        activatedAt: string | null;
+                        closedAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Proposta não aceita ou já contratada. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    getContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contractId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contrato encontrado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        proposalId: string;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "active" | "finished" | "canceled" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "active" | "finished" | "canceled";
+                        inForce: boolean;
+                        currency: string;
+                        valueCents: number;
+                        /** Format: date-time */
+                        startsOn: string;
+                        /** Format: date-time */
+                        endsOn: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        activatedAt: string | null;
+                        closedAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    activateContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contractId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contrato ativo. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        proposalId: string;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "active" | "finished" | "canceled" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "active" | "finished" | "canceled";
+                        inForce: boolean;
+                        currency: string;
+                        valueCents: number;
+                        /** Format: date-time */
+                        startsOn: string;
+                        /** Format: date-time */
+                        endsOn: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        activatedAt: string | null;
+                        closedAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Fora do rascunho ou vigência vencida. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    finishContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contractId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Contrato encerrado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        proposalId: string;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "active" | "finished" | "canceled" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "active" | "finished" | "canceled";
+                        inForce: boolean;
+                        currency: string;
+                        valueCents: number;
+                        /** Format: date-time */
+                        startsOn: string;
+                        /** Format: date-time */
+                        endsOn: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        activatedAt: string | null;
+                        closedAt: string | null;
+                        closeReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    cancelContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contractId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Contrato cancelado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        /** Format: uuid */
+                        proposalId: string;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "active" | "finished" | "canceled" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "active" | "finished" | "canceled";
+                        inForce: boolean;
+                        currency: string;
+                        valueCents: number;
+                        /** Format: date-time */
+                        startsOn: string;
+                        /** Format: date-time */
+                        endsOn: string;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        activatedAt: string | null;
+                        closedAt: string | null;
+                        closeReason: string | null;
                     };
                 };
             };

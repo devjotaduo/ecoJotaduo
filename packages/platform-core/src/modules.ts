@@ -1,4 +1,5 @@
 import { commercialManifest } from '@ecojotaduo/commercial';
+import { contractsManifest } from '@ecojotaduo/contracts';
 import { crmManifest } from '@ecojotaduo/crm';
 import { pluginsManifest } from '@ecojotaduo/plugins';
 import { identityManifest } from '@ecojotaduo/identity';
@@ -21,6 +22,7 @@ export const modulosInstalados = [
   pluginsManifest,
   crmManifest,
   commercialManifest,
+  contractsManifest,
 ];
 
 export function catalogoDeModulos(): ResolvedModules {

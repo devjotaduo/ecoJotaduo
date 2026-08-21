@@ -51,8 +51,8 @@ Ficou **fora** desta entrega, deliberadamente:
    permissões concedidas na instalação e o primeiro plugin first-party de verdade.
 8. **Fase 7 (em andamento)** — Expansão dos módulos, um vertical por vez.
    ✅ **Commercial** (propostas: elaborar → enviar → decidir).
-   Próximo: Contracts → Assets → Operations → Billing → Finance → Inventory →
-   Maintenance → RH.
+   ✅ **Contracts** (formalizar da proposta aceita → ativar → encerrar).
+   Próximo: Assets → Operations → Billing → Finance → Inventory → Maintenance → RH.
 
 ### Fase 5 — escopo entregue
 
@@ -114,6 +114,31 @@ Ficou **fora**, deliberadamente:
 | PDF da proposta                           | Depende de Documents, transversal ainda não implementado                | Fase 9+               |
 | Eventos publicados                        | Declarados no manifesto, sem barramento até a Fase 8                    | Fase 8                |
 | Desconto no cabeçalho da proposta         | Desconto por item cobre o caso; total no cabeçalho duplicaria a verdade | Se pedirem            |
+
+### Fase 7 — Contracts (segundo vertical)
+
+Um contrato nasce de uma proposta **aceita**: cliente, título, moeda e valor vêm dela,
+e não de quem formaliza — se viessem, o contrato poderia divergir do que o cliente
+aceitou e a proposta deixaria de significar alguma coisa. Uma proposta vira um
+contrato só (regra no caso de uso, restrição de unicidade no banco como rede de baixo).
+
+`expired` segue o padrão do Comercial: derivado de `endsOn`, nunca guardado. Encerrar
+formalmente um contrato de vigência vencida continua sendo operação válida — é assim
+que a situação deixa de ser `expired` e vira `finished`.
+
+A ligação com o Comercial é por **chamada direta ao caso de uso**, via superfície
+pública. O barramento de eventos entra na Fase 8, onde a durabilidade é o ponto; até
+lá, chamada direta é honesta e não esconde o acoplamento.
+
+Ficou **fora**, deliberadamente:
+
+| Item                            | Por quê                                                     | Quando                      |
+| ------------------------------- | ----------------------------------------------------------- | --------------------------- |
+| Renovação / aditivo de contrato | Encerrar e formalizar um novo cobre o caso no escopo mínimo | Quando houver demanda       |
+| Reajuste por índice             | Depende de Finance                                          | Fase 7, com Finance         |
+| Contrato sem proposta (avulso)  | Contradiz a regra que define o módulo                       | Se o negócio pedir, com ADR |
+| Anexos (documento assinado)     | Depende de Documents, transversal ainda não implementado    | Fase 9+                     |
+| Eventos publicados              | Declarados no manifesto, sem barramento até a Fase 8        | Fase 8                      |
 
 ### Dívidas conhecidas ao fim da Fase 2
 

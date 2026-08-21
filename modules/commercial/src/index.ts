@@ -1,5 +1,7 @@
 export * from './manifest';
 export * from './commercial.tokens';
+export * from './contracts/public-api';
+export { CommercialService } from './commercial.service';
 
 // Domínio
 export { Money } from './domain/money';

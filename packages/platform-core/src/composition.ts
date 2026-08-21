@@ -37,9 +37,21 @@ import {
   SendProposalUseCase,
   UpdateProposalUseCase,
   commercialMcpContribution,
+  CommercialService,
   type CommercialUseCases,
   type CustomerDirectory,
 } from '@ecojotaduo/commercial';
+import {
+  ActivateContractUseCase,
+  CloseContractUseCase,
+  contractsMcpContribution,
+  CreateContractUseCase,
+  DrizzleContractRepository,
+  GetContractUseCase,
+  SearchContractsUseCase,
+  type ContractsUseCases,
+  type ProposalDirectory,
+} from '@ecojotaduo/contracts';
 import { createDatabase, type DatabaseHandle } from '@ecojotaduo/database';
 import { McpCatalog } from '@ecojotaduo/mcp-kit';
 import {
@@ -120,6 +132,7 @@ export interface NucleoDaPlataforma {
   readonly entitlements: ManageEntitlementsUseCase;
   readonly crm: CrmCompleto;
   readonly commercial: CommercialCompleto;
+  readonly contracts: ContractsUseCases;
   /**
    * Catálogo MCP da instalação. Já sabe filtrar por `AccessGrant`; o gateway
    * só o liga ao transporte.
@@ -384,6 +397,28 @@ export function criarNucleo(
     decidirProposta: new DecideProposalUseCase(propostasRepo, audit),
   };
 
+  // --- contratos ----------------------------------------------------------
+  // Um contrato nasce de uma proposta ACEITA: a referência passa pela
+  // superfície pública do Comercial. A regra "só de proposta aceita" fica no
+  // caso de uso de Contratos, porque é regra de contrato, não de proposta.
+  const propostasDoComercial = new CommercialService(propostasRepo);
+  const diretorioDePropostas: ProposalDirectory = {
+    find: (tenantId, proposalId) =>
+      propostasDoComercial.findProposal(tenantId, proposalId),
+  };
+  const contratosRepo = new DrizzleContractRepository(db);
+  const contracts: ContractsUseCases = {
+    formalizar: new CreateContractUseCase(
+      contratosRepo,
+      diretorioDePropostas,
+      audit,
+    ),
+    obter: new GetContractUseCase(contratosRepo),
+    pesquisar: new SearchContractsUseCase(contratosRepo),
+    ativar: new ActivateContractUseCase(contratosRepo, audit),
+    encerrar: new CloseContractUseCase(contratosRepo, audit),
+  };
+
   return {
     handle,
     catalogo,
@@ -392,6 +427,7 @@ export function criarNucleo(
     identity,
     crm,
     commercial,
+    contracts,
     plugins,
     // A tool do plugin entra no MESMO catálogo das tools de módulo. Quem
     // decide se ela aparece é o entitlement `plugin.<id>`, não código de
@@ -399,6 +435,7 @@ export function criarNucleo(
     mcp: new McpCatalog([
       crmMcpContribution(crm),
       commercialMcpContribution(commercial),
+      contractsMcpContribution(contracts),
       notificationsMcpContribution(notificacoes, runtimeDeNotificacoes),
     ]),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),

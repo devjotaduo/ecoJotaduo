@@ -19,6 +19,7 @@
     "@ecojotaduo/auth": "workspace:*",
     "@ecojotaduo/commercial": "workspace:*",
     "@ecojotaduo/config": "workspace:*",
+    "@ecojotaduo/contracts": "workspace:*",
     "@ecojotaduo/crm": "workspace:*",
     "@ecojotaduo/database": "workspace:*",
     "@ecojotaduo/http-kit": "workspace:*",

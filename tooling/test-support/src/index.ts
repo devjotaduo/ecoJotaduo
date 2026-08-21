@@ -90,6 +90,10 @@ export function migracoesDaPlataforma(): {
       moduleId: 'commercial',
       directory: diretorioDeMigracoes('modules/commercial'),
     },
+    {
+      moduleId: 'contracts',
+      directory: diretorioDeMigracoes('modules/contracts'),
+    },
   ];
 }
 
@@ -119,6 +123,8 @@ export async function reservarBancoDeTestes(): Promise<() => Promise<void>> {
 
 const TABELAS = [
   'audit_events',
+  'contracts_contracts',
+  'contracts_contract_numbers',
   'commercial_proposal_items',
   'commercial_proposals',
   'commercial_proposal_numbers',

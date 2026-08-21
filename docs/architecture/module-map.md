@@ -66,7 +66,7 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 | **CRM**           | —                                    | `crm.customer.created.v1`, `crm.customer.updated.v1`            | `crm.customer.read/create/update`                        |
 | **Catalog**       | —                                    | `catalog.item.published.v1`                                     | `catalog.item.read/manage`                               |
 | **Commercial** ✅ | CRM (Catalog: adiado, ver nota)      | `commercial.proposal.sent/approved/rejected.v1`                 | `commercial.proposal.read/create/update/send/approve`    |
-| **Contracts**     | Commercial                           | `contracts.contract.activated.v1`                               | `commercial.contract.approve`                            |
+| **Contracts** ✅  | Commercial                           | `contracts.contract.activated/finished/canceled.v1`             | `contracts.contract.read/create/activate/close`          |
 | **Assets**        | —                                    | `assets.asset.registered.v1`, `assets.asset.unavailable.v1`     | `assets.asset.read/manage`                               |
 | **Inventory**     | Catalog                              | `inventory.stock.adjusted.v1`                                   | `inventory.stock.read/adjust`                            |
 | **Operations**    | Contracts, Assets                    | `operations.rental.started.v1`, `operations.rental.finished.v1` | `operations.rental.create`, `operations.schedule.manage` |
@@ -81,6 +81,11 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 > existir, o item ganha uma referência opcional — nada do que já está gravado muda.
 > A referência ao CRM passa pela superfície pública (`CrmPublicApi`), nunca pelas
 > tabelas `crm_*`.
+>
+> **Nota (Fase 7)** — Contracts consome o Comercial pela `CommercialPublicApi`, também
+> por chamada direta. As permissões usam o prefixo do próprio módulo
+> (`contracts.contract.*`); a coluna deste mapa trazia `commercial.contract.approve`,
+> que era engano de redação.
 
 ## Regras de comunicação entre módulos
 

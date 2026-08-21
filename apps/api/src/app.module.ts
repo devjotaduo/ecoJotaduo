@@ -22,6 +22,14 @@ import {
   COMMERCIAL_UPDATE_PROPOSAL,
 } from '@ecojotaduo/commercial';
 import {
+  ContractsController,
+  CONTRACTS_ACTIVATE,
+  CONTRACTS_CLOSE,
+  CONTRACTS_CREATE,
+  CONTRACTS_GET,
+  CONTRACTS_SEARCH,
+} from '@ecojotaduo/contracts';
+import {
   NotificationsController,
   NOTIFICATIONS_RUNTIME,
   NOTIFICATIONS_SEND,
@@ -66,6 +74,18 @@ function doNucleo<K extends keyof NucleoDaPlataforma>(token: symbol, chave: K) {
   return {
     provide: token,
     useFactory: (nucleo: NucleoDaPlataforma) => nucleo[chave],
+    inject: [PLATFORM_CORE],
+  };
+}
+
+/** Idem, para os casos de uso de Contratos. */
+function deContratos<K extends keyof NucleoDaPlataforma['contracts']>(
+  token: symbol,
+  chave: K,
+) {
+  return {
+    provide: token,
+    useFactory: (nucleo: NucleoDaPlataforma) => nucleo.contracts[chave],
     inject: [PLATFORM_CORE],
   };
 }
@@ -123,6 +143,7 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     CrmCustomersController,
     CrmAppointmentsController,
     CommercialProposalsController,
+    ContractsController,
     // Administração de extensões e a borda do plugin de exemplo — este
     // segundo é o que prova que capacidade de plugin só existe quando a
     // empresa habilita.
@@ -163,6 +184,11 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     doComercial(COMMERCIAL_SEARCH_PROPOSALS, 'pesquisarPropostas'),
     doComercial(COMMERCIAL_SEND_PROPOSAL, 'enviarProposta'),
     doComercial(COMMERCIAL_DECIDE_PROPOSAL, 'decidirProposta'),
+    deContratos(CONTRACTS_CREATE, 'formalizar'),
+    deContratos(CONTRACTS_GET, 'obter'),
+    deContratos(CONTRACTS_SEARCH, 'pesquisar'),
+    deContratos(CONTRACTS_ACTIVATE, 'ativar'),
+    deContratos(CONTRACTS_CLOSE, 'encerrar'),
     doPlugins(PLUGINS_LIST, 'listar'),
     doPlugins(PLUGINS_INSTALL, 'instalar'),
     doPlugins(PLUGINS_CONFIGURE, 'configurar'),

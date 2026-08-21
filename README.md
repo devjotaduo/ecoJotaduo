@@ -65,7 +65,7 @@ packages/      kernel compartilhado: config, database, auth, permissions,
                tenant-context, audit, platform-kernel, platform-core, http-kit,
                mcp-kit, plugin-sdk, api-client, tsconfig, eslint-config
 modules/       módulos de domínio hexagonais (identity, tenancy, plugins, crm,
-               commercial)
+               commercial, contracts)
 plugins/       plugins first-party (notifications-example)
 tooling/       apoio a testes e geração de código
 docs/          arquitetura, ADRs, API, runbooks
