@@ -219,6 +219,11 @@ falha com `MigrationDriftError`. Crie um arquivo novo.
 O manifesto de módulo (`src/manifest.ts`) é dado puro — declara `migrations.packageName`,
 nunca um caminho de disco; quem resolve o caminho é o composition root.
 
+O banco precisa permitir `create extension` (Ativos usa `btree_gist` para a
+restrição de exclusão que impede bloqueios sobrepostos). É extensão _trusted_
+desde o PostgreSQL 13, então o dono do banco a cria sem ser superusuário — mas
+um provedor gerenciado que bloqueie extensões faria a migração falhar no boot.
+
 ### Injeção de dependência
 
 **Todo parâmetro de construtor precisa de `@Inject(TOKEN)` explícito** (inclusive

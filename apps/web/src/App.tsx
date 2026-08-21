@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 
 import { ProvedorDeSessao, useSessao } from './api/sessao';
+import { Ativos } from './paginas/Ativos';
 import { Cliente, Clientes } from './paginas/Clientes';
 import { Contratos } from './paginas/Contratos';
 import { Login } from './paginas/Login';
@@ -55,6 +56,9 @@ function Interno() {
           {pode('contracts.contract.read') ? (
             <NavLink to="/contratos">Contratos</NavLink>
           ) : null}
+          {pode('assets.asset.read') ? (
+            <NavLink to="/ativos">Ativos</NavLink>
+          ) : null}
         </nav>
         <div className="cabecalho__conta">
           <span className="cabecalho__empresa">{acesso?.tenantName}</span>
@@ -70,6 +74,7 @@ function Interno() {
         <Route path="/propostas" element={<Propostas />} />
         <Route path="/propostas/:proposalId" element={<RotaDaProposta />} />
         <Route path="/contratos" element={<Contratos />} />
+        <Route path="/ativos" element={<Ativos />} />
         <Route path="*" element={<Navigate to="/clientes" replace />} />
       </Routes>
     </div>

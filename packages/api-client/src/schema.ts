@@ -454,6 +454,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista ativos por categoria, disponibilidade, código ou nome */
+        get: operations["searchAssets"];
+        put?: never;
+        /** Cadastra um equipamento no patrimônio da empresa */
+        post: operations["registerAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assets/{assetId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtém um ativo com a situação atual e o histórico de bloqueios */
+        get: operations["getAsset"];
+        put?: never;
+        /** Corrige o cadastro de um ativo em operação */
+        post: operations["updateAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assets/{assetId}/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Responde se o ativo está livre num período, e o que o ocupa */
+        get: operations["checkAssetAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assets/{assetId}/retire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dá baixa definitiva no ativo (venda, perda ou fim de vida) */
+        post: operations["retireAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/asset-holds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bloqueia um ativo por um período, com motivo */
+        post: operations["holdAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/asset-holds/{holdId}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Libera o bloqueio agora, devolvendo o ativo à operação */
+        post: operations["releaseAssetHold"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plugins": {
         parameters: {
             query?: never;
@@ -3281,6 +3385,844 @@ export interface operations {
             };
             /** @description Sem permissão, ou módulo não contratado pela empresa. */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    searchAssets: {
+        parameters: {
+            query?: {
+                category?: string;
+                availability?: "available" | "held" | "retired";
+                termo?: string;
+                em?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de ativos. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            code: string;
+                            name: string;
+                            category: string;
+                            serialNumber: string | null;
+                            acquiredOn: string | null;
+                            /** @enum {string} */
+                            status: "active" | "retired";
+                            /** @enum {string} */
+                            availability: "available" | "held" | "retired";
+                            currentHold: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                assetId: string;
+                                /** @enum {string} */
+                                reason: "maintenance" | "reserved" | "damaged" | "transit";
+                                /** Format: date-time */
+                                startsAt: string;
+                                /** Format: date-time */
+                                endsAt: string;
+                                releasedAt: string | null;
+                                /** Format: date-time */
+                                effectiveEndsAt: string;
+                                open: boolean;
+                                notes: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            } | null;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            retiredAt: string | null;
+                            retireReason: string | null;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    registerAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    code: string;
+                    name: string;
+                    category: string;
+                    serialNumber?: string | null;
+                    acquiredOn?: string | null;
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Ativo cadastrado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        code: string;
+                        name: string;
+                        category: string;
+                        serialNumber: string | null;
+                        acquiredOn: string | null;
+                        /** @enum {string} */
+                        status: "active" | "retired";
+                        /** @enum {string} */
+                        availability: "available" | "held" | "retired";
+                        currentHold: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            assetId: string;
+                            /** @enum {string} */
+                            reason: "maintenance" | "reserved" | "damaged" | "transit";
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            releasedAt: string | null;
+                            /** Format: date-time */
+                            effectiveEndsAt: string;
+                            open: boolean;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        } | null;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        retiredAt: string | null;
+                        retireReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Já existe ativo com este código. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    getAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ativo encontrado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        code: string;
+                        name: string;
+                        category: string;
+                        serialNumber: string | null;
+                        acquiredOn: string | null;
+                        /** @enum {string} */
+                        status: "active" | "retired";
+                        /** @enum {string} */
+                        availability: "available" | "held" | "retired";
+                        currentHold: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            assetId: string;
+                            /** @enum {string} */
+                            reason: "maintenance" | "reserved" | "damaged" | "transit";
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            releasedAt: string | null;
+                            /** Format: date-time */
+                            effectiveEndsAt: string;
+                            open: boolean;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        } | null;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        retiredAt: string | null;
+                        retireReason: string | null;
+                        history: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            assetId: string;
+                            /** @enum {string} */
+                            reason: "maintenance" | "reserved" | "damaged" | "transit";
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            releasedAt: string | null;
+                            /** Format: date-time */
+                            effectiveEndsAt: string;
+                            open: boolean;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    updateAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    name?: string;
+                    category?: string;
+                    serialNumber?: string | null;
+                    acquiredOn?: string | null;
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Ativo atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        code: string;
+                        name: string;
+                        category: string;
+                        serialNumber: string | null;
+                        acquiredOn: string | null;
+                        /** @enum {string} */
+                        status: "active" | "retired";
+                        /** @enum {string} */
+                        availability: "available" | "held" | "retired";
+                        currentHold: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            assetId: string;
+                            /** @enum {string} */
+                            reason: "maintenance" | "reserved" | "damaged" | "transit";
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            releasedAt: string | null;
+                            /** Format: date-time */
+                            effectiveEndsAt: string;
+                            open: boolean;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        } | null;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        retiredAt: string | null;
+                        retireReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    checkAssetAvailability: {
+        parameters: {
+            query: {
+                startsAt: string;
+                endsAt: string;
+            };
+            header?: never;
+            path: {
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Situação no período. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        assetId: string;
+                        code: string;
+                        available: boolean;
+                        conflicts: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            assetId: string;
+                            /** @enum {string} */
+                            reason: "maintenance" | "reserved" | "damaged" | "transit";
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            releasedAt: string | null;
+                            /** Format: date-time */
+                            effectiveEndsAt: string;
+                            open: boolean;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        }[];
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    retireAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    reason?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Ativo baixado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        code: string;
+                        name: string;
+                        category: string;
+                        serialNumber: string | null;
+                        acquiredOn: string | null;
+                        /** @enum {string} */
+                        status: "active" | "retired";
+                        /** @enum {string} */
+                        availability: "available" | "held" | "retired";
+                        currentHold: {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            assetId: string;
+                            /** @enum {string} */
+                            reason: "maintenance" | "reserved" | "damaged" | "transit";
+                            /** Format: date-time */
+                            startsAt: string;
+                            /** Format: date-time */
+                            endsAt: string;
+                            releasedAt: string | null;
+                            /** Format: date-time */
+                            effectiveEndsAt: string;
+                            open: boolean;
+                            notes: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                        } | null;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        retiredAt: string | null;
+                        retireReason: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description O ativo tem bloqueio em vigor agora. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    holdAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    assetId: string;
+                    /**
+                     * @description maintenance = manutenção, reserved = reservado para operação, damaged = avariado, transit = em deslocamento
+                     * @enum {string}
+                     */
+                    reason: "maintenance" | "reserved" | "damaged" | "transit";
+                    /** Format: date-time */
+                    startsAt: string;
+                    /** Format: date-time */
+                    endsAt: string;
+                    notes?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Bloqueio criado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** Format: uuid */
+                        assetId: string;
+                        /** @enum {string} */
+                        reason: "maintenance" | "reserved" | "damaged" | "transit";
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        releasedAt: string | null;
+                        /** Format: date-time */
+                        effectiveEndsAt: string;
+                        open: boolean;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description O ativo já está bloqueado no período, ou foi baixado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    releaseAssetHold: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                holdId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bloqueio liberado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        /** Format: uuid */
+                        assetId: string;
+                        /** @enum {string} */
+                        reason: "maintenance" | "reserved" | "damaged" | "transit";
+                        /** Format: date-time */
+                        startsAt: string;
+                        /** Format: date-time */
+                        endsAt: string;
+                        releasedAt: string | null;
+                        /** Format: date-time */
+                        effectiveEndsAt: string;
+                        open: boolean;
+                        notes: string | null;
+                        /** Format: date-time */
+                        createdAt: string;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description O bloqueio já havia sido liberado. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

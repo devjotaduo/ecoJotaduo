@@ -1,5 +1,17 @@
 import { loadEnv, type Env } from '@ecojotaduo/config';
 import {
+  AssetHoldsController,
+  AssetsController,
+  ASSETS_AVAILABILITY,
+  ASSETS_GET,
+  ASSETS_HOLD,
+  ASSETS_REGISTER,
+  ASSETS_RELEASE,
+  ASSETS_RETIRE,
+  ASSETS_SEARCH,
+  ASSETS_UPDATE,
+} from '@ecojotaduo/assets';
+import {
   CrmAppointmentsController,
   CrmCustomersController,
   CRM_ADD_NOTE,
@@ -78,6 +90,18 @@ function doNucleo<K extends keyof NucleoDaPlataforma>(token: symbol, chave: K) {
   };
 }
 
+/** Idem, para os casos de uso de Ativos. */
+function deAtivos<K extends keyof NucleoDaPlataforma['assets']>(
+  token: symbol,
+  chave: K,
+) {
+  return {
+    provide: token,
+    useFactory: (nucleo: NucleoDaPlataforma) => nucleo.assets[chave],
+    inject: [PLATFORM_CORE],
+  };
+}
+
 /** Idem, para os casos de uso de Contratos. */
 function deContratos<K extends keyof NucleoDaPlataforma['contracts']>(
   token: symbol,
@@ -144,6 +168,8 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     CrmAppointmentsController,
     CommercialProposalsController,
     ContractsController,
+    AssetsController,
+    AssetHoldsController,
     // Administração de extensões e a borda do plugin de exemplo — este
     // segundo é o que prova que capacidade de plugin só existe quando a
     // empresa habilita.
@@ -189,6 +215,14 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     deContratos(CONTRACTS_SEARCH, 'pesquisar'),
     deContratos(CONTRACTS_ACTIVATE, 'ativar'),
     deContratos(CONTRACTS_CLOSE, 'encerrar'),
+    deAtivos(ASSETS_REGISTER, 'cadastrar'),
+    deAtivos(ASSETS_UPDATE, 'atualizar'),
+    deAtivos(ASSETS_GET, 'obter'),
+    deAtivos(ASSETS_SEARCH, 'pesquisar'),
+    deAtivos(ASSETS_HOLD, 'bloquear'),
+    deAtivos(ASSETS_RELEASE, 'liberar'),
+    deAtivos(ASSETS_RETIRE, 'baixar'),
+    deAtivos(ASSETS_AVAILABILITY, 'disponibilidade'),
     doPlugins(PLUGINS_LIST, 'listar'),
     doPlugins(PLUGINS_INSTALL, 'instalar'),
     doPlugins(PLUGINS_CONFIGURE, 'configurar'),

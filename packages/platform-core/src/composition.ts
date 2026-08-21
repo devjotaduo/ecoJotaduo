@@ -10,6 +10,20 @@ import {
   TokenService,
   verifyPassword,
 } from '@ecojotaduo/auth';
+import {
+  CheckAvailabilityUseCase,
+  DrizzleAssetHoldRepository,
+  DrizzleAssetRepository,
+  GetAssetUseCase,
+  HoldAssetUseCase,
+  RegisterAssetUseCase,
+  ReleaseHoldUseCase,
+  RetireAssetUseCase,
+  SearchAssetsUseCase,
+  UpdateAssetUseCase,
+  assetsMcpContribution,
+  type AssetsUseCases,
+} from '@ecojotaduo/assets';
 import type { Env } from '@ecojotaduo/config';
 import {
   AddCustomerNoteUseCase,
@@ -133,6 +147,7 @@ export interface NucleoDaPlataforma {
   readonly crm: CrmCompleto;
   readonly commercial: CommercialCompleto;
   readonly contracts: ContractsUseCases;
+  readonly assets: AssetsUseCases;
   /**
    * Catálogo MCP da instalação. Já sabe filtrar por `AccessGrant`; o gateway
    * só o liga ao transporte.
@@ -419,6 +434,23 @@ export function criarNucleo(
     encerrar: new CloseContractUseCase(contratosRepo, audit),
   };
 
+  // --- ativos -------------------------------------------------------------
+  // Sem dependência de outro módulo: o patrimônio existe antes de qualquer
+  // contrato. Os dois repositórios andam juntos porque a disponibilidade do
+  // ativo é sempre lida a partir dos bloqueios sobre ele.
+  const ativosRepo = new DrizzleAssetRepository(db);
+  const bloqueiosRepo = new DrizzleAssetHoldRepository(db);
+  const assets: AssetsUseCases = {
+    cadastrar: new RegisterAssetUseCase(ativosRepo, audit),
+    atualizar: new UpdateAssetUseCase(ativosRepo, audit),
+    obter: new GetAssetUseCase(ativosRepo, bloqueiosRepo),
+    pesquisar: new SearchAssetsUseCase(ativosRepo, bloqueiosRepo),
+    bloquear: new HoldAssetUseCase(ativosRepo, bloqueiosRepo, audit),
+    liberar: new ReleaseHoldUseCase(bloqueiosRepo, audit),
+    baixar: new RetireAssetUseCase(ativosRepo, bloqueiosRepo, audit),
+    disponibilidade: new CheckAvailabilityUseCase(ativosRepo, bloqueiosRepo),
+  };
+
   return {
     handle,
     catalogo,
@@ -428,6 +460,7 @@ export function criarNucleo(
     crm,
     commercial,
     contracts,
+    assets,
     plugins,
     // A tool do plugin entra no MESMO catálogo das tools de módulo. Quem
     // decide se ela aparece é o entitlement `plugin.<id>`, não código de
@@ -436,6 +469,7 @@ export function criarNucleo(
       crmMcpContribution(crm),
       commercialMcpContribution(commercial),
       contractsMcpContribution(contracts),
+      assetsMcpContribution(assets),
       notificationsMcpContribution(notificacoes, runtimeDeNotificacoes),
     ]),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),

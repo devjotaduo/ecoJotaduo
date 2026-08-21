@@ -15,6 +15,7 @@
     "openapi": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/emit-openapi.js"
   },
   "dependencies": {
+    "@ecojotaduo/assets": "workspace:*",
     "@ecojotaduo/audit": "workspace:*",
     "@ecojotaduo/auth": "workspace:*",
     "@ecojotaduo/commercial": "workspace:*",

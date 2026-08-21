@@ -52,7 +52,8 @@ Ficou **fora** desta entrega, deliberadamente:
 8. **Fase 7 (em andamento)** — Expansão dos módulos, um vertical por vez.
    ✅ **Commercial** (propostas: elaborar → enviar → decidir).
    ✅ **Contracts** (formalizar da proposta aceita → ativar → encerrar).
-   Próximo: Assets → Operations → Billing → Finance → Inventory → Maintenance → RH.
+   ✅ **Assets** (cadastrar → bloquear por período → liberar → baixar).
+   Próximo: Operations → Billing → Finance → Inventory → Maintenance → RH.
 
 ### Fase 5 — escopo entregue
 
@@ -140,11 +141,60 @@ Ficou **fora**, deliberadamente:
 | Anexos (documento assinado)     | Depende de Documents, transversal ainda não implementado    | Fase 9+                     |
 | Eventos publicados              | Declarados no manifesto, sem barramento até a Fase 8        | Fase 8                      |
 
+### Fase 7 — Assets (terceiro vertical)
+
+O fluxo fechado é o **ciclo de disponibilidade do equipamento**: cadastrar no
+patrimônio, bloquear por um período com motivo, liberar (inclusive antes do
+previsto) e dar baixa definitiva. É o que Operações e Manutenção vão consumir
+nas próximas entregas.
+
+Duas escolhas de desenho que valem registro:
+
+- **Disponibilidade não é coluna.** O ativo guarda só `active` ou `retired`;
+  "disponível" e "bloqueado" saem dos bloqueios sobre ele no instante
+  consultado. A mesma linha do banco responde "livre hoje" e "ocupada dia 15"
+  sem nenhuma rotina rodar no meio — é o mesmo princípio de `expired` no
+  Comercial, agora aplicado a um estado que muda várias vezes por semana.
+  O filtro por disponibilidade acontece no **banco**, e não depois de paginar:
+  filtrado em memória, uma página de 20 devolveria menos de 20 e o total
+  mentiria.
+
+- **A sobreposição é impedida pelo banco**, com `exclude using gist` sobre
+  `tstzrange` (extensão `btree_gist`). O caso de uso confere antes de gravar,
+  mas verificação em aplicação tem janela: duas reservas simultâneas leem
+  "livre" e as duas gravam — e o conflito aparece no dia da entrega, com dois
+  clientes esperando a mesma máquina. É a mesma corrida que a numeração de
+  propostas evita com contador atômico.
+
+  O período que conta é o **efetivo**, encurtado pela liberação:
+  `greatest(starts_at, coalesce(released_at, ends_at))`. O `greatest` cobre
+  cancelar um compromisso que ainda não começou — sem ele o intervalo ficaria
+  invertido e o PostgreSQL recusaria a linha com erro de faixa, virando 500 numa
+  operação legítima. Há teste para exatamente esse caso.
+
+Permissões separadas de propósito: quem opera o pátio (`assets.asset.hold`) não
+cadastra patrimônio (`manage`) nem dá baixa (`retire`). O mapa de módulos previa
+`read`/`manage`; o fluxo real pediu quatro, e a alçada tem teste E2E.
+
+Ficou **fora**, deliberadamente:
+
+| Item                                        | Por quê                                                                            | Quando                 |
+| ------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------- |
+| Bloqueio sem previsão de término            | Período fechado sustenta a restrição de exclusão; liberar antecipado cobre o caso  | Se a operação pedir    |
+| Vínculo do bloqueio com contrato/locação    | Operações é quem tem esse conceito; aqui o bloqueio é só motivo + período          | Fase 7, com Operations |
+| Telemetria / horímetro                      | Depende de integração com equipamento; nada consome hoje                           | Quando houver fonte    |
+| Depreciação e valor contábil                | É assunto de Finance, não de disponibilidade                                       | Fase 7, com Finance    |
+| Hierarquia de ativos (implemento, conjunto) | Um nível cobre o escopo mínimo; a árvore complica toda consulta de disponibilidade | Quando houver demanda  |
+| Eventos publicados                          | Declarados no manifesto, sem barramento até a Fase 8                               | Fase 8                 |
+
 ### `apps/web` — primeira tela (ADR-0011)
 
 Entregue junto do segundo vertical: login, carteira de clientes com linha do tempo,
 funil de propostas (criar → enviar → decidir) e contratos (formalizar → ativar →
 encerrar). Consome **apenas** o SDK gerado — nenhum tipo de API escrito à mão.
+
+O pátio de equipamentos entrou junto com o terceiro vertical, com o filtro de
+disponibilidade por data — a tela que torna visível que a situação é derivada.
 
 ### Dívidas conhecidas ao fim da Fase 2
 

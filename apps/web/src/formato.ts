@@ -72,7 +72,23 @@ export const SITUACAO: Record<string, string> = {
   archived: 'Arquivado',
   scheduled: 'Agendado',
   done: 'Realizado',
+  // Ativos: a situação é derivada dos bloqueios, não é coluna do equipamento.
+  available: 'Disponível',
+  held: 'Bloqueado',
+  retired: 'Baixado',
 };
+
+/** Motivos de bloqueio de um ativo. */
+export const MOTIVO_DE_BLOQUEIO: Record<string, string> = {
+  maintenance: 'Manutenção',
+  reserved: 'Reservado',
+  damaged: 'Avariado',
+  transit: 'Em deslocamento',
+};
+
+export function motivoDeBloqueio(chave: string): string {
+  return MOTIVO_DE_BLOQUEIO[chave] ?? chave;
+}
 
 export function situacao(chave: string): string {
   return SITUACAO[chave] ?? chave;

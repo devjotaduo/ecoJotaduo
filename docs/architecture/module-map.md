@@ -67,7 +67,7 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 | **Catalog**       | —                                    | `catalog.item.published.v1`                                     | `catalog.item.read/manage`                               |
 | **Commercial** ✅ | CRM (Catalog: adiado, ver nota)      | `commercial.proposal.sent/approved/rejected.v1`                 | `commercial.proposal.read/create/update/send/approve`    |
 | **Contracts** ✅  | Commercial                           | `contracts.contract.activated/finished/canceled.v1`             | `contracts.contract.read/create/activate/close`          |
-| **Assets**        | —                                    | `assets.asset.registered.v1`, `assets.asset.unavailable.v1`     | `assets.asset.read/manage`                               |
+| **Assets** ✅     | —                                    | `assets.asset.registered/unavailable/available/retired.v1`      | `assets.asset.read/manage/hold/retire`                   |
 | **Inventory**     | Catalog                              | `inventory.stock.adjusted.v1`                                   | `inventory.stock.read/adjust`                            |
 | **Operations**    | Contracts, Assets                    | `operations.rental.started.v1`, `operations.rental.finished.v1` | `operations.rental.create`, `operations.schedule.manage` |
 | **Maintenance**   | Assets, Inventory                    | `maintenance.work-order.completed.v1`                           | `maintenance.work-order.schedule`                        |
@@ -81,6 +81,12 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 > existir, o item ganha uma referência opcional — nada do que já está gravado muda.
 > A referência ao CRM passa pela superfície pública (`CrmPublicApi`), nunca pelas
 > tabelas `crm_*`.
+>
+> **Nota (Fase 7)** — Assets foi entregue com quatro permissões, e não com as duas
+> (`read`/`manage`) previstas aqui: operar o pátio (`hold`) é rotina diária de um
+> papel que não cadastra patrimônio nem dá baixa. A separação tem teste E2E de
+> alçada. A disponibilidade do ativo é **derivada dos bloqueios**, nunca uma
+> coluna — quem consumir a `AssetsPublicApi` recebe a situação já calculada.
 >
 > **Nota (Fase 7)** — Contracts consome o Comercial pela `CommercialPublicApi`, também
 > por chamada direta. As permissões usam o prefixo do próprio módulo
