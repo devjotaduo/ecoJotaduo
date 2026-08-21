@@ -209,9 +209,11 @@ Duas regras que não se negociam ali (ADR-0011):
 - **A interface esconde; o servidor barra.** `pode('crm.customer.create')` some com o
   botão que só levaria a 403 — é conveniência, nunca barreira. Se o espelho divergir
   do servidor, quem está certo é o servidor.
-- **Access token só em memória.** Só o refresh token vai para o `sessionStorage`, e
-  ele passa por rotação com detecção de reuso. Não protege contra XSS — a correção
-  durável é cookie `httpOnly` + CSRF, declarada no roadmap.
+- **Nada de sessão fica ao alcance de script.** Access token só em memória; refresh
+  token num cookie `httpOnly` + `sameSite=strict` com `path=/api/v1/auth`, que o
+  JavaScript não enxerga. Não há token anti-CSRF porque nenhuma rota de negócio é
+  autenticada por cookie — o único endpoint que o lê é `/auth/refresh`. Sair é
+  `POST /auth/logout` (a tela não consegue apagar o cookie sozinha).
 
 Em desenvolvimento o Vite encaminha `/api` para a API: mesma origem, sem abrir CORS no
 servidor por conveniência do front.

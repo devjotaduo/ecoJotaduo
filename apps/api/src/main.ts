@@ -11,7 +11,7 @@ import {
 import { AppModule } from './app.module';
 import { ProblemDetailsFilter } from './http/problem-details.filter';
 import { registrarLimiteDeRequisicoes } from './http/rate-limit';
-import { registrarContextoDeRequisicao } from './http/request-context';
+import { prepararBordaHttp } from './http/borda';
 
 export async function bootstrap(): Promise<NestFastifyApplication> {
   // Fail-fast: ambiente inválido derruba o boot com mensagem clara.
@@ -22,7 +22,7 @@ export async function bootstrap(): Promise<NestFastifyApplication> {
     new FastifyAdapter(),
   );
 
-  registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+  await prepararBordaHttp(app);
   await registrarLimiteDeRequisicoes(app, env);
   app.useGlobalFilters(new ProblemDetailsFilter());
   // Dispara o OnApplicationShutdown de DatabaseLifecycle em SIGTERM/SIGINT.

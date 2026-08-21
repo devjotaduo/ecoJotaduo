@@ -121,4 +121,19 @@ export class RefreshTokenUseCase {
   async revokeAllOfUser(userId: string): Promise<void> {
     await this.tokens.revokeAllOfUser(userId);
   }
+
+  /**
+   * Encerra a sessão a que o token pertence.
+   *
+   * Revoga a família inteira do usuário, e não só a linha apresentada: um
+   * token já rotacionado tem irmãos vivos, e sair pela metade deixaria a
+   * sessão de pé em outra aba. Token desconhecido não levanta erro — sair não
+   * pode virar um oráculo que confirma quais tokens existem.
+   */
+  async revokeSession(token: string): Promise<void> {
+    const registro = await this.tokens.findByHash(this.hasher.hash(token));
+    if (registro) {
+      await this.tokens.revokeAllOfUser(registro.userId);
+    }
+  }
 }

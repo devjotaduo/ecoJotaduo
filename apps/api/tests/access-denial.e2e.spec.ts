@@ -22,7 +22,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { ProblemDetailsFilter } from '../src/http/problem-details.filter';
-import { registrarContextoDeRequisicao } from '../src/http/request-context';
+import { prepararBordaHttp } from '../src/http/borda';
 
 exigirBancoEmCI();
 
@@ -120,7 +120,7 @@ describe.skipIf(!temBancoDeTeste)('negação de acesso auditada (E2E)', () => {
     app = modulo.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
     );
-    registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+    await prepararBordaHttp(app);
     app.useGlobalFilters(new ProblemDetailsFilter());
     await app.init();
     await app.getHttpAdapter().getInstance().ready();

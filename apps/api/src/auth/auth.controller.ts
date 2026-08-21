@@ -1,4 +1,6 @@
 import type { AuditLogger } from '@ecojotaduo/audit';
+import type { Env } from '@ecojotaduo/config';
+import { RefreshTokenInvalidError } from '@ecojotaduo/identity';
 import type {
   IssueServiceTokenUseCase,
   RefreshSessionUseCase,
@@ -6,8 +8,18 @@ import type {
   TenancyPublicApi,
 } from '@ecojotaduo/tenancy';
 import { requireAuth } from '@ecojotaduo/tenant-context';
-import { Body, Controller, Get, HttpCode, Inject, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Inject,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 
 import {
@@ -19,7 +31,14 @@ import {
 } from './auth.responses';
 
 import {
+  gravarCookieDeRenovacao,
+  lerCookieDeRenovacao,
+  limparCookieDeRenovacao,
+} from './refresh-cookie';
+
+import {
   AUDIT_LOGGER,
+  ENV,
   ISSUE_SERVICE_TOKEN_USE_CASE,
   REFRESH_SESSION_USE_CASE,
   SIGN_IN_USE_CASE,
@@ -47,9 +66,12 @@ const loginSchema = z.object({
     ),
 });
 
-const refreshSchema = z.object({
-  refreshToken: z.string().min(20).max(512),
-});
+/**
+ * A renovação não recebe corpo: o refresh token vem no cookie `httpOnly`.
+ * Aceitá-lo também por corpo reabriria exatamente o caminho que o cookie
+ * fecha — bastaria um XSS convencer a página a mandar o que roubou.
+ */
+export const SEM_SESSAO = 'Sessão ausente ou expirada.';
 
 const serviceTokenSchema = z.object({
   clientId: z.string().min(1).max(128),
@@ -67,6 +89,7 @@ export class AuthController {
     private readonly serviceToken: IssueServiceTokenUseCase,
     @Inject(TENANCY_API) private readonly tenancy: TenancyPublicApi,
     @Inject(AUDIT_LOGGER) private readonly audit: AuditLogger,
+    @Inject(ENV) private readonly env: Env,
   ) {}
 
   @Public()
@@ -79,13 +102,14 @@ export class AuthController {
   async login(
     @Body(new ZodValidationPipe(loginSchema))
     corpo: z.infer<typeof loginSchema>,
+    @Res({ passthrough: true }) resposta: FastifyReply,
   ) {
     const sessao = await this.signIn.execute(corpo);
+    gravarCookieDeRenovacao(resposta, this.env, sessao.refreshToken);
 
     return {
       accessToken: sessao.accessToken,
       accessTokenExpiresAt: sessao.accessTokenExpiresAt.toISOString(),
-      refreshToken: sessao.refreshToken,
       refreshTokenExpiresAt: sessao.refreshTokenExpiresAt.toISOString(),
       tenant: sessao.tenant,
       user: sessao.user,
@@ -101,23 +125,55 @@ export class AuthController {
     operationId: 'authRefresh',
     summary: 'Renova a sessão (rotaciona o refresh token)',
   })
-  @ApiZodBody(refreshSchema)
   @ApiZodResponse(200, sessaoRenovadaResposta, 'Sessão renovada.')
-  @ApiZodResponse(401, problemaSchema, 'Refresh token inválido ou já usado.')
+  @ApiZodResponse(401, problemaSchema, 'Sessão inválida ou já usada.')
   async refresh(
-    @Body(new ZodValidationPipe(refreshSchema))
-    corpo: z.infer<typeof refreshSchema>,
+    @Req() requisicao: FastifyRequest,
+    @Res({ passthrough: true }) resposta: FastifyReply,
   ) {
-    const sessao = await this.refreshSession.execute(corpo);
+    const refreshToken = lerCookieDeRenovacao(requisicao);
+    if (!refreshToken) {
+      // Mesmo 401 de token inválido: quem chama não precisa saber se o cookie
+      // faltou ou se já tinha sido queimado.
+      throw new RefreshTokenInvalidError();
+    }
+
+    const sessao = await this.refreshSession.execute({ refreshToken });
+    gravarCookieDeRenovacao(resposta, this.env, sessao.refreshToken);
 
     return {
       accessToken: sessao.accessToken,
       accessTokenExpiresAt: sessao.accessTokenExpiresAt.toISOString(),
-      refreshToken: sessao.refreshToken,
       refreshTokenExpiresAt: sessao.refreshTokenExpiresAt.toISOString(),
       permissions: sessao.permissions,
       entitlements: sessao.entitlements,
     };
+  }
+
+  /**
+   * Encerra a sessão.
+   *
+   * Passa a existir porque o cookie é `httpOnly`: a tela não consegue mais
+   * apagá-lo sozinha, então sair vira uma operação de servidor. Além de
+   * limpar o cookie, a família de refresh tokens é revogada — sair numa aba
+   * tem de valer nas outras, e num equipamento perdido também.
+   */
+  @Public()
+  @Post('logout')
+  @HttpCode(204)
+  @ApiOperation({ operationId: 'authLogout', summary: 'Encerra a sessão' })
+  async logout(
+    @Req() requisicao: FastifyRequest,
+    @Res({ passthrough: true }) resposta: FastifyReply,
+  ): Promise<void> {
+    const refreshToken = lerCookieDeRenovacao(requisicao);
+    limparCookieDeRenovacao(resposta, this.env);
+
+    if (refreshToken) {
+      // Sem token não há o que revogar, e sair continua devolvendo 204: uma
+      // sessão já morta responder erro só atrapalharia quem está saindo.
+      await this.refreshSession.revokeSession(refreshToken);
+    }
   }
 
   /** Autenticação de aplicação (client credentials), sem refresh token. */

@@ -21,7 +21,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { ProblemDetailsFilter } from '../src/http/problem-details.filter';
-import { registrarContextoDeRequisicao } from '../src/http/request-context';
+import { prepararBordaHttp } from '../src/http/borda';
 
 exigirBancoEmCI();
 
@@ -64,7 +64,7 @@ describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
     app = modulo.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
     );
-    registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+    await prepararBordaHttp(app);
     app.useGlobalFilters(new ProblemDetailsFilter());
     await app.init();
 
@@ -89,8 +89,43 @@ describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
     });
   });
 
+  /**
+   * Pote de cookies mínimo.
+   *
+   * O refresh token vive num cookie `httpOnly`, e quem o guarda e reenvia
+   * normalmente é o navegador. Um consumidor Node não tem isso, então o teste
+   * faz o papel dele — e ao fazer, exercita o fluxo de verdade: o servidor
+   * emite `set-cookie` no login e aceita o `cookie` na renovação.
+   */
+  function comPoteDeCookies(): typeof fetch {
+    const pote = new Map<string, string>();
+
+    return async (entrada, init) => {
+      const requisicao = new Request(entrada, init);
+      const guardados = [...pote].map(([nome, valor]) => `${nome}=${valor}`);
+      if (guardados.length > 0) {
+        requisicao.headers.set('cookie', guardados.join('; '));
+      }
+
+      const resposta = await fetch(requisicao);
+      for (const bruto of resposta.headers.getSetCookie()) {
+        const [par = ''] = bruto.split(';');
+        const separador = par.indexOf('=');
+        const nome = par.slice(0, separador).trim();
+        const valor = par.slice(separador + 1).trim();
+        if (!nome) continue;
+        if (valor.length === 0 || bruto.includes('Max-Age=0')) {
+          pote.delete(nome);
+        } else {
+          pote.set(nome, valor);
+        }
+      }
+      return resposta;
+    };
+  }
+
   function cliente() {
-    return criarClienteDaApi({ baseUrl });
+    return criarClienteDaApi({ baseUrl, fetch: comPoteDeCookies() });
   }
 
   it('faz o ciclo completo do CRM só com o SDK', async () => {
@@ -143,26 +178,27 @@ describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
   });
 
   it('renova a sessão sozinho quando o access token expira', async () => {
-    const api = cliente();
-    const sessao = await api.entrar({
+    // O MESMO pote nos dois clientes: é ele que guarda o cookie do login e o
+    // devolve na renovação, como o navegador faria.
+    const fetchDoPote = comPoteDeCookies();
+    const api = criarClienteDaApi({ baseUrl, fetch: fetchDoPote });
+    await api.entrar({
       email: empresa.email,
       password: empresa.senha,
       tenantSlug: empresa.slug,
     });
 
-    // Simula token expirado mantendo o refresh válido: o SDK deve renovar e
-    // repetir a chamada sem que o consumidor perceba.
-    const armazenamento = api.sessaoAtual();
-    expect(armazenamento).not.toBeNull();
-    api.sair();
+    // Estraga só o access token: o cookie de renovação continua no pote, que
+    // é exatamente a situação de uma aba com token expirado.
+    let atual = { accessToken: 'token.invalido.aqui' };
     const apiComTokenRuim = criarClienteDaApi({
       baseUrl,
+      fetch: fetchDoPote,
       armazenamento: {
-        ler: () => ({
-          accessToken: 'token.invalido.aqui',
-          refreshToken: sessao.refreshToken,
-        }),
-        gravar: () => undefined,
+        ler: () => atual,
+        gravar: (nova) => {
+          atual = nova ?? { accessToken: '' };
+        },
       },
     });
 
@@ -173,6 +209,8 @@ describe.skipIf(!temBancoDeTeste)('SDK gerado contra a API real', () => {
     );
 
     expect(pagina.total).toBe(0);
+    // A renovação de fato aconteceu — o access token na mão é outro.
+    expect(atual.accessToken).not.toBe('token.invalido.aqui');
   });
 
   it('erro do servidor chega tipado, com correlationId', async () => {

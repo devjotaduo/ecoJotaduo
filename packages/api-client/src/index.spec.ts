@@ -45,7 +45,6 @@ describe('cliente da API', () => {
       baseUrl: BASE,
       armazenamento: armazenamentoEmMemoria({
         accessToken: 'token-1',
-        refreshToken: 'refresh-1',
       }),
       fetch: (entrada, init) => {
         chamadas.push(new Request(entrada, init));
@@ -82,7 +81,6 @@ describe('cliente da API', () => {
     it('renova ao receber 401 e repete a requisição uma vez', async () => {
       const armazenamento = armazenamentoEmMemoria({
         accessToken: 'expirado',
-        refreshToken: 'refresh-1',
       });
       const tokensUsados: (string | null)[] = [];
       let renovacoes = 0;
@@ -99,7 +97,6 @@ describe('cliente da API', () => {
             return Promise.resolve(
               resposta(200, {
                 accessToken: 'token-novo',
-                refreshToken: 'refresh-2',
               }),
             );
           }
@@ -121,7 +118,9 @@ describe('cliente da API', () => {
       expect(renovacoes).toBe(1);
       expect(tokensUsados).toEqual(['Bearer expirado', 'Bearer token-novo']);
       expect(data).toEqual({ items: [], total: 0 });
-      expect(armazenamento.ler()?.refreshToken).toBe('refresh-2');
+      // O refresh token não passa mais pelo SDK: ele fica no cookie
+      // `httpOnly`. O que se guarda da renovação é só o access token novo.
+      expect(armazenamento.ler()?.accessToken).toBe('token-novo');
     });
 
     it('três 401 simultâneos disparam UMA única renovação', async () => {
@@ -132,7 +131,6 @@ describe('cliente da API', () => {
         baseUrl: BASE,
         armazenamento: armazenamentoEmMemoria({
           accessToken: 'expirado',
-          refreshToken: 'refresh-1',
         }),
         fetch: async (entrada, init) => {
           const requisicao = new Request(entrada, init);
@@ -142,7 +140,6 @@ describe('cliente da API', () => {
             await new Promise((resolver) => setTimeout(resolver, 20));
             return resposta(200, {
               accessToken: 'token-novo',
-              refreshToken: 'refresh-2',
             });
           }
           const token = requisicao.headers.get('authorization');
@@ -162,7 +159,10 @@ describe('cliente da API', () => {
       expect(renovacoes).toBe(1);
     });
 
-    it('não tenta renovar quando não há sessão', async () => {
+    it('sem sessão local ainda tenta renovar — uma vez', async () => {
+      // O SDK não tem como saber se existe sessão: o refresh token está num
+      // cookie `httpOnly`, invisível ao JavaScript. Então a tentativa É a
+      // pergunta. O que não pode é virar laço.
       let renovacoes = 0;
       const cliente = criarClienteDaApi({
         baseUrl: BASE,
@@ -175,13 +175,12 @@ describe('cliente da API', () => {
 
       await cliente.rotas.GET('/api/v1/auth/me');
 
-      expect(renovacoes).toBe(0);
+      expect(renovacoes).toBe(1);
     });
 
     it('refresh recusado limpa a sessão e não repete indefinidamente', async () => {
       const armazenamento = armazenamentoEmMemoria({
         accessToken: 'expirado',
-        refreshToken: 'vazado',
       });
       let tentativas = 0;
 
@@ -212,7 +211,6 @@ describe('cliente da API', () => {
           Promise.resolve(
             resposta(200, {
               accessToken: 'a',
-              refreshToken: 'r',
               accessTokenExpiresAt: new Date().toISOString(),
               refreshTokenExpiresAt: new Date().toISOString(),
               tenant: { id: 't', slug: 'empresa', name: 'Empresa' },
@@ -230,7 +228,31 @@ describe('cliente da API', () => {
       });
 
       expect(sessao.accessToken).toBe('a');
-      expect(cliente.sessaoAtual()?.refreshToken).toBe('r');
+      // O refresh token não vem no corpo: fica no cookie `httpOnly` que o
+      // servidor emitiu. Nada de sessão além do access token passa por aqui.
+      expect(JSON.stringify(cliente.sessaoAtual())).not.toContain('refresh');
+    });
+
+    it('sair limpa a sessão local e pede ao servidor para encerrar', async () => {
+      const chamadas: Request[] = [];
+      const cliente = criarClienteDaApi({
+        baseUrl: BASE,
+        armazenamento: armazenamentoEmMemoria({ accessToken: 'a' }),
+        fetch: (entrada, init) => {
+          chamadas.push(new Request(entrada, init));
+          // 204 não pode ter corpo — o construtor de `Response` recusa.
+          return Promise.resolve(new Response(null, { status: 204 }));
+        },
+      });
+
+      await cliente.sair();
+
+      // Só o servidor consegue apagar um cookie `httpOnly` — e é ele quem
+      // revoga a família de tokens, para sair numa aba valer nas outras.
+      expect(cliente.sessaoAtual()).toBeNull();
+      expect(chamadas).toHaveLength(1);
+      expect(chamadas[0]?.url).toContain('/api/v1/auth/logout');
+      expect(chamadas[0]?.credentials).toBe('include');
     });
 
     it('credencial errada vira ApiError com o correlationId', async () => {
@@ -256,12 +278,11 @@ describe('cliente da API', () => {
         baseUrl: BASE,
         armazenamento: armazenamentoEmMemoria({
           accessToken: 'a',
-          refreshToken: 'r',
         }),
         fetch: () => Promise.resolve(resposta(200, {})),
       });
 
-      cliente.sair();
+      await cliente.sair();
 
       expect(cliente.sessaoAtual()).toBeNull();
       await expect(cliente.rotas.GET('/health')).resolves.toBeDefined();

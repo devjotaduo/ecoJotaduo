@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Encerra a sessão */
+        post: operations["authLogout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/token": {
         parameters: {
             query?: never;
@@ -836,7 +853,6 @@ export interface operations {
                         accessToken: string;
                         /** Format: date-time */
                         accessTokenExpiresAt: string;
-                        refreshToken: string;
                         /** Format: date-time */
                         refreshTokenExpiresAt: string;
                         tenant: {
@@ -882,13 +898,7 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": {
-                    refreshToken: string;
-                };
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description Sessão renovada. */
             200: {
@@ -900,7 +910,6 @@ export interface operations {
                         accessToken: string;
                         /** Format: date-time */
                         accessTokenExpiresAt: string;
-                        refreshToken: string;
                         /** Format: date-time */
                         refreshTokenExpiresAt: string;
                         permissions: string[];
@@ -908,7 +917,7 @@ export interface operations {
                     };
                 };
             };
-            /** @description Refresh token inválido ou já usado. */
+            /** @description Sessão inválida ou já usada. */
             401: {
                 headers: {
                     [name: string]: unknown;
@@ -924,6 +933,23 @@ export interface operations {
                         errors?: string[];
                     };
                 };
+            };
+        };
+    };
+    authLogout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

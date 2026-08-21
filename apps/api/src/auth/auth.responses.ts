@@ -11,10 +11,15 @@ export const empresaResposta = z.object({
   name: z.string(),
 });
 
+/**
+ * O refresh token NÃO aparece aqui: ele volta num cookie `httpOnly`, fora do
+ * alcance de qualquer script (ver `refresh-cookie.ts`). O que sobra é a data
+ * de expiração, que a tela usa para saber quando a sessão morre sem precisar
+ * do segredo em si.
+ */
 export const sessaoResposta = z.object({
   accessToken: z.string(),
   accessTokenExpiresAt: z.iso.datetime(),
-  refreshToken: z.string(),
   refreshTokenExpiresAt: z.iso.datetime(),
   tenant: empresaResposta,
   user: z.object({ id: z.uuid(), name: z.string(), email: z.string() }),

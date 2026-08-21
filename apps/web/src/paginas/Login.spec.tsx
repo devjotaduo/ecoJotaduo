@@ -49,16 +49,16 @@ describe('tela de login', () => {
     globalThis.fetch = fetchOriginal;
   });
 
-  it('entra e guarda apenas o refresh token na aba', async () => {
+  it('entra sem deixar nada de sessão em storage do navegador', async () => {
     // Função tipada, não mock: nada aqui inspeciona chamadas — o que o teste
-    // observa é o efeito, que é o refresh token na aba.
+    // observa é o efeito, que agora é a AUSÊNCIA de rastro em storage.
+    let carregouAcesso = false;
     const servidor: typeof fetch = (entrada) => {
       const url = entrada instanceof Request ? entrada.url : String(entrada);
       if (url.includes('/auth/login')) {
         return Promise.resolve(
           respostaJson({
             accessToken: 'token-de-acesso',
-            refreshToken: 'token-de-renovacao',
             accessTokenExpiresAt: new Date().toISOString(),
             refreshTokenExpiresAt: new Date().toISOString(),
             tenant: { id: 't-1', slug: 'demo', name: 'Empresa Demo' },
@@ -69,6 +69,7 @@ describe('tela de login', () => {
         );
       }
       if (url.includes('/auth/me')) {
+        carregouAcesso = true;
         return Promise.resolve(
           respostaJson({
             tenantId: 't-1',
@@ -94,13 +95,16 @@ describe('tela de login', () => {
     );
     preencherEEnviar();
 
+    // O login terminou quando o provedor foi buscar o acesso no servidor.
     await waitFor(() => {
-      expect(sessionStorage.getItem('ecojotaduo.refresh')).toBe(
-        'token-de-renovacao',
-      );
+      expect(carregouAcesso).toBe(true);
     });
-    // O access token não pode ter passado por aqui.
-    expect(JSON.stringify(sessionStorage)).not.toContain('token-de-acesso');
+
+    // Nem access token, nem refresh: o primeiro vive em memória, o segundo num
+    // cookie `httpOnly` que este código nunca enxerga. Um XSS aqui não tem o
+    // que levar embora.
+    expect(sessionStorage.length).toBe(0);
+    expect(localStorage.length).toBe(0);
   });
 
   it('credencial errada mostra a mensagem do servidor, sem adivinhar o motivo', async () => {

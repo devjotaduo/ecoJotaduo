@@ -84,9 +84,6 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                     },
-                    "refreshToken": {
-                      "type": "string"
-                    },
                     "refreshTokenExpiresAt": {
                       "type": "string",
                       "format": "date-time",
@@ -152,7 +149,6 @@
                   "required": [
                     "accessToken",
                     "accessTokenExpiresAt",
-                    "refreshToken",
                     "refreshTokenExpiresAt",
                     "tenant",
                     "user",
@@ -221,26 +217,6 @@
       "post": {
         "operationId": "authRefresh",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "refreshToken": {
-                    "type": "string",
-                    "minLength": 20,
-                    "maxLength": 512
-                  }
-                },
-                "required": [
-                  "refreshToken"
-                ]
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Sessão renovada.",
@@ -256,9 +232,6 @@
                       "type": "string",
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
-                    },
-                    "refreshToken": {
-                      "type": "string"
                     },
                     "refreshTokenExpiresAt": {
                       "type": "string",
@@ -281,7 +254,6 @@
                   "required": [
                     "accessToken",
                     "accessTokenExpiresAt",
-                    "refreshToken",
                     "refreshTokenExpiresAt",
                     "permissions",
                     "entitlements"
@@ -292,7 +264,7 @@
             }
           },
           "401": {
-            "description": "Refresh token inválido ou já usado.",
+            "description": "Sessão inválida ou já usada.",
             "content": {
               "application/json": {
                 "schema": {
@@ -339,6 +311,21 @@
           }
         },
         "summary": "Renova a sessão (rotaciona o refresh token)",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "authLogout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Encerra a sessão",
         "tags": [
           "Autenticação"
         ]

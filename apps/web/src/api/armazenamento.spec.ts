@@ -1,80 +1,58 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { armazenamentoDaAba } from './armazenamento';
 
-/** `sessionStorage` de mentira, para o teste não depender do jsdom. */
-function storageFalso(): Storage {
-  const dados = new Map<string, string>();
-  return {
-    get length() {
-      return dados.size;
-    },
-    clear: () => dados.clear(),
-    getItem: (chave: string) => dados.get(chave) ?? null,
-    key: (indice: number) => [...dados.keys()][indice] ?? null,
-    removeItem: (chave: string) => {
-      dados.delete(chave);
-    },
-    setItem: (chave: string, valor: string) => {
-      dados.set(chave, valor);
-    },
-  };
-}
-
+/**
+ * A partir da Fase 10 a sessão do navegador vive **só em memória**.
+ *
+ * Antes, o refresh token ia para o `sessionStorage` para a aba sobreviver a um
+ * F5 — e de lá qualquer script injetado o lia. Agora ele está num cookie
+ * `httpOnly`, que o navegador envia sozinho e nenhum JavaScript enxerga. O que
+ * este teste guarda é a propriedade que sobrou: **nada de sessão é gravado em
+ * lugar nenhum acessível a script**.
+ */
 describe('armazenamento da aba', () => {
-  let storage: Storage;
+  it('não grava nada em storage do navegador', () => {
+    sessionStorage.clear();
+    localStorage.clear();
 
-  beforeEach(() => {
-    storage = storageFalso();
+    const armazenamento = armazenamentoDaAba();
+    armazenamento.gravar({ accessToken: 'token-de-acesso' });
+
+    expect(sessionStorage.length).toBe(0);
+    expect(localStorage.length).toBe(0);
   });
 
-  it('sem sessão, devolve null', () => {
-    expect(armazenamentoDaAba(storage).ler()).toBeNull();
+  it('devolve o access token gravado', () => {
+    const armazenamento = armazenamentoDaAba();
+    armazenamento.gravar({ accessToken: 'token-de-acesso' });
+
+    expect(armazenamento.ler()?.accessToken).toBe('token-de-acesso');
   });
 
-  it('guarda o refresh token e devolve os dois', () => {
-    const armazenamento = armazenamentoDaAba(storage);
-    armazenamento.gravar({ accessToken: 'acesso', refreshToken: 'renovacao' });
+  it('sem sessão, devolve token vazio em vez de null', () => {
+    const armazenamento = armazenamentoDaAba();
 
-    expect(armazenamento.ler()).toEqual({
-      accessToken: 'acesso',
-      refreshToken: 'renovacao',
-    });
+    // Um `null` faria a tela concluir "não está logado" e pedir senha. Com
+    // token vazio o SDK chama sem autorização, toma 401 e renova pelo cookie —
+    // que é como uma aba recarregada volta à vida sem senha.
+    expect(armazenamento.ler()).toEqual({ accessToken: '' });
   });
 
-  it('o ACCESS TOKEN nunca vai para o storage', () => {
-    // É o que abre todas as rotas sem nenhuma volta ao servidor: fora da
-    // memória, um vazamento não seria nem detectável nem revogável.
-    const armazenamento = armazenamentoDaAba(storage);
-    armazenamento.gravar({ accessToken: 'acesso', refreshToken: 'renovacao' });
-
-    const gravado = JSON.stringify([...Object.entries(storage)]);
-    expect(storage.getItem('ecojotaduo.refresh')).toBe('renovacao');
-    expect(gravado).not.toContain('acesso');
-  });
-
-  it('depois de recarregar a página, sobra só o refresh', () => {
-    // Simula o F5: mesmo storage, instância nova (a memória se perdeu).
-    armazenamentoDaAba(storage).gravar({
-      accessToken: 'acesso',
-      refreshToken: 'renovacao',
-    });
-
-    const depoisDoReload = armazenamentoDaAba(storage);
-    expect(depoisDoReload.ler()).toEqual({
-      accessToken: '',
-      refreshToken: 'renovacao',
-    });
-    // Access token vazio faz o SDK chamar sem credencial, tomar 401 e renovar
-    // — que é exatamente o caminho desejado.
-  });
-
-  it('sair limpa o storage', () => {
-    const armazenamento = armazenamentoDaAba(storage);
-    armazenamento.gravar({ accessToken: 'a', refreshToken: 'r' });
+  it('sair apaga o que estava em memória', () => {
+    const armazenamento = armazenamentoDaAba();
+    armazenamento.gravar({ accessToken: 'token-de-acesso' });
     armazenamento.gravar(null);
 
-    expect(storage.getItem('ecojotaduo.refresh')).toBeNull();
-    expect(armazenamento.ler()).toBeNull();
+    expect(armazenamento.ler()?.accessToken).toBe('');
+  });
+
+  it('duas abas não compartilham sessão em memória', () => {
+    const umaAba = armazenamentoDaAba();
+    const outraAba = armazenamentoDaAba();
+
+    umaAba.gravar({ accessToken: 'token-de-acesso' });
+
+    expect(outraAba.ler()?.accessToken).toBe('');
   });
 });

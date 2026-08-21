@@ -32,7 +32,12 @@ export interface ClienteDaApi {
     password: string;
     tenantSlug: string;
   }): Promise<Sessao>;
-  sair(): void;
+  /**
+   * Encerra a sessão. Assíncrona porque o refresh token está num cookie
+   * `httpOnly`: só o servidor consegue apagá-lo, e é ele quem revoga a
+   * família — sair numa aba tem de valer nas outras.
+   */
+  sair(): Promise<void>;
   sessaoAtual(): Sessao | null;
 }
 
@@ -110,16 +115,22 @@ export function criarClienteDaApi(opcoes: OpcoesDoCliente): ClienteDaApi {
         throw await erroDaChamada(error, response);
       }
 
-      const sessao = {
+      const sessao: Sessao = {
         accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
+        expiraEm: data.accessTokenExpiresAt,
       };
       armazenamento.gravar(sessao);
       return sessao;
     },
 
-    sair() {
+    async sair() {
+      // Limpa o local primeiro: mesmo que a chamada falhe (rede caiu, servidor
+      // fora), a aba não fica se comportando como autenticada.
       armazenamento.gravar(null);
+      await fetchBase(`${opcoes.baseUrl}/api/v1/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      }).catch(() => undefined);
     },
 
     sessaoAtual: () => armazenamento.ler(),

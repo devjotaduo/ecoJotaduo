@@ -5,10 +5,10 @@ Implementado na Fase 2.
 
 ## Dois fluxos
 
-| Fluxo              | Para quem                | Endpoint                  | Refresh                     |
-| ------------------ | ------------------------ | ------------------------- | --------------------------- |
-| Senha              | Pessoas (web, mobile)    | `POST /api/v1/auth/login` | Sim, com rotação            |
-| Client credentials | Aplicações e integrações | `POST /api/v1/auth/token` | Não (reapresenta o segredo) |
+| Fluxo              | Para quem                | Endpoint                  | Refresh                          |
+| ------------------ | ------------------------ | ------------------------- | -------------------------------- |
+| Senha              | Pessoas (navegador)      | `POST /api/v1/auth/login` | Sim, com rotação, **por cookie** |
+| Client credentials | Aplicações e integrações | `POST /api/v1/auth/token` | Não (reapresenta o segredo)      |
 
 ## Login (usuário)
 
@@ -29,7 +29,6 @@ Resposta (200):
 {
   "accessToken": "…", // JWT HS256, TTL padrão 15 min
   "accessTokenExpiresAt": "2026-08-20T18:15:00.000Z",
-  "refreshToken": "…", // token opaco, TTL padrão 30 dias
   "refreshTokenExpiresAt": "2026-09-19T18:00:00.000Z",
   "tenant": { "id": "…", "slug": "empresa-a", "name": "Empresa A" },
   "user": { "id": "…", "name": "…", "email": "…" },
@@ -37,6 +36,22 @@ Resposta (200):
   "entitlements": ["identity", "tenancy"],
 }
 ```
+
+E, junto com a resposta, um cookie:
+
+```http
+Set-Cookie: ecojotaduo_refresh=…; HttpOnly; SameSite=Strict; Path=/api/v1/auth; Max-Age=2592000
+```
+
+**O refresh token não aparece no corpo.** Ele vive nesse cookie desde a Fase 10:
+`HttpOnly` significa que nenhum JavaScript o lê — nem o da própria aplicação. Antes
+disso ele voltava no JSON e a tela o guardava no `sessionStorage`, de onde um script
+injetado o levava embora. O que fica no corpo é só a data de expiração, que é
+informação e não segredo.
+
+Consequência para quem integra: o fluxo de senha assume um cliente que guarda cookies
+(navegador, ou um cliente HTTP com _cookie jar_). Integração servidor-a-servidor usa
+client credentials, que não tem refresh.
 
 **O tenant fica preso ao token.** Não existe parâmetro de tenant em nenhuma rota —
 nem para clientes REST, nem para agentes MCP. Trocar de empresa exige novo login.
@@ -55,12 +70,42 @@ informação útil para quem tem credencial válida, e não revela nada a tercei
 
 ```http
 POST /api/v1/auth/refresh
-{ "refreshToken": "…" }
+Cookie: ecojotaduo_refresh=…
 ```
 
-Cada uso **rotaciona**: o token apresentado é revogado e um novo é emitido. Se um
-token já revogado for apresentado outra vez, isso indica vazamento — toda a família de
-tokens do usuário é derrubada e um novo login passa a ser exigido.
+Sem corpo: o token vem do cookie. Aceitá-lo também por corpo reabriria exatamente o
+caminho que o cookie fecha — bastaria um XSS convencer a página a enviar o que roubou.
+
+Cada uso **rotaciona**: o token apresentado é revogado e um novo é emitido (num cookie
+novo). A revogação acontece **antes** da emissão, e a condição vive no próprio
+`UPDATE` — de duas renovações simultâneas do mesmo token, exatamente uma vence, e a
+perdedora é tratada como reuso. Reuso indica vazamento: toda a família de tokens do
+usuário é derrubada e um novo login passa a ser exigido.
+
+## Sair
+
+```http
+POST /api/v1/auth/logout
+Cookie: ecojotaduo_refresh=…
+```
+
+Devolve 204, apaga o cookie e revoga a família inteira — sair numa aba vale nas
+outras, e num equipamento perdido também. Existe porque o cookie é `HttpOnly`: a tela
+não consegue apagá-lo sozinha.
+
+Sem cookie também devolve 204: uma sessão já morta responder erro só atrapalharia
+quem está saindo.
+
+### Por que não há token de CSRF
+
+Nenhuma rota de negócio é autenticada por cookie — o access token vai como `Bearer`,
+então um POST forjado de outro site chega sem autorização nenhuma. Os únicos endpoints
+que leem o cookie são `refresh` e `logout`, e `SameSite=Strict` mais o `Path` restrito
+já impedem que uma requisição de outro site o carregue. Um token anti-CSRF fecharia
+uma porta que não abre, ao custo de mais uma peça para manter em sincronia.
+
+Isso impõe uma condição de implantação: **aplicação web e API precisam ser
+_same-site_** em produção.
 
 A renovação **reconsulta o banco**: se o vínculo foi revogado, um papel mudou ou a
 empresa foi suspensa, o resultado muda na hora. Um token antigo não perpetua

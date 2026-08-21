@@ -41,7 +41,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module';
 import { PLATFORM_CORE } from '../src/bootstrap/tokens';
 import { ProblemDetailsFilter } from '../src/http/problem-details.filter';
-import { registrarContextoDeRequisicao } from '../src/http/request-context';
+import { prepararBordaHttp } from '../src/http/borda';
 
 exigirBancoEmCI();
 
@@ -197,7 +197,7 @@ describe.skipIf(!temBancoDeTeste)('Plugins (E2E)', () => {
     app = modulo.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
     );
-    registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+    await prepararBordaHttp(app);
     app.useGlobalFilters(new ProblemDetailsFilter());
     await app.init();
     await app.getHttpAdapter().getInstance().ready();

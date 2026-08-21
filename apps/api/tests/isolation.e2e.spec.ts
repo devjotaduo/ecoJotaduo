@@ -23,7 +23,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { AppModule } from '../src/app.module';
 import { ProblemDetailsFilter } from '../src/http/problem-details.filter';
-import { registrarContextoDeRequisicao } from '../src/http/request-context';
+import { prepararBordaHttp } from '../src/http/borda';
 
 const SEGREDO_SERVICE_ACCOUNT = 'segredo-de-service-account-para-teste-0001';
 
@@ -48,11 +48,26 @@ function corpo<T>(resposta: RespostaHttp): T {
 
 interface Sessao {
   accessToken: string;
-  refreshToken: string;
   tenant: { id: string; slug: string; name: string };
   permissions: string[];
   entitlements: string[];
 }
+
+/** O `set-cookie` do refresh, inteiro — com os atributos. */
+function setCookieDeRenovacao(resposta: RespostaHttp): string {
+  const bruto: unknown = resposta.headers['set-cookie'];
+  const linhas: string[] = (Array.isArray(bruto) ? bruto : [bruto]).filter(
+    (linha): linha is string => typeof linha === 'string',
+  );
+  return linhas.find((linha) => linha.startsWith(COOKIE_DE_REFRESH)) ?? '';
+}
+
+/** O cookie do refresh como o navegador o devolveria (`nome=valor`). */
+function cookieDeRenovacao(resposta: RespostaHttp): string {
+  return setCookieDeRenovacao(resposta).split(';')[0] ?? '';
+}
+
+const COOKIE_DE_REFRESH = 'ecojotaduo_refresh=';
 
 interface Problema {
   type: string;
@@ -168,7 +183,7 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
     app = modulo.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
     );
-    registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+    await prepararBordaHttp(app);
     app.useGlobalFilters(new ProblemDetailsFilter());
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
@@ -198,7 +213,17 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
       expect(sessao.tenant.id).toBe(empresaA.tenantId);
       expect(sessao.permissions).toContain('*');
       expect(sessao.entitlements).toContain('identity');
-      expect(sessao.refreshToken).toBeTypeOf('string');
+
+      // O refresh token NÃO está no corpo: vem num cookie `httpOnly`, fora do
+      // alcance de qualquer script na página. (A data de expiração fica, que
+      // é informação e não segredo.)
+      expect(Object.keys(sessao)).not.toContain('refreshToken');
+      const cookie = cookieDeRenovacao(resposta);
+      expect(cookie).toContain('ecojotaduo_refresh=');
+      const atributos = setCookieDeRenovacao(resposta);
+      expect(atributos).toContain('HttpOnly');
+      expect(atributos).toContain('SameSite=Strict');
+      expect(atributos).toContain('Path=/api/v1/auth');
     });
 
     it('senha errada e empresa inexistente devolvem o MESMO 401', async () => {
@@ -271,22 +296,64 @@ describe.skipIf(!temBancoDeTeste)('Isolamento entre tenants (E2E)', () => {
           tenantSlug: empresaB.slug,
         },
       });
-      const { refreshToken } = corpo<Sessao>(login);
+      const cookie = cookieDeRenovacao(login);
 
-      const primeira = await requisicao({
+      const primeira = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/refresh',
-        payload: { refreshToken },
+        headers: { cookie },
       });
       expect(primeira.statusCode).toBe(200);
+      // A renovação emite outro cookie: o anterior está queimado.
+      expect(cookieDeRenovacao(primeira)).not.toBe(cookie);
 
-      // Reuso do token já rotacionado: recusado (e derruba a família).
-      const reuso = await requisicao({
+      // Reuso do cookie já rotacionado: recusado (e derruba a família).
+      const reuso = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/refresh',
-        payload: { refreshToken },
+        headers: { cookie },
       });
       expect(reuso.statusCode).toBe(401);
+    });
+
+    it('sem cookie, a renovação é 401 — e não 500', async () => {
+      const semCookie = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/refresh',
+      });
+      expect(semCookie.statusCode).toBe(401);
+    });
+
+    it('sair apaga o cookie e derruba a família de tokens', async () => {
+      const login = await requisicao({
+        method: 'POST',
+        url: '/api/v1/auth/login',
+        payload: {
+          email: empresaB.email,
+          password: empresaB.senha,
+          tenantSlug: empresaB.slug,
+        },
+      });
+      const cookie = cookieDeRenovacao(login);
+
+      const saida = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/logout',
+        headers: { cookie },
+      });
+      expect(saida.statusCode).toBe(204);
+      // `Max-Age=0` é como o servidor manda o navegador esquecer o cookie —
+      // a tela não consegue apagá-lo sozinha, ele é `httpOnly`.
+      expect(setCookieDeRenovacao(saida)).toContain('Max-Age=0');
+
+      // E o token em si morreu no servidor: um cookie guardado antes de sair
+      // não serve para ressuscitar a sessão.
+      const depois = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/refresh',
+        headers: { cookie },
+      });
+      expect(depois.statusCode).toBe(401);
     });
 
     it('autentica aplicação por client credentials, presa ao tenant da conta', async () => {

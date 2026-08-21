@@ -1,50 +1,35 @@
 import type { ArmazenamentoDeSessao, Sessao } from '@ecojotaduo/api-client';
 
-const CHAVE = 'ecojotaduo.refresh';
-
 /**
- * Onde a sessão vive no navegador.
+ * Onde a sessão vive no navegador: **só em memória**.
  *
- * O **access token fica só em memória** e some ao recarregar a página. O
- * refresh token vai para o `sessionStorage`, para a aba sobreviver a um F5 sem
- * pedir senha de novo — e morre quando a aba fecha.
+ * Nada de sessão é gravado em `sessionStorage` ou `localStorage`. O access
+ * token fica nesta closure e some ao recarregar a página; o refresh token
+ * nunca chega ao JavaScript — ele vive num cookie `httpOnly` que o navegador
+ * envia sozinho e nenhum script lê, nem este.
  *
- * Não guardar o access token não é firula: ele é o que abre TODAS as rotas
- * agora, sem nenhuma volta ao servidor. O refresh, sozinho, ainda passa pela
- * rotação com detecção de reuso (ADR-0007), então um vazamento dele é
- * detectável e revogável; o access token vazado não é nem uma coisa nem outra
- * até expirar.
- *
- * **Isto NÃO protege contra XSS** — script injetado lê `sessionStorage` do
- * mesmo jeito. A correção durável é cookie `httpOnly` + CSRF, que exige
- * mudança na API e está declarada como dívida no roadmap.
+ * A aba sobrevive a um F5 assim: ao carregar, não há access token, a primeira
+ * chamada toma 401 e o SDK renova usando o cookie. É o mesmo caminho de antes,
+ * com a diferença de que agora um XSS não tem o que roubar — ele consegue agir
+ * enquanto a página está aberta, mas não leva a sessão embora.
  */
-export function armazenamentoDaAba(
-  storage: Storage = sessionStorage,
-): ArmazenamentoDeSessao {
-  let accessToken: string | null = null;
+export function armazenamentoDaAba(): ArmazenamentoDeSessao {
+  let sessao: Sessao | null = null;
 
   return {
     ler(): Sessao | null {
-      const refreshToken = storage.getItem(CHAVE);
-      if (!refreshToken) {
-        return null;
-      }
       /**
-       * Depois de recarregar a página o access token não existe mais. Devolver
-       * string vazia faz o SDK chamar sem cabeçalho de autorização, tomar 401
-       * e renovar — que é exatamente o caminho desejado.
+       * Depois de recarregar a página não há access token. Devolver uma sessão
+       * com token vazio faz o SDK chamar sem cabeçalho de autorização, tomar
+       * 401 e renovar pelo cookie — que é exatamente o caminho desejado. Um
+       * `null` aqui faria a tela concluir "não está logado" e pedir senha de
+       * novo, jogando fora a sessão que ainda existe no servidor.
        */
-      return { accessToken: accessToken ?? '', refreshToken };
+      return sessao ?? { accessToken: '' };
     },
 
-    gravar(sessao: Sessao | null): void {
-      accessToken = sessao?.accessToken ?? null;
-      if (sessao?.refreshToken) {
-        storage.setItem(CHAVE, sessao.refreshToken);
-      } else {
-        storage.removeItem(CHAVE);
-      }
+    gravar(nova: Sessao | null): void {
+      sessao = nova;
     },
   };
 }

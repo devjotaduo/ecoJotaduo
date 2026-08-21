@@ -34,7 +34,7 @@ export interface ContextoDeSessao {
     password: string;
     tenantSlug: string;
   }) => Promise<void>;
-  readonly sair: () => void;
+  readonly sair: () => Promise<void>;
   /**
    * O papel do usuário concede a permissão E a empresa contratou o módulo.
    *
@@ -77,20 +77,23 @@ export function ProvedorDeSessao({ children }: { children: ReactNode }) {
     };
   }, [api]);
 
-  // Ao abrir a aba: se ainda há refresh token, o SDK renova sozinho na
-  // primeira chamada. É por isso que a restauração é só um GET.
+  /**
+   * Ao abrir a aba, tenta restaurar a sessão.
+   *
+   * Não há como perguntar ao cliente se existe sessão: o refresh token está
+   * num cookie `httpOnly`, invisível ao JavaScript. Então a tentativa É a
+   * pergunta — o `GET` sai sem access token, toma 401, o SDK renova pelo
+   * cookie e a chamada é repetida. Se não houver cookie, o 401 é definitivo e
+   * a tela mostra o login.
+   */
   useEffect(() => {
-    if (!api.sessaoAtual()) {
-      setCarregando(false);
-      return;
-    }
     let ativo = true;
     carregarAcesso()
       .then((restaurado) => {
         if (ativo) setAcesso(restaurado);
       })
       .catch(() => {
-        if (ativo) api.sair();
+        if (ativo) setAcesso(null);
       })
       .finally(() => {
         if (ativo) setCarregando(false);
@@ -109,9 +112,12 @@ export function ProvedorDeSessao({ children }: { children: ReactNode }) {
         await api.entrar(entrada);
         setAcesso(await carregarAcesso());
       },
-      sair: () => {
-        api.sair();
+      sair: async () => {
+        // O cookie é `httpOnly`: só o servidor consegue apagá-lo, e é ele quem
+        // revoga a família de tokens. Sair aqui é uma chamada, não um delete
+        // local.
         setAcesso(null);
+        await api.sair();
       },
       pode: (permissao) => podeNaInterface(acesso, permissao),
     }),

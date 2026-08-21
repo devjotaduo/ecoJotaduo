@@ -66,7 +66,7 @@ function Interno() {
         </nav>
         <div className="cabecalho__conta">
           <span className="cabecalho__empresa">{acesso?.tenantName}</span>
-          <Botao variante="secundario" onClick={sair}>
+          <Botao variante="secundario" onClick={() => void sair()}>
             Sair
           </Botao>
         </div>

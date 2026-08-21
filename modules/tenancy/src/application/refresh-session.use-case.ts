@@ -32,6 +32,18 @@ export class RefreshSessionUseCase {
     private readonly tokens: AccessTokenIssuer,
   ) {}
 
+  /**
+   * Encerra a sessão do portador deste refresh token.
+   *
+   * Revoga a FAMÍLIA inteira, e não só o token apresentado: sair numa aba tem
+   * de valer nas outras, e num equipamento perdido também. Token desconhecido
+   * é silêncio de propósito — sair não pode virar um oráculo que diz quais
+   * tokens existem.
+   */
+  async revokeSession(refreshToken: string): Promise<void> {
+    await this.identity.revokeSessionByRefreshToken(refreshToken);
+  }
+
   async execute(entrada: { refreshToken: string }): Promise<RefreshedSession> {
     const rotacionado = await this.identity.rotateRefreshToken(
       entrada.refreshToken,

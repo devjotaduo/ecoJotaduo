@@ -1,13 +1,21 @@
 import { erroDaResposta } from './errors';
 
+/**
+ * A sessão que o SDK guarda é só o access token.
+ *
+ * O refresh token **não passa por aqui**: ele vive num cookie `httpOnly`
+ * emitido pela API, que o navegador envia sozinho e nenhum script lê — nem
+ * este. Guardá-lo em JavaScript seria desfazer a proteção inteira.
+ */
 export interface Sessao {
   readonly accessToken: string;
-  readonly refreshToken: string;
+  /** Quando o access token expira; a tela usa para antecipar a renovação. */
+  readonly expiraEm?: string;
 }
 
 /**
- * Onde a sessão vive. A web pode guardar em memória, o mobile em storage
- * seguro, o teste em um objeto — o SDK não decide isso.
+ * Onde a sessão vive. A web guarda em memória, o teste em um objeto — o SDK
+ * não decide isso.
  */
 export interface ArmazenamentoDeSessao {
   ler(): Sessao | null;
@@ -31,6 +39,10 @@ export function armazenamentoEmMemoria(inicial: Sessao | null = null) {
  * acontece e as outras esperam por ela. Sem isso, as três rotacionariam o
  * refresh token em paralelo — e a rotação do servidor trata reuso como
  * vazamento, derrubando a sessão inteira do usuário.
+ *
+ * A chamada não leva corpo: o refresh token vai no cookie. Por isso
+ * `credentials: 'include'`, sem o qual o navegador não o enviaria em nenhuma
+ * requisição feita por `fetch`.
  */
 export class RenovadorDeSessao {
   private emAndamento: Promise<Sessao | null> | null = null;
@@ -49,22 +61,16 @@ export class RenovadorDeSessao {
   }
 
   private async executar(): Promise<Sessao | null> {
-    const atual = this.armazenamento.ler();
-    if (!atual?.refreshToken) {
-      return null;
-    }
-
     const resposta = await this.fetchInterno(
       `${this.baseUrl}/api/v1/auth/refresh`,
       {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ refreshToken: atual.refreshToken }),
+        credentials: 'include',
       },
     );
 
     if (!resposta.ok) {
-      // Refresh recusado: a sessão acabou. Limpar evita repetir a tentativa
+      // Renovação recusada: a sessão acabou. Limpar evita repetir a tentativa
       // a cada chamada seguinte.
       this.armazenamento.gravar(null);
       if (resposta.status >= 500) {
@@ -75,11 +81,11 @@ export class RenovadorDeSessao {
 
     const corpo = (await resposta.json()) as {
       accessToken: string;
-      refreshToken: string;
+      accessTokenExpiresAt?: string;
     };
-    const nova = {
+    const nova: Sessao = {
       accessToken: corpo.accessToken,
-      refreshToken: corpo.refreshToken,
+      expiraEm: corpo.accessTokenExpiresAt,
     };
     this.armazenamento.gravar(nova);
     return nova;

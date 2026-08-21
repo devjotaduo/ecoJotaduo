@@ -51,6 +51,12 @@ export interface IdentityPublicApi {
   }>;
 
   revokeUserSessions(userId: string): Promise<void>;
+  /**
+   * Encerra a sessão a que este refresh token pertence, revogando a família
+   * inteira do usuário. Token desconhecido é ignorado em silêncio: sair não
+   * pode virar um oráculo que diz quais tokens existem.
+   */
+  revokeSessionByRefreshToken(refreshToken: string): Promise<void>;
 }
 
 /** Token de injeção usado pelo composition root (evita acoplar em classe). */

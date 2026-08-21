@@ -30,7 +30,7 @@ import {
 import { AppModule } from '../src/app.module';
 import { ProblemDetailsFilter } from '../src/http/problem-details.filter';
 import { registrarLimiteDeRequisicoes } from '../src/http/rate-limit';
-import { registrarContextoDeRequisicao } from '../src/http/request-context';
+import { prepararBordaHttp } from '../src/http/borda';
 
 exigirBancoEmCI();
 
@@ -134,7 +134,7 @@ describe.skipIf(!temBancoDeTeste)('limite de requisições (E2E)', () => {
     app = modulo.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
     );
-    registrarContextoDeRequisicao(app.getHttpAdapter().getInstance());
+    await prepararBordaHttp(app);
     await registrarLimiteDeRequisicoes(app, loadEnv());
     app.useGlobalFilters(new ProblemDetailsFilter());
     await app.init();

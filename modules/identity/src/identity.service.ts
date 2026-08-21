@@ -57,4 +57,8 @@ export class IdentityService implements IdentityPublicApi {
   revokeUserSessions(userId: string): Promise<void> {
     return this.refreshTokens.revokeAllOfUser(userId);
   }
+
+  revokeSessionByRefreshToken(refreshToken: string): Promise<void> {
+    return this.refreshTokens.revokeSession(refreshToken);
+  }
 }
