@@ -13,6 +13,15 @@ import {
   CRM_UPDATE_CUSTOMER,
 } from '@ecojotaduo/crm';
 import {
+  CommercialProposalsController,
+  COMMERCIAL_CREATE_PROPOSAL,
+  COMMERCIAL_DECIDE_PROPOSAL,
+  COMMERCIAL_GET_PROPOSAL,
+  COMMERCIAL_SEARCH_PROPOSALS,
+  COMMERCIAL_SEND_PROPOSAL,
+  COMMERCIAL_UPDATE_PROPOSAL,
+} from '@ecojotaduo/commercial';
+import {
   NotificationsController,
   NOTIFICATIONS_RUNTIME,
   NOTIFICATIONS_SEND,
@@ -61,6 +70,18 @@ function doNucleo<K extends keyof NucleoDaPlataforma>(token: symbol, chave: K) {
   };
 }
 
+/** Idem, para os casos de uso do Comercial. */
+function doComercial<K extends keyof NucleoDaPlataforma['commercial']>(
+  token: symbol,
+  chave: K,
+) {
+  return {
+    provide: token,
+    useFactory: (nucleo: NucleoDaPlataforma) => nucleo.commercial[chave],
+    inject: [PLATFORM_CORE],
+  };
+}
+
 /** Idem, para os casos de uso do CRM, que ficam agrupados em `nucleo.crm`. */
 function doCrm<K extends keyof NucleoDaPlataforma['crm']>(
   token: symbol,
@@ -101,6 +122,7 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     // Controllers do CRM vêm do próprio módulo: ele é dono da sua borda REST.
     CrmCustomersController,
     CrmAppointmentsController,
+    CommercialProposalsController,
     // Administração de extensões e a borda do plugin de exemplo — este
     // segundo é o que prova que capacidade de plugin só existe quando a
     // empresa habilita.
@@ -135,6 +157,12 @@ function doPlugins<K extends keyof NucleoDaPlataforma['plugins']>(
     doCrm(CRM_SCHEDULE_APPOINTMENT, 'agendar'),
     doCrm(CRM_CLOSE_APPOINTMENT, 'encerrarAgendamento'),
     doCrm(CRM_LIST_AGENDA, 'listarAgenda'),
+    doComercial(COMMERCIAL_CREATE_PROPOSAL, 'criarProposta'),
+    doComercial(COMMERCIAL_UPDATE_PROPOSAL, 'atualizarProposta'),
+    doComercial(COMMERCIAL_GET_PROPOSAL, 'obterProposta'),
+    doComercial(COMMERCIAL_SEARCH_PROPOSALS, 'pesquisarPropostas'),
+    doComercial(COMMERCIAL_SEND_PROPOSAL, 'enviarProposta'),
+    doComercial(COMMERCIAL_DECIDE_PROPOSAL, 'decidirProposta'),
     doPlugins(PLUGINS_LIST, 'listar'),
     doPlugins(PLUGINS_INSTALL, 'instalar'),
     doPlugins(PLUGINS_CONFIGURE, 'configurar'),

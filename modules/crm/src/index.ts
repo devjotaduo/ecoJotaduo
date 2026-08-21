@@ -1,5 +1,7 @@
 export * from './manifest';
 export * from './crm.tokens';
+export * from './contracts/public-api';
+export { CrmService } from './crm.service';
 
 // Domínio
 export {

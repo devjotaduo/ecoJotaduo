@@ -25,8 +25,21 @@ import {
   SearchCustomersUseCase,
   UpdateCustomerUseCase,
   crmMcpContribution,
+  CrmService,
   type CrmUseCases,
 } from '@ecojotaduo/crm';
+import {
+  CreateProposalUseCase,
+  DecideProposalUseCase,
+  DrizzleProposalRepository,
+  GetProposalUseCase,
+  SearchProposalsUseCase,
+  SendProposalUseCase,
+  UpdateProposalUseCase,
+  commercialMcpContribution,
+  type CommercialUseCases,
+  type CustomerDirectory,
+} from '@ecojotaduo/commercial';
 import { createDatabase, type DatabaseHandle } from '@ecojotaduo/database';
 import { McpCatalog } from '@ecojotaduo/mcp-kit';
 import {
@@ -106,6 +119,7 @@ export interface NucleoDaPlataforma {
   readonly serviceToken: IssueServiceTokenUseCase;
   readonly entitlements: ManageEntitlementsUseCase;
   readonly crm: CrmCompleto;
+  readonly commercial: CommercialCompleto;
   /**
    * Catálogo MCP da instalação. Já sabe filtrar por `AccessGrant`; o gateway
    * só o liga ao transporte.
@@ -139,12 +153,17 @@ export interface OpcoesDoNucleo {
  * Casos de uso do CRM.
  *
  * Estende `CrmUseCases` (o subconjunto que vira tool MCP) com o que hoje só
- * tem borda REST. Passar este objeto para a contribuição MCP funciona por tipagem
- * estrutural — e deixa explícito que não existem duas implementações.
+ * tem borda REST. Passar este objeto para a contribuição MCP funciona por
+ * tipagem estrutural — e deixa explícito que não existem duas implementações.
  */
 export interface CrmCompleto extends CrmUseCases {
   readonly atualizarCliente: UpdateCustomerUseCase;
   readonly listarNotas: ListCustomerNotesUseCase;
+}
+
+/** Idem para o Comercial: mesma instância no REST e no MCP. */
+export interface CommercialCompleto extends CommercialUseCases {
+  readonly atualizarProposta: UpdateProposalUseCase;
 }
 
 /** Adapta o TokenService (criptografia) à porta esperada pelos casos de uso. */
@@ -343,6 +362,28 @@ export function criarNucleo(
     runtimeDeNotificacoes,
   };
 
+  // --- comercial ----------------------------------------------------------
+  // A proposta é sempre PARA um cliente: a referência é conferida contra a
+  // superfície pública do CRM, nunca contra a tabela dele.
+  const diretorioDeClientes: CustomerDirectory = {
+    findName: async (tenantId, customerId) =>
+      (await new CrmService(clientesRepo).findCustomer(tenantId, customerId))
+        ?.name ?? null,
+  };
+  const propostasRepo = new DrizzleProposalRepository(db);
+  const commercial: CommercialCompleto = {
+    criarProposta: new CreateProposalUseCase(
+      propostasRepo,
+      diretorioDeClientes,
+      audit,
+    ),
+    atualizarProposta: new UpdateProposalUseCase(propostasRepo, audit),
+    obterProposta: new GetProposalUseCase(propostasRepo, diretorioDeClientes),
+    pesquisarPropostas: new SearchProposalsUseCase(propostasRepo),
+    enviarProposta: new SendProposalUseCase(propostasRepo, audit),
+    decidirProposta: new DecideProposalUseCase(propostasRepo, audit),
+  };
+
   return {
     handle,
     catalogo,
@@ -350,12 +391,14 @@ export function criarNucleo(
     audit,
     identity,
     crm,
+    commercial,
     plugins,
     // A tool do plugin entra no MESMO catálogo das tools de módulo. Quem
     // decide se ela aparece é o entitlement `plugin.<id>`, não código de
     // exceção no gateway.
     mcp: new McpCatalog([
       crmMcpContribution(crm),
+      commercialMcpContribution(commercial),
       notificationsMcpContribution(notificacoes, runtimeDeNotificacoes),
     ]),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),

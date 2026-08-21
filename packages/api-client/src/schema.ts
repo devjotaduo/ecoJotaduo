@@ -281,6 +281,93 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/commercial/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista propostas por cliente, situação ou título */
+        get: operations["searchProposals"];
+        put?: never;
+        /** Cria uma proposta em rascunho para um cliente */
+        post: operations["createProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/proposals/{proposalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Obtém uma proposta com itens e total */
+        get: operations["getProposal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Altera uma proposta ainda em rascunho */
+        patch: operations["updateProposal"];
+        trace?: never;
+    };
+    "/api/v1/commercial/proposals/{proposalId}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Envia a proposta ao cliente (congela os valores) */
+        post: operations["sendProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/proposals/{proposalId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra o aceite do cliente */
+        post: operations["acceptProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/commercial/proposals/{proposalId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra a recusa do cliente */
+        post: operations["rejectProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plugins": {
         parameters: {
             query?: never;
@@ -1786,6 +1873,737 @@ export interface operations {
                         /** @enum {string} */
                         status: "scheduled" | "done" | "canceled";
                         outcome: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    searchProposals: {
+        parameters: {
+            query?: {
+                customerId?: string;
+                status?: "draft" | "sent" | "accepted" | "rejected";
+                termo?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de propostas. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            number: number;
+                            /** Format: uuid */
+                            customerId: string;
+                            customerName: string | null;
+                            title: string;
+                            /** @enum {string} */
+                            status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+                            /** @enum {string} */
+                            storedStatus: "draft" | "sent" | "accepted" | "rejected";
+                            currency: string;
+                            totalCents: number;
+                            notes: string | null;
+                            /** Format: date-time */
+                            validUntil: string;
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                position: number;
+                                description: string;
+                                quantity: number;
+                                unitPriceCents: number;
+                                discountCents: number;
+                                totalCents: number;
+                            }[];
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            sentAt: string | null;
+                            decidedAt: string | null;
+                        }[];
+                        total: number;
+                        limit: number;
+                        offset: number;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    createProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Format: uuid */
+                    customerId: string;
+                    title: string;
+                    currency: string;
+                    /** Format: date-time */
+                    validUntil: string;
+                    notes?: string | null;
+                    items?: {
+                        description: string;
+                        quantity: number;
+                        unitPriceCents: number;
+                        discountCents?: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Proposta criada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        customerName: string | null;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "sent" | "accepted" | "rejected";
+                        currency: string;
+                        totalCents: number;
+                        notes: string | null;
+                        /** Format: date-time */
+                        validUntil: string;
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            position: number;
+                            description: string;
+                            quantity: number;
+                            unitPriceCents: number;
+                            discountCents: number;
+                            totalCents: number;
+                        }[];
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        sentAt: string | null;
+                        decidedAt: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Cliente inexistente nesta empresa. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    getProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposta encontrada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        customerName: string | null;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "sent" | "accepted" | "rejected";
+                        currency: string;
+                        totalCents: number;
+                        notes: string | null;
+                        /** Format: date-time */
+                        validUntil: string;
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            position: number;
+                            description: string;
+                            quantity: number;
+                            unitPriceCents: number;
+                            discountCents: number;
+                            totalCents: number;
+                        }[];
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        sentAt: string | null;
+                        decidedAt: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    updateProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    title?: string;
+                    notes?: string | null;
+                    /** Format: date-time */
+                    validUntil?: string;
+                    items?: {
+                        description: string;
+                        quantity: number;
+                        unitPriceCents: number;
+                        discountCents?: number;
+                    }[];
+                };
+            };
+        };
+        responses: {
+            /** @description Proposta atualizada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        customerName: string | null;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "sent" | "accepted" | "rejected";
+                        currency: string;
+                        totalCents: number;
+                        notes: string | null;
+                        /** Format: date-time */
+                        validUntil: string;
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            position: number;
+                            description: string;
+                            quantity: number;
+                            unitPriceCents: number;
+                            discountCents: number;
+                            totalCents: number;
+                        }[];
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        sentAt: string | null;
+                        decidedAt: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description A proposta não é mais editável. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    sendProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposta enviada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        customerName: string | null;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "sent" | "accepted" | "rejected";
+                        currency: string;
+                        totalCents: number;
+                        notes: string | null;
+                        /** Format: date-time */
+                        validUntil: string;
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            position: number;
+                            description: string;
+                            quantity: number;
+                            unitPriceCents: number;
+                            discountCents: number;
+                            totalCents: number;
+                        }[];
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        sentAt: string | null;
+                        decidedAt: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Proposta vazia ou fora do rascunho. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    acceptProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposta aceita. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        customerName: string | null;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "sent" | "accepted" | "rejected";
+                        currency: string;
+                        totalCents: number;
+                        notes: string | null;
+                        /** Format: date-time */
+                        validUntil: string;
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            position: number;
+                            description: string;
+                            quantity: number;
+                            unitPriceCents: number;
+                            discountCents: number;
+                            totalCents: number;
+                        }[];
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        sentAt: string | null;
+                        decidedAt: string | null;
+                    };
+                };
+            };
+            /** @description Não autenticado ou sessão expirada. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Sem permissão, ou módulo não contratado pela empresa. */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+            /** @description Proposta vencida ou não enviada. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        type: string;
+                        title: string;
+                        status: number;
+                        detail: string;
+                        instance: string;
+                        correlationId?: string;
+                        errors?: string[];
+                    };
+                };
+            };
+        };
+    };
+    rejectProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                proposalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proposta recusada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        id: string;
+                        number: number;
+                        /** Format: uuid */
+                        customerId: string;
+                        customerName: string | null;
+                        title: string;
+                        /** @enum {string} */
+                        status: "draft" | "sent" | "accepted" | "rejected" | "expired";
+                        /** @enum {string} */
+                        storedStatus: "draft" | "sent" | "accepted" | "rejected";
+                        currency: string;
+                        totalCents: number;
+                        notes: string | null;
+                        /** Format: date-time */
+                        validUntil: string;
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            position: number;
+                            description: string;
+                            quantity: number;
+                            unitPriceCents: number;
+                            discountCents: number;
+                            totalCents: number;
+                        }[];
+                        /** Format: date-time */
+                        createdAt: string;
+                        /** Format: date-time */
+                        updatedAt: string;
+                        sentAt: string | null;
+                        decidedAt: string | null;
                     };
                 };
             };

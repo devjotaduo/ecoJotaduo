@@ -49,8 +49,10 @@ Ficou **fora** desta entrega, deliberadamente:
    por empresa, papéis e módulo contratado, resources e prompt do CRM.
 7. ✅ Fase 6 — Registry de plugins: instalação por empresa, segredos cifrados,
    permissões concedidas na instalação e o primeiro plugin first-party de verdade.
-8. **Fase 7** — Expansão dos módulos, um vertical por vez: Commercial → Contracts →
-   Assets → Operations → Billing → Finance → Inventory → Maintenance → RH.
+8. **Fase 7 (em andamento)** — Expansão dos módulos, um vertical por vez.
+   ✅ **Commercial** (propostas: elaborar → enviar → decidir).
+   Próximo: Contracts → Assets → Operations → Billing → Finance → Inventory →
+   Maintenance → RH.
 
 ### Fase 5 — escopo entregue
 
@@ -87,6 +89,31 @@ Ficou **fora** desta entrega, deliberadamente:
 | Migrações próprias de plugin           | O plugin de exemplo não tem tabelas                                           | Quando um pedir       |
 | Assinatura de eventos (`subscribesTo`) | Não há barramento; o manifesto já recusa evento inexistente                   | Fase 8                |
 | UI de plugin                           | Depende de `apps/web`                                                         | Fase 9                |
+
+### Fase 7 — Commercial (primeiro vertical)
+
+Escopo mínimo com fluxo fechado: proposta para um cliente do CRM, com itens em
+centavos, envio (que congela os valores) e decisão do cliente. Cinco tools MCP sobre
+os mesmos casos de uso do REST, incluindo `commercial.proposal.approve` — a intenção
+de negócio que o modelo MCP cita como exemplo.
+
+Duas escolhas de desenho que valem registro:
+
+- **`expired` é derivado, não guardado.** Se fosse coluna, dependeria de um job rodar
+  para virar verdade, e uma proposta vencida ficaria "enviada" até lá. Derivando de
+  `validUntil`, ela vence no instante certo, sem agendador.
+- **Número por empresa vem de contador atômico**, não de `max(number) + 1`: duas
+  criações simultâneas leriam o mesmo máximo. Há teste com cinco criações em paralelo.
+
+Ficou **fora**, deliberadamente:
+
+| Item                                      | Por quê                                                                 | Quando                |
+| ----------------------------------------- | ----------------------------------------------------------------------- | --------------------- |
+| Dependência de Catalog (item de catálogo) | Catalog não existe; no escopo mínimo o item é descrito à mão            | Quando Catalog vier   |
+| Versionamento de proposta (revisões)      | Recusar alteração após o envio já protege o combinado                   | Quando houver demanda |
+| PDF da proposta                           | Depende de Documents, transversal ainda não implementado                | Fase 9+               |
+| Eventos publicados                        | Declarados no manifesto, sem barramento até a Fase 8                    | Fase 8                |
+| Desconto no cabeçalho da proposta         | Desconto por item cobre o caso; total no cabeçalho duplicaria a verdade | Se pedirem            |
 
 ### Dívidas conhecidas ao fim da Fase 2
 

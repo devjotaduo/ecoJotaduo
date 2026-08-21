@@ -17,6 +17,7 @@
   "dependencies": {
     "@ecojotaduo/audit": "workspace:*",
     "@ecojotaduo/auth": "workspace:*",
+    "@ecojotaduo/commercial": "workspace:*",
     "@ecojotaduo/config": "workspace:*",
     "@ecojotaduo/crm": "workspace:*",
     "@ecojotaduo/database": "workspace:*",

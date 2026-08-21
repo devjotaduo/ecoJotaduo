@@ -60,9 +60,16 @@ A montagem dos módulos de domínio é **uma só**, em
 função; app não monta caso de uso por conta própria, senão as bordas divergem em
 silêncio. O que fica em `apps/<x>` é só a borda: tokens de DI, controllers, rota.
 
-O CRM (`modules/crm`) é a referência de como um módulo se parece completo:
-domínio com invariantes, casos de uso, portas, persistência com RLS, borda REST
-**dentro do módulo** e contribuição MCP sobre os mesmos casos de uso.
+O CRM (`modules/crm`) e o Comercial (`modules/commercial`) são as referências de
+como um módulo se parece completo: domínio com invariantes, casos de uso, portas,
+persistência com RLS, borda REST **dentro do módulo** e contribuição MCP sobre os
+mesmos casos de uso.
+
+**Módulo que precisa de dado de outro** fala com a superfície pública dele
+(`contracts/public-api.ts`) através de uma porta própria, adaptada no composition
+root — nunca importando `src/**` nem consultando a tabela alheia. E sem FK entre
+módulos: ela travaria a extração futura de qualquer um dos dois. O Comercial confere
+a existência do cliente assim.
 
 ### Regra de negócio única
 
@@ -224,7 +231,10 @@ quebra os testes E2E. Tokens ficam em `apps/api/src/bootstrap/tokens.ts`.
   eventos) em inglês; variáveis e parâmetros locais em português.
 - Comentário explica _por que_, sobretudo quando a escolha protege uma propriedade de
   segurança. Não narre o que o código já diz.
-- Datas em UTC; dinheiro como inteiro em centavos + moeda (nunca float); IDs opacos.
+- Datas em UTC; dinheiro como inteiro em centavos + moeda (nunca float; use o
+  `Money` do Comercial como referência); IDs opacos.
+- **Estado derivável não vira coluna.** `expired` de uma proposta sai de `validUntil`
+  a cada leitura: guardado, dependeria de um job para virar verdade e mentiria até lá.
 - Eventos nomeados no passado e versionados: `crm.customer.created.v1`.
 - `TenantId`/`UserId` são tipos marcados (`@ecojotaduo/tenant-context`) — converta com
   `toTenantId()`/`toUserId()`, que validam UUID.

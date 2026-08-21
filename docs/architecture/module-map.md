@@ -65,7 +65,7 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 | **Employees**     | Identity                             | `employees.employee.hired.v1`                                   | `employees.employee.read/create`                         |
 | **CRM**           | —                                    | `crm.customer.created.v1`, `crm.customer.updated.v1`            | `crm.customer.read/create/update`                        |
 | **Catalog**       | —                                    | `catalog.item.published.v1`                                     | `catalog.item.read/manage`                               |
-| **Commercial**    | CRM, Catalog                         | `commercial.proposal.approved.v1`                               | `commercial.proposal.create/approve`                     |
+| **Commercial** ✅ | CRM (Catalog: adiado, ver nota)      | `commercial.proposal.sent/approved/rejected.v1`                 | `commercial.proposal.read/create/update/send/approve`    |
 | **Contracts**     | Commercial                           | `contracts.contract.activated.v1`                               | `commercial.contract.approve`                            |
 | **Assets**        | —                                    | `assets.asset.registered.v1`, `assets.asset.unavailable.v1`     | `assets.asset.read/manage`                               |
 | **Inventory**     | Catalog                              | `inventory.stock.adjusted.v1`                                   | `inventory.stock.read/adjust`                            |
@@ -75,6 +75,12 @@ justamente para não criar ciclos (ex.: Billing não conhece Finance; publica
 | **Finance**       | (eventos)                            | `finance.payment.received.v1`                                   | `finance.payment.approve`                                |
 | **Documents**     | (transversal, por contrato genérico) | `documents.document.attached.v1`                                | `documents.document.read/attach`                         |
 | **Notifications** | (eventos)                            | `notifications.message.sent.v1`                                 | `notifications.channel.manage`                           |
+
+> **Nota (Fase 7)** — O Comercial foi entregue sem a dependência de Catalog: no escopo
+> mínimo o item da proposta é descrito à mão, com preço e quantidade. Quando o Catalog
+> existir, o item ganha uma referência opcional — nada do que já está gravado muda.
+> A referência ao CRM passa pela superfície pública (`CrmPublicApi`), nunca pelas
+> tabelas `crm_*`.
 
 ## Regras de comunicação entre módulos
 

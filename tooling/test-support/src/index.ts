@@ -86,6 +86,10 @@ export function migracoesDaPlataforma(): {
     { moduleId: 'tenancy', directory: diretorioDeMigracoes('modules/tenancy') },
     { moduleId: 'plugins', directory: diretorioDeMigracoes('modules/plugins') },
     { moduleId: 'crm', directory: diretorioDeMigracoes('modules/crm') },
+    {
+      moduleId: 'commercial',
+      directory: diretorioDeMigracoes('modules/commercial'),
+    },
   ];
 }
 
@@ -115,6 +119,9 @@ export async function reservarBancoDeTestes(): Promise<() => Promise<void>> {
 
 const TABELAS = [
   'audit_events',
+  'commercial_proposal_items',
+  'commercial_proposals',
+  'commercial_proposal_numbers',
   'plugin_secrets',
   'plugin_installations',
   'tenancy_module_entitlements',
