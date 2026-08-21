@@ -66,7 +66,11 @@ services:
         APP: api
     environment:
       <<: *app-env
-      # A migração é a ÚNICA coisa que usa a conexão do dono.
+      # A conexão do dono vive SÓ aqui. Os apps conectam com o papel
+      # restrito — é o que faz a RLS valer, já que o PostgreSQL não a
+      # aplica ao dono das tabelas. Provisionar empresa também precisa
+      # dela, e por isso roda por este serviço:
+      #   docker compose ... run --rm migrate \n      #     node dist/cli/provisionar-empresa.js --slug=... --email=...
       DATABASE_ADMIN_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
     command: ['node', 'dist/cli/migrate.js']
     depends_on:

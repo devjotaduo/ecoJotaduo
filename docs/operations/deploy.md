@@ -54,6 +54,48 @@ docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod \
   exec api node -e "fetch('http://127.0.0.1:3000/health/ready').then(r=>r.text()).then(console.log)"
 ```
 
+## A primeira empresa
+
+A pilha no ar não tem empresa nenhuma, e sem uma o login não tem a quem
+responder. Criar a primeira é um **procedimento operado**:
+
+```bash
+docker compose -f docker/docker-compose.prod.yml --env-file docker/.env.prod   run --rm migrate node dist/cli/provisionar-empresa.js   --slug=minha-empresa --nome="Minha Empresa Ltda" --email=voce@minhaempresa.com.br
+```
+
+Roda pelo serviço `migrate`, e não por `exec api`, porque a conexão do dono do
+banco existe só ali — os apps conectam com o papel restrito, que é o que faz a
+RLS valer. Não é obstáculo: é a propriedade funcionando.
+
+A saída traz o id da empresa, os módulos contratados e **a senha, uma vez**.
+Guarde-a antes de fechar o terminal: não existe rota que a mostre depois, pelo
+mesmo motivo do token pessoal — guardar para mostrar depois é guardar em claro.
+
+Não há parâmetro para informar a senha. Argumento de linha de comando fica no
+histórico do shell e aparece em `ps` para qualquer processo da máquina.
+
+| Opção                      | Efeito                                                      |
+| -------------------------- | ----------------------------------------------------------- |
+| `--slug`                   | O que a pessoa digita no login. Obrigatório                 |
+| `--email`                  | A primeira pessoa, que entra como proprietária. Obrigatório |
+| `--nome`                   | Nome de exibição da empresa (padrão: o slug)                |
+| `--modulos=crm,commercial` | Recorte contratado (padrão: todos os desta instalação)      |
+
+**Rodar de novo é seguro**, e é assim que se contrata um módulo que passou a
+existir numa versão nova: a empresa não é recriada e a senha de quem já entrava
+não muda. Se o e-mail já tem conta na plataforma, ela ganha vínculo com a
+empresa nova e continua com a mesma senha — é assim que uma pessoa atende duas
+empresas. Daí em diante, contratar e cancelar módulo é rota autenticada
+(`/api/v1/modules`), no escopo de quem está logado.
+
+### Por que não existe rota para criar empresa
+
+Uma rota teria de responder quem pode chamá-la, e as duas respostas disponíveis
+são ruins. Aberta, vira auto-registro — decisão de produto que ninguém tomou.
+Fechada, exigiria uma identidade com poder sobre todas as empresas, que é
+exatamente o que `tenant_id` + RLS existem para tornar impossível. Quem roda o
+comando já tem a conexão do dono na mão; não há privilégio novo a inventar.
+
 ## Deploy de uma versão nova
 
 ```bash
@@ -145,7 +187,10 @@ diferentes fariam o navegador não enviá-lo.
   o resultado de `pnpm deploy --prod`.
 - **`seed:dev`.** O comando existe na imagem mas se recusa a rodar com
   `NODE_ENV=production` — semear dados de exemplo em produção é o tipo de
-  acidente que ninguém percebe até a auditoria.
+  acidente que ninguém percebe até a auditoria. Em produção o comando é
+  `provisionar-empresa.js`, que gera senha forte em vez de usar uma fixa; o
+  provisionamento em si é o mesmo código, para que o caminho de produção não
+  seja um que ninguém exercita.
 
 O processo roda como usuário `node`, não root.
 

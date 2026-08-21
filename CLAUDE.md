@@ -34,7 +34,7 @@ Ambiente local (necessário para os testes de integração):
 cp docker/.env.example docker/.env && docker compose -f docker/docker-compose.yml up -d
 cp .env.example .env && cp .env.test.example .env.test
 pnpm --filter @ecojotaduo/api migrate    # aplica migrações (conecta como dono)
-pnpm --filter @ecojotaduo/api seed:dev   # empresa "demo" + admin@demo.local
+pnpm --filter @ecojotaduo/api seed:dev   # empresa "demo" + admin@demo.local, todos os módulos
 pnpm --filter @ecojotaduo/api dev        # http://127.0.0.1:3000
 pnpm --filter @ecojotaduo/mcp-gateway dev # http://127.0.0.1:3001/mcp
 pnpm --filter @ecojotaduo/web dev        # http://127.0.0.1:5173 (proxy /api → 3000)
@@ -404,6 +404,23 @@ A migração é **serviço de deploy**, não passo de boot: N réplicas migrando
 são N migrações concorrentes, e rollback tentaria migrar para trás. Migração nova
 precisa ser compatível para trás (expand/contract) — durante o rolling, código velho
 e novo falam com o mesmo banco.
+
+### Empresa nova é procedimento operado, não rota
+
+`apps/api/src/cli/provisionar-empresa.ts` (script `provision`) cria organização,
+tenant, a primeira pessoa como proprietária e os módulos contratados. Conecta
+como **dono** do banco, igual às migrações: a primeira empresa nasce antes de
+existir sessão a que a RLS possa dar escopo — e por isso o comando roda pelo
+serviço `migrate` no compose, o único que carrega `DATABASE_ADMIN_URL`.
+
+Não existe rota para isso, e não é omissão: aberta viraria auto-registro, e
+fechada exigiria uma identidade com poder sobre todas as empresas — exatamente
+o que `tenant_id` + RLS existem para impedir. A senha sai **uma vez** e não é
+aceita por argumento (ficaria no histórico do shell e em `ps`).
+
+`seed:dev` é o MESMO código com os padrões de dev. Dois caminhos de criação de
+empresa divergiriam em silêncio, e o de produção só seria exercitado no dia em
+que houvesse uma empresa de verdade para criar.
 
 ### Extração seletiva (ADR-0016)
 

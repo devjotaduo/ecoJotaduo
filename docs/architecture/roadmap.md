@@ -510,6 +510,45 @@ Quatro propriedades, todas com teste falsificado:
 | Não emite outro token pessoal      | Sem isso, um token vazado se renova e revogar o original não adianta         |
 | Revogação vale na chamada seguinte | Não há cache de credencial — o acesso é resolvido do banco a cada requisição |
 
+### Depois da Fase 12 — provisionamento de empresa
+
+A segunda coisa construída por demanda e não por plano, e o buraco mais antigo
+de todos: **não havia como criar uma empresa em produção**. O `seed-dev.ts`
+recusava rodar lá e carregava, desde a Fase 2, um comentário adiando o
+procedimento para "quando a Fase 11 chegar". Ela chegou e ele não foi escrito.
+
+`provision` cria organização, tenant, a primeira pessoa como proprietária e os
+módulos contratados. O `seed:dev` passou a ser o MESMO código com os padrões de
+dev — dois caminhos divergiriam em silêncio, e o de produção só seria
+exercitado no dia em que houvesse uma empresa de verdade para criar.
+
+**Não virou rota**, de propósito: uma rota teria de responder quem pode
+chamá-la, e as duas respostas disponíveis são ruins — aberta é auto-registro
+(decisão de produto que ninguém tomou), fechada exige uma identidade acima de
+todas as empresas, que é o oposto do que `tenant_id` + RLS garantem.
+
+| Propriedade                            | Por que importa                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------ |
+| Nasce com os módulos contratados       | Sem entitlement a empresa autentica e é inútil: 403 e catálogo MCP vazio |
+| A primeira pessoa é proprietária       | Sem papel, ninguém administra a empresa recém-criada                     |
+| E-mail normalizado                     | Gravar "Dev@Empresa.com" cria conta em que ninguém entra                 |
+| Senha sai uma vez, nunca por argumento | Argumento fica no histórico do shell e em `ps`                           |
+| Rodar de novo completa, não recria     | É assim que se contrata módulo que passou a existir numa versão nova     |
+| E-mail já conhecido reusa a pessoa     | Uma pessoa atende duas empresas com uma senha só                         |
+
+Falsificado: sem contratar módulos, sem o papel de proprietária e sem
+normalizar o e-mail, três testes reprovam em cada caso. E o login continua
+passando na primeira falsificação — prova de que testar só "consegue entrar"
+teria deixado passar uma empresa inutilizável.
+
+**Achado.** O container `api` não tem `DATABASE_ADMIN_URL`, então o comando não
+roda em `exec api`. É a separação de papéis funcionando: ele roda pelo serviço
+`migrate`, o único portador daquela credencial. Nenhuma variável nova.
+
+Fica **fora**: tela de autoatendimento, convite de pessoa por e-mail e troca de
+senha no primeiro acesso — todos supõem envio de e-mail, que a plataforma não
+faz.
+
 ### Dívidas conhecidas ao fim da Fase 2
 
 | Item                                                                      | Impacto                                  | Quando resolver                                                 |

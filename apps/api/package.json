@@ -11,6 +11,7 @@
     "dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env --enable-source-maps dist/main.js",
     "start": "node --enable-source-maps dist/main.js",
     "migrate": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/migrate.js",
+    "provision": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/provisionar-empresa.js",
     "seed:dev": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/seed-dev.js",
     "openapi": "tsc -p tsconfig.build.json && node --env-file-if-exists=../../.env dist/cli/emit-openapi.js"
   },
