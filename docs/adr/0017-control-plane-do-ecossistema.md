@@ -150,6 +150,23 @@ fallback administrativo documenta o furo em vez de fechá-lo.
 Registrá-las aqui e não executá-las lá seria o modo de falha mais caro desta
 casa: documentação plausível e falsa.
 
+**Medido em 22/08, e uma das quatro caiu.** A allowlist de WhatsApp por oito
+dígitos não era dívida: é a armadilha A52 resolvida de propósito. Trocá-la por
+"E.164 ou JID completo", como este plano pedia, quebraria os dois donos hoje —
+o mesmo contato está guardado em duas formas dentro do mesmo registro de
+tenant (13 dígitos com o nono, 12 sem), e os JIDs que a ponte conhece têm todos 12. O sufixo é o que faz os três casarem; a igualdade completa trocaria
+falso-positivo por **falso-negativo**, e o falso-negativo aqui é o dono falando
+e não sendo reconhecido.
+
+Fica o desenho certo para quando houver motivo: normalizar canonicamente os
+dois lados (DDI + regra do nono dígito) e comparar o canônico. Enquanto ninguém
+escrever esse normalizador com teste, o sufixo fica — e essa é a diferença
+entre um plano e uma medição.
+
+As outras três: a chave administrativa do CRM foi fechada (o modelo perdeu o
+caminho de volta ao Admin), o MCP cru já estava desligado na camada de tool
+antes deste plano existir, e a varredura de log não achou vazamento vivo.
+
 ## O que foi recusado, e por quê
 
 | Proposta                                                             | Por que não                                                                                                                                                                                                      |
