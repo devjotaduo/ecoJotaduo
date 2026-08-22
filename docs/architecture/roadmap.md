@@ -4,21 +4,22 @@ Fases estritamente ordenadas; cada fase termina com lint + typecheck + testes + 
 executados de verdade, documentação atualizada e riscos declarados. Nenhum módulo é
 "pronto" com apenas tabela e CRUD.
 
-| Fase                                      | Objetivo                              | Entregáveis-chave                                                                                                                                                                             | Critério de aceite                                                                                   | Riscos principais                                |
-| ----------------------------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| **0. Descoberta e arquitetura** ✅        | Fronteiras e decisões antes de código | Diagramas C4, mapa de módulos, threat model, ADRs 1–6, roadmap                                                                                                                                | Implementação não inicia sem fronteiras registradas                                                  | Análise infinita — timebox                       |
-| **1. Fundação do monorepo**               | Estrutura técnica sem domínio         | pnpm + Turborepo, TS strict, ESLint 10, Prettier, Vitest, env validada, Docker Compose (PG+Redis), health check, CI, regras de dependência                                                    | `pnpm install/lint/typecheck/test/build` verdes                                                      | Bikeshedding de tooling                          |
-| **2. Identidade, tenant e permissões** ✅ | Fundação de segurança                 | tenants, orgs, users, memberships, roles, permissions, entitlements, RequestContext, audit log, RLS + papel restrito, auth de usuário e de aplicação, testes de isolamento                    | Usuário do tenant A não acessa nada do tenant B — verificado por suíte E2E contra PostgreSQL real    | Complexidade de RBAC/ABAC — começar mínimo       |
-| **3. Primeiro fluxo vertical (CRM)** ✅   | Ponta a ponta real                    | Clientes, notas e agendamentos: domínio com invariantes, use cases, Drizzle + RLS, REST no módulo, 7 tools MCP, auditoria, testes unit/integração/E2E (tela React adiada)                     | REST e MCP executam exatamente os mesmos use cases — verificado em teste                             | Escopo crescer — escopo mínimo acordado          |
-| **4. OpenAPI e SDK** ✅                   | Contrato como produto                 | OpenAPI 3.1 gerado dos schemas Zod, deriva barrada no CI, SDK tipado com sessão e renovação, docs de versionamento e depreciação                                                              | Consumidor usa só o SDK gerado, zero tipos manuais — verificado em E2E                               | Detecção semântica de breaking change pendente   |
-| **5. MCP Gateway** ✅                     | Capacidades para agentes              | `apps/mcp-gateway` com Streamable HTTP sem sessão, `packages/mcp-kit` (contrato + catálogo autorizado), 7 tools, 2 resources, 1 prompt, auditoria, E2E com o cliente oficial, docs de conexão | Host autorizado descobre e executa apenas as capacidades do seu tenant — verificado em E2E           | Fluxo OAuth 2.1 do MCP ainda não implementado    |
-| **6. Module Registry e Plugin SDK** ✅    | Extensão controlada                   | `packages/plugin-sdk` (manifesto validado + runtime), `modules/plugins` (catálogo, instalação por empresa, segredos cifrados, health), plugin `notifications-example` com REST e MCP          | Ativar/desativar plugin em uma empresa não afeta outras — verificado em E2E                          | Plugin externo (out-of-process) ainda não existe |
-| **7. Expansão dos módulos**               | Verticais de negócio                  | Ordem: Commercial → Contracts → Assets → Operations → Billing → Finance → Inventory → Maintenance → RH; cada um com domínio, REST, MCP, eventos, UI, testes, auditoria                        | Cada módulo entrega ao menos um fluxo de negócio completo                                            | Módulos rasos em paralelo — um vertical por vez  |
-| **8. Eventos, integrações e jobs** ✅     | Confiabilidade assíncrona             | Outbox + dispatcher, BullMQ, retries, idempotência, DLQ, webhooks assinados, replay, circuit breaker, rate limit                                                                              | Falha temporária de integração não desfaz transação nem derruba API                                  | Semântica de retry mal definida                  |
-| **9. MCP Apps e UIs de plugin** ✅        | Interfaces interativas                | App exemplo (form + dashboard), CSP, sandbox, validação de mensagens, fallback textual                                                                                                        | Host sem suporte a Apps continua usando a tool estruturada                                           | Depender de host específico                      |
-| **10. Observabilidade e segurança**       | Confiança operacional                 | OTel completo, dashboards, alertas, auditoria consultável, rate limiting, headers, secret management, backup/restore testado, runbooks, carga                                                 | Responder: quem, qual tenant, qual interface, qual use case, quanto tempo, resultado, correlation ID | Instrumentação tardia — base já na Fase 1        |
-| **11. Implantação e escala**              | Escala horizontal                     | Imagens Docker, staging/prod, migrations controladas, readiness, graceful shutdown, zero-downtime, deploy independente api/mcp/worker                                                         | API e MCP escalam sem estado local                                                                   | Migrations incompatíveis — expand/contract       |
-| **12. Extração seletiva**                 | Processo, não execução                | Contratos estáveis → eventos versionados → testes de contrato → novo deployable → adapter remoto → migração de dados → cutover                                                                | Extração sem mudanças relevantes nos consumidores                                                    | Extrair sem justificativa concreta               |
+| Fase                                      | Objetivo                                             | Entregáveis-chave                                                                                                                                                                             | Critério de aceite                                                                                        | Riscos principais                                |
+| ----------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| **0. Descoberta e arquitetura** ✅        | Fronteiras e decisões antes de código                | Diagramas C4, mapa de módulos, threat model, ADRs 1–6, roadmap                                                                                                                                | Implementação não inicia sem fronteiras registradas                                                       | Análise infinita — timebox                       |
+| **1. Fundação do monorepo**               | Estrutura técnica sem domínio                        | pnpm + Turborepo, TS strict, ESLint 10, Prettier, Vitest, env validada, Docker Compose (PG+Redis), health check, CI, regras de dependência                                                    | `pnpm install/lint/typecheck/test/build` verdes                                                           | Bikeshedding de tooling                          |
+| **2. Identidade, tenant e permissões** ✅ | Fundação de segurança                                | tenants, orgs, users, memberships, roles, permissions, entitlements, RequestContext, audit log, RLS + papel restrito, auth de usuário e de aplicação, testes de isolamento                    | Usuário do tenant A não acessa nada do tenant B — verificado por suíte E2E contra PostgreSQL real         | Complexidade de RBAC/ABAC — começar mínimo       |
+| **3. Primeiro fluxo vertical (CRM)** ✅   | Ponta a ponta real                                   | Clientes, notas e agendamentos: domínio com invariantes, use cases, Drizzle + RLS, REST no módulo, 7 tools MCP, auditoria, testes unit/integração/E2E (tela React adiada)                     | REST e MCP executam exatamente os mesmos use cases — verificado em teste                                  | Escopo crescer — escopo mínimo acordado          |
+| **4. OpenAPI e SDK** ✅                   | Contrato como produto                                | OpenAPI 3.1 gerado dos schemas Zod, deriva barrada no CI, SDK tipado com sessão e renovação, docs de versionamento e depreciação                                                              | Consumidor usa só o SDK gerado, zero tipos manuais — verificado em E2E                                    | Detecção semântica de breaking change pendente   |
+| **5. MCP Gateway** ✅                     | Capacidades para agentes                             | `apps/mcp-gateway` com Streamable HTTP sem sessão, `packages/mcp-kit` (contrato + catálogo autorizado), 7 tools, 2 resources, 1 prompt, auditoria, E2E com o cliente oficial, docs de conexão | Host autorizado descobre e executa apenas as capacidades do seu tenant — verificado em E2E                | Fluxo OAuth 2.1 do MCP ainda não implementado    |
+| **6. Module Registry e Plugin SDK** ✅    | Extensão controlada                                  | `packages/plugin-sdk` (manifesto validado + runtime), `modules/plugins` (catálogo, instalação por empresa, segredos cifrados, health), plugin `notifications-example` com REST e MCP          | Ativar/desativar plugin em uma empresa não afeta outras — verificado em E2E                               | Plugin externo (out-of-process) ainda não existe |
+| **7. Expansão dos módulos**               | Verticais de negócio                                 | Ordem: Commercial → Contracts → Assets → Operations → Billing → Finance → Inventory → Maintenance → RH; cada um com domínio, REST, MCP, eventos, UI, testes, auditoria                        | Cada módulo entrega ao menos um fluxo de negócio completo                                                 | Módulos rasos em paralelo — um vertical por vez  |
+| **8. Eventos, integrações e jobs** ✅     | Confiabilidade assíncrona                            | Outbox + dispatcher, BullMQ, retries, idempotência, DLQ, webhooks assinados, replay, circuit breaker, rate limit                                                                              | Falha temporária de integração não desfaz transação nem derruba API                                       | Semântica de retry mal definida                  |
+| **9. MCP Apps e UIs de plugin** ✅        | Interfaces interativas                               | App exemplo (form + dashboard), CSP, sandbox, validação de mensagens, fallback textual                                                                                                        | Host sem suporte a Apps continua usando a tool estruturada                                                | Depender de host específico                      |
+| **10. Observabilidade e segurança**       | Confiança operacional                                | OTel completo, dashboards, alertas, auditoria consultável, rate limiting, headers, secret management, backup/restore testado, runbooks, carga                                                 | Responder: quem, qual tenant, qual interface, qual use case, quanto tempo, resultado, correlation ID      | Instrumentação tardia — base já na Fase 1        |
+| **11. Implantação e escala**              | Escala horizontal                                    | Imagens Docker, staging/prod, migrations controladas, readiness, graceful shutdown, zero-downtime, deploy independente api/mcp/worker                                                         | API e MCP escalam sem estado local                                                                        | Migrations incompatíveis — expand/contract       |
+| **12. Extração seletiva**                 | Processo, não execução                               | Contratos estáveis → eventos versionados → testes de contrato → novo deployable → adapter remoto → migração de dados → cutover                                                                | Extração sem mudanças relevantes nos consumidores                                                         | Extrair sem justificativa concreta               |
+| **13. Control Plane do ecossistema**      | Dono canônico de empresa, provisionamento e execução | `external_resources`, `provisioning_runs`, adaptadores dos serviços em produção, espelho dos tenants atuais, catálogo de agentes por template, execuções e aprovações                         | Pergunta "esta empresa está inteira?" respondida por consulta, e provisionamento que sobrevive a reinício | Espelho divergir da produção sem ninguém notar   |
 
 ### Fase 3 — escopo entregue
 
@@ -72,6 +73,10 @@ Ficou **fora** desta entrega, deliberadamente:
 13. ✅ Fase 12 — Extração seletiva: o CRM roda como processo próprio, com banco
     próprio, atendendo o MESMO contrato. Ligável por `CRM_SERVICE_URL`; o
     padrão continua sendo o monólito.
+14. **Fase 13 (planejada)** — Control Plane do ecossistema JotaDuo: esta
+    plataforma passa a ser dona da identidade da empresa, do provisionamento e
+    do registro de execução; os serviços em produção continuam donos do
+    trabalho, atrás de portas (ADR-0017).
 
 ### Fase 5 — escopo entregue
 
@@ -568,6 +573,66 @@ roda em `exec api`. É a separação de papéis funcionando: ele roda pelo servi
 Fica **fora**: tela de autoatendimento, convite de pessoa por e-mail e troca de
 senha no primeiro acesso — todos supõem envio de e-mail, que a plataforma não
 faz.
+
+### Fase 13 — Control Plane do ecossistema (ADR-0017)
+
+A primeira fase cujo objeto **não é este repositório**: os serviços que já
+atendem clientes — Studio, OmniRoute, Hermes, CRM, WhatsApp — funcionam e não
+têm dono da identidade. Uma empresa lá não é uma linha em lugar nenhum; é a
+coincidência de cinco coisas em cinco sistemas, amarradas por convenção de
+nome. Esta plataforma passa a ser esse dono, e nada do que já funciona é
+reescrito.
+
+A separação em uma frase: **o Control Plane decide e registra; o Data Plane
+executa.**
+
+**Sub-fases, na ordem em que precisam acontecer**
+
+| #   | Entrega                        | O que é                                                                                                                                                  | Por que nesta posição                                                                                                |
+| --- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 0   | Estabilização (fora daqui)     | Matar o fallback da chave restrita do CRM para a administrativa, desligar o MCP cru, trocar allowlist de 8 dígitos por E.164/JID, redigir segredo em log | Registro canônico na frente de credencial com fallback administrativo **documenta** o furo em vez de fechá-lo        |
+| 1   | `external_resources`           | Uma linha por recurso que existe fora daqui e pertence a uma empresa daqui, com `system`, `kind`, `external_id`, `state`                                 | É o vocabulário de que todo o resto depende. Sem ele, `tenant_id` não tem como virar identificador externo           |
+| 2   | Espelho dos tenants atuais     | Importar as empresas de produção e registrar o que já está provisionado, sem alterar o fluxo vivo                                                        | Divergência entre documentação e host é achado, não erro do espelho — e só aparece medindo. O host é canônico        |
+| 3   | Adaptadores                    | Uma porta por sistema, adaptada no `criarNucleo`, como o Comercial já fala com o CRM                                                                     | Depois do espelho: adaptador escrito contra o que se supõe do sistema é o mesmo erro que o espelho existe para pegar |
+| 4   | `provisioning_runs` + worker   | Criar empresa grava tudo numa transação e enfileira; o worker executa passo a passo, idempotente, gravando `external_resources`                          | Não é infraestrutura nova — é o outbox da Fase 8 fazendo o trabalho para o qual foi construído                       |
+| 5   | Onboarding e descoberta        | Estado da conversa de implantação em PostgreSQL, com fases, tentativas e bloqueios; o Studio apresenta a experiência                                     | Depende de a empresa existir aqui primeiro                                                                           |
+| 6   | Catálogo de agentes            | Sofia e Lia viram duas instâncias de um catálogo de templates; a empresa tem uma configuração publicada                                                  | Depende do onboarding: template sem o que uma empresa respondeu é formulário vazio                                   |
+| 7   | Execuções, alçada e aprovações | `agent_runs`, `tool_runs`, `approval_requests` — e a autorização de ferramenta pela cadeia única, com `AccessGrant`                                      | Depende de haver agente publicado. Nível de autonomia sobre agente que não existe é configuração de nada             |
+
+**Três propriedades que este repositório já tem e que a fase reusa em vez de
+recriar**
+
+- **O evento vai na mesma transação do dado.** Provisionamento interrompido no
+  meio continua do ponto seguro — que é exatamente o que um script não faz. Um
+  script interrompido deixa a empresa num estado que ninguém consegue nomear.
+- **A autorização é uma só.** O agente age com o mesmo `AccessGrant` das outras
+  bordas, com `credential` distinguindo o risco. A lição do token pessoal vale
+  inteira aqui: enquanto a conversão de credencial viveu dentro do guard da
+  API, a credencial valia no REST e era recusada no gateway MCP — e nenhum
+  teste pegou, porque todos estavam em `apps/api`.
+- **Estado derivável não vira coluna.** "Pronto para o ar" sai dos testes contra
+  a configuração corrente, nunca de uma coluna que mentiria no instante
+  seguinte a qualquer edição — o mesmo princípio de `expired` no Comercial e de
+  disponibilidade em Ativos, agora aplicado a algo que atende cliente.
+
+**`gid8` deixa de ser fronteira de autorização.** Continua em nome de modelo e
+de perfil, porque é o que está em produção e renomear não paga — mas como
+rótulo. Quem responde "esta requisição é da empresa X" é `tenant_id`. Oito
+caracteres derivados de um UUID não são fronteira de segurança, e a mesma
+lição já está registrada em produção pela allowlist de WhatsApp que casa por
+oito dígitos de telefone.
+
+Ficou **fora**, deliberadamente (detalhe no ADR-0017):
+
+| Item                                                | Por quê                                                                                        | Quando                                |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `apps/agent-runtime`                                | Runtime sem agente configurado é composition root vazio                                        | Sub-fase 7, se a borda pedir          |
+| `apps/webhook-gateway`                              | Nenhum evento externo tem consumidor aqui ainda                                                | Quando houver o primeiro gatilho      |
+| Reorganizar em `packages/core \| ports \| adapters` | Move a hexagonal para o topo sem regra nova; as três fronteiras já reprovam o build por módulo | Não previsto                          |
+| Um `criarNucleo` por aplicação                      | Cinco montagens divergem em silêncio — já aconteceu, com o token pessoal                       | Não previsto                          |
+| Temporal / Kafka / NATS                             | ADR-0012: o outbox é a fila                                                                    | Ao surgir consumidor fora do processo |
+| Rota HTTP de cadastro de empresa                    | Aberta é auto-registro; fechada exige identidade acima de todas as empresas                    | Não previsto                          |
+| Billing, limites de uso e analytics                 | Cobrar por execução exige execução registrada, que é a sub-fase 7                              | Depois da sub-fase 7                  |
 
 ### Dívidas conhecidas ao fim da Fase 2
 

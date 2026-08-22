@@ -394,6 +394,10 @@ engano:
   depende de `emitDecoratorMetadata` (ADR-0006).
 - `fastify` está fixado por `pnpm.overrides` na raiz: duas cópias na árvore geram tipos
   incompatíveis entre o adapter do Nest e o app.
+- **Um `criarNucleo` só, e a árvore de pacotes como está** (ADR-0017). Uma montagem
+  por aplicação e uma hexagonal no topo do monorepo já foram propostas e recusadas:
+  bordas que montam sozinhas divergem em silêncio, e as três fronteiras de camada já
+  reprovam o build por módulo.
 
 ### Empacotamento (ADR-0015)
 
