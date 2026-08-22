@@ -271,9 +271,16 @@ Credencial de longa duração de uma PESSOA numa empresa (`ecj_pat_…`), para o
 em que um programa age em nome dela de forma continuada — um agente num host MCP
 manda cabeçalho fixo e não refaz login a cada quinze minutos.
 
-O guarda aceita as duas credenciais e as converte nas MESMAS claims: daí para
-frente a cadeia de autorização é uma só. Um token pessoal não é caminho paralelo,
-é outra porta para a mesma porteira.
+As duas credenciais viram as MESMAS claims: daí para frente a cadeia de
+autorização é uma só. Um token pessoal não é caminho paralelo, é outra porta
+para a mesma porteira.
+
+Essa conversão vive em **um lugar só** — `lerCredencial`, em
+`@ecojotaduo/platform-core` — e toda borda que aceite credencial deve chamá-la
+em vez de reescrevê-la. O motivo é concreto: enquanto ela esteve dentro do
+guard da API, o token pessoal valia no REST e era **recusado pelo gateway
+MCP**, justamente a borda para a qual ele foi criado. Nenhum teste pegou,
+porque todos estavam em `apps/api`.
 
 Quatro regras que não se negociam:
 

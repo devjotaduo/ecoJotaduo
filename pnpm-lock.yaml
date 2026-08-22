@@ -208,6 +208,9 @@ importers:
       '@ecojotaduo/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@ecojotaduo/identity':
+        specifier: workspace:*
+        version: link:../../modules/identity
       '@ecojotaduo/mcp-kit':
         specifier: workspace:*
         version: link:../../packages/mcp-kit
@@ -1168,6 +1171,9 @@ importers:
       '@ecojotaduo/tenancy':
         specifier: workspace:*
         version: link:../../modules/tenancy
+      '@ecojotaduo/tenant-context':
+        specifier: workspace:*
+        version: link:../tenant-context
     devDependencies:
       '@ecojotaduo/eslint-config':
         specifier: workspace:*

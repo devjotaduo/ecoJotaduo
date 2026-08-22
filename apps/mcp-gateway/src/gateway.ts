@@ -19,6 +19,7 @@ import Fastify, {
 } from 'fastify';
 
 import { InvalidTokenError } from '@ecojotaduo/auth';
+import { PersonalTokenInvalidError } from '@ecojotaduo/identity';
 import {
   NoActiveMembershipError,
   TenantNotActiveError,
@@ -147,7 +148,11 @@ export async function criarGateway(env: Env): Promise<Gateway> {
     let sessao;
     try {
       sessao = await autorizar(
-        { tokens: nucleo.tokens, tenancy: nucleo.tenancy },
+        {
+          tokens: nucleo.tokens,
+          tenancy: nucleo.tenancy,
+          identity: nucleo.identity,
+        },
         requisicao.headers.authorization,
         correlationId,
       );
@@ -219,6 +224,7 @@ function recusar(resposta: FastifyReply, erro: unknown): void {
   const naoAutenticado =
     erro instanceof NaoAutenticadoError ||
     erro instanceof InvalidTokenError ||
+    erro instanceof PersonalTokenInvalidError ||
     erro instanceof TenantNotFoundError ||
     erro instanceof NoActiveMembershipError;
 

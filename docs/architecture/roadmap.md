@@ -510,6 +510,26 @@ Quatro propriedades, todas com teste falsificado:
 | Não emite outro token pessoal      | Sem isso, um token vazado se renova e revogar o original não adianta         |
 | Revogação vale na chamada seguinte | Não há cache de credencial — o acesso é resolvido do banco a cada requisição |
 
+#### O defeito que só apareceu rodando
+
+O token pessoal foi construído para o host MCP e **não funcionava no gateway
+MCP**: 401 em toda chamada. A leitura da credencial vivia dentro do
+`access.guard.ts`, então só o REST a tinha; o gateway chamava `tokens.verify`
+direto, que só entende JWT.
+
+Nenhum teste pegou porque todos os do token pessoal estavam em `apps/api` — e
+lá tudo passava. Foi preciso subir os dois processos e conectar de verdade.
+
+A correção não foi copiar o trecho para o gateway: foi mover a leitura para
+`lerCredencial`, em `@ecojotaduo/platform-core`, que as duas bordas passaram a
+compartilhar — o mesmo princípio do `criarNucleo`, aplicado à porta de entrada.
+Com uma suíte nova em `apps/mcp-gateway/tests/token-pessoal.e2e.spec.ts`:
+revertida a correção, quatro dos cinco testes reprovam.
+
+A lição que fica: **um recurso que atravessa bordas precisa de teste em cada
+borda**. "Funciona no REST" não é evidência sobre o MCP, mesmo quando a
+documentação afirma que a cadeia é uma só.
+
 ### Depois da Fase 12 — provisionamento de empresa
 
 A segunda coisa construída por demanda e não por plano, e o buraco mais antigo

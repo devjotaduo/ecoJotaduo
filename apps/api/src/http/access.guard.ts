@@ -1,14 +1,14 @@
 import { registrarNegacao, type AuditLogger } from '@ecojotaduo/audit';
-import { TokenService, type AccessTokenClaims } from '@ecojotaduo/auth';
-import { ehTokenPessoal, type IdentityPublicApi } from '@ecojotaduo/identity';
+import { TokenService } from '@ecojotaduo/auth';
+import type { IdentityPublicApi } from '@ecojotaduo/identity';
 import { assertAllAllowed, ForbiddenError } from '@ecojotaduo/permissions';
+import { lerCredencial } from '@ecojotaduo/platform-core';
 import type { TenancyPublicApi } from '@ecojotaduo/tenancy';
 import {
   authenticateContext,
   requireContext,
   toTenantId,
   toUserId,
-  type CredentialKind,
 } from '@ecojotaduo/tenant-context';
 import {
   CanActivate,
@@ -28,23 +28,6 @@ import {
 } from '../bootstrap/tokens';
 
 import { PERMISSIONS_KEY, PUBLIC_KEY } from '@ecojotaduo/http-kit';
-
-/**
- * De onde veio a credencial desta requisição.
- *
- * Serve a uma regra em particular: um token pessoal NÃO pode emitir outro
- * token pessoal. Sem isso, um token vazado emite sucessores para sempre e
- * revogar o original não adianta nada.
- */
-function origemDaCredencial(
-  cabecalho: string,
-  ator: 'user' | 'service',
-): CredentialKind {
-  if (ehTokenPessoal(cabecalho.slice('Bearer '.length).trim())) {
-    return 'personal-token';
-  }
-  return ator === 'service' ? 'service' : 'session';
-}
 
 /**
  * Ponto único de autorização da API.
@@ -83,9 +66,16 @@ export class AccessGuard implements CanActivate {
     }
 
     const requisicao = execucao.switchToHttp().getRequest<FastifyRequest>();
-    const cabecalho = requisicao.headers.authorization ?? '';
-    const claims = await this.lerCredencial(requisicao);
-    const credencial = origemDaCredencial(cabecalho, claims.kind);
+    // Uma leitura de credencial só, compartilhada com o gateway MCP: enquanto
+    // cada borda teve a sua, o token pessoal valia no REST e não no MCP.
+    const lida = await lerCredencial(
+      { tokens: this.tokens, identity: this.identity },
+      requisicao.headers.authorization,
+    );
+    if (!lida) {
+      throw new UnauthorizedException('Token de acesso ausente.');
+    }
+    const { claims, credential: credencial } = lida;
 
     const grant =
       claims.kind === 'service'
@@ -153,33 +143,4 @@ export class AccessGuard implements CanActivate {
    * O prefixo decide qual é. Tentar decodificar como JWT primeiro faria um
    * token pessoal passar por "assinatura inválida", que é a mensagem errada.
    */
-  private async lerCredencial(
-    requisicao: FastifyRequest,
-  ): Promise<AccessTokenClaims> {
-    const cabecalho = requisicao.headers.authorization;
-    if (!cabecalho?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Token de acesso ausente.');
-    }
-    const valor = cabecalho.slice('Bearer '.length).trim();
-
-    if (ehTokenPessoal(valor)) {
-      // PersonalTokenInvalidError vira 401 no filtro, igual ao JWT inválido:
-      // quem sonda não descobre se errou o token ou o tipo dele.
-      const portador = await this.identity.authenticatePersonalToken(valor);
-      return {
-        sub: portador.userId,
-        tid: portador.tenantId,
-        kind: 'user',
-        scope: portador.scopes,
-        jti: portador.tokenId,
-        iat: 0,
-        exp: 0,
-        iss: '',
-        aud: '',
-      };
-    }
-
-    // InvalidTokenError vira 401 no filtro; a razão fica só no log.
-    return this.tokens.verify(valor);
-  }
 }

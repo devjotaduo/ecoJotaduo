@@ -1,4 +1,5 @@
 import { InvalidTokenError } from '@ecojotaduo/auth';
+import { PersonalTokenInvalidError } from '@ecojotaduo/identity';
 import {
   AcessoNegadoError,
   PromptDesconhecidoError,
@@ -61,7 +62,8 @@ export function erroDeProtocolo(erro: unknown): McpError {
 
   if (
     erro instanceof NaoAutenticadoError ||
-    erro instanceof InvalidTokenError
+    erro instanceof InvalidTokenError ||
+    erro instanceof PersonalTokenInvalidError
   ) {
     return new McpError(
       ErrorCode.InvalidRequest,

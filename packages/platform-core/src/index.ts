@@ -1,2 +1,3 @@
 export * from './composition';
 export * from './modules';
+export * from './credencial';

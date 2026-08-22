@@ -38,7 +38,8 @@
     "@ecojotaduo/plugin-notifications-example": "workspace:*",
     "@ecojotaduo/plugin-sdk": "workspace:*",
     "@ecojotaduo/plugins": "workspace:*",
-    "@ecojotaduo/tenancy": "workspace:*"
+    "@ecojotaduo/tenancy": "workspace:*",
+    "@ecojotaduo/tenant-context": "workspace:*"
   },
   "devDependencies": {
     "@ecojotaduo/eslint-config": "workspace:*",

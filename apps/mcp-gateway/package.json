@@ -16,6 +16,7 @@
     "@ecojotaduo/auth": "workspace:*",
     "@ecojotaduo/config": "workspace:*",
     "@ecojotaduo/database": "workspace:*",
+    "@ecojotaduo/identity": "workspace:*",
     "@ecojotaduo/mcp-kit": "workspace:*",
     "@ecojotaduo/permissions": "workspace:*",
     "@ecojotaduo/platform-core": "workspace:*",

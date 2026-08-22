@@ -1,4 +1,6 @@
 import type { TokenService } from '@ecojotaduo/auth';
+import type { IdentityPublicApi } from '@ecojotaduo/identity';
+import { lerCredencial } from '@ecojotaduo/platform-core';
 import type { McpToolContext } from '@ecojotaduo/mcp-kit';
 import type { AccessGrant } from '@ecojotaduo/permissions';
 import type { TenancyPublicApi } from '@ecojotaduo/tenancy';
@@ -29,6 +31,8 @@ export interface SessaoMcp {
 export interface DependenciasDeAutorizacao {
   readonly tokens: TokenService;
   readonly tenancy: TenancyPublicApi;
+  /** Necessário para aceitar token pessoal — a credencial do agente MCP. */
+  readonly identity: IdentityPublicApi;
 }
 
 /**
@@ -48,13 +52,11 @@ export async function autorizar(
   cabecalhoAuthorization: string | undefined,
   correlationId: string,
 ): Promise<SessaoMcp> {
-  if (!cabecalhoAuthorization?.startsWith('Bearer ')) {
+  const lida = await lerCredencial(deps, cabecalhoAuthorization);
+  if (!lida) {
     throw new NaoAutenticadoError('Token de acesso ausente.');
   }
-
-  const claims = deps.tokens.verify(
-    cabecalhoAuthorization.slice('Bearer '.length).trim(),
-  );
+  const { claims } = lida;
 
   const grant =
     claims.kind === 'service'
