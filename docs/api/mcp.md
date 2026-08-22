@@ -103,6 +103,8 @@ mcpServers:
   ecojotaduo:
     type: streamable-http
     url: http://host.docker.internal:3001/mcp
+    # Sem isto o LibreChat tenta um handshake OAuth — ver abaixo.
+    requiresOAuth: false
     headers:
       Authorization: 'Bearer {{ECOJOTADUO_TOKEN}}'
     customUserVars:
@@ -110,10 +112,35 @@ mcpServers:
         title: 'Token da ecoJotaduo'
         description: 'Gere em Configurações → Tokens pessoais. Começa com ecj_pat_'
     timeout: 60000
+
+# Isenção de SSRF para o gateway rodando fora do container.
+mcpSettings:
+  allowedAddresses:
+    - 'host.docker.internal:3001'
 ```
 
 Com o LibreChat em Docker e a plataforma na máquina, o endereço é
 `host.docker.internal`. Com os dois no mesmo compose, use o nome do serviço.
+
+**Dois obstáculos que só aparecem conectando**, ambos verificados contra o
+LibreChat v0.8.8:
+
+- **`mcpSettings.allowedAddresses`.** O LibreChat bloqueia loopback e IP
+  privado por padrão (anti-SSRF), então um gateway fora do container é
+  recusado com `Domain ... is not allowed`. A isenção vai em
+  `allowedAddresses`, e **não** em `allowedDomains`: esta última liga modo
+  whitelist estrita e passa a bloquear todo servidor MCP público não listado —
+  quebrando, em silêncio, tudo o que for adicionado depois.
+
+- **`requiresOAuth: false`.** O gateway responde 401 com
+  `WWW-Authenticate: Bearer`, que é o correto por HTTP, e o LibreChat deduz
+  OAuth de qualquer challenge Bearer. A plataforma não é Authorization Server
+  (ADR-0009): a credencial é o token pessoal do cabeçalho. Sem essa linha o
+  host tenta um handshake que o servidor não implementa.
+
+Na subida o log mostra `Capabilities: undefined` — isso é esperado e é a
+propriedade funcionando: sem o token de uma pessoa não há catálogo a
+inspecionar. As tools aparecem quando cada uma cola o próprio token.
 
 Duas coisas que aparecem na prática:
 
