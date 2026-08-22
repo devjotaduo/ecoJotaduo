@@ -54,4 +54,28 @@ export {
   tenants,
 } from './adapters/persistence/schema';
 
+// --- Recursos externos (ADR-0017) ------------------------------------------
+export {
+  ExternalResource,
+  IdentificadorExternoAusenteError,
+  RecursoExternoRevogadoError,
+  SISTEMAS_EXTERNOS,
+  TIPOS_DE_RECURSO,
+  type DadosDoRecursoExterno,
+  type EstadoDoRecurso,
+  type SistemaExterno,
+  type TipoDeRecurso,
+} from './domain/external-resource';
+export {
+  ConfirmarRecursoExternoUseCase,
+  FalharRecursoExternoUseCase,
+  ListarRecursosExternosUseCase,
+  RecursoExternoNaoEncontradoError,
+  RegistrarRecursoExternoUseCase,
+  RevogarRecursoExternoUseCase,
+} from './application/external-resources.use-cases';
+export type { ExternalResourceRepository } from './ports/external-resources.repository';
+export { DrizzleExternalResourceRepository } from './adapters/persistence/external-resources.repository';
+export { externalResources } from './adapters/persistence/schema';
+
 export { TenancyService } from './tenancy.service';

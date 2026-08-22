@@ -19,6 +19,16 @@ export const tenancyManifest: ModuleManifest = {
       description: 'Contratar e cancelar módulos da empresa.',
     },
     {
+      key: 'platform.resource.read',
+      description:
+        'Consultar os recursos externos provisionados para a empresa.',
+    },
+    {
+      key: 'platform.resource.manage',
+      description:
+        'Registrar, confirmar e revogar recursos externos da empresa.',
+    },
+    {
       key: 'platform.audit.read',
       description: 'Consultar a trilha de auditoria da empresa.',
     },

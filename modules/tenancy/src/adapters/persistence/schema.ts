@@ -110,3 +110,27 @@ export const moduleEntitlements = pgTable(
     ),
   ],
 );
+
+/**
+ * Recursos que existem fora desta plataforma e pertencem a uma empresa daqui.
+ * Ver modules/tenancy/migrations/0003_external_resources.sql e o ADR-0017.
+ */
+export const externalResources = pgTable(
+  'tenancy_external_resources',
+  {
+    id: uuid('id').primaryKey(),
+    tenantId: uuid('tenant_id').notNull(),
+    system: text('system').notNull(),
+    kind: text('kind').notNull(),
+    externalId: text('external_id'),
+    state: text('state').notNull().default('pending'),
+    failureReason: text('failure_reason'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (tabela) => [unique().on(tabela.tenantId, tabela.system, tabela.kind)],
+);

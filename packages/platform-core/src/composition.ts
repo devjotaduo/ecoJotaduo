@@ -151,6 +151,12 @@ import {
   ResolveAccessGrantUseCase,
   SignInUseCase,
   TenancyService,
+  DrizzleExternalResourceRepository,
+  RegistrarRecursoExternoUseCase,
+  ConfirmarRecursoExternoUseCase,
+  FalharRecursoExternoUseCase,
+  RevogarRecursoExternoUseCase,
+  ListarRecursosExternosUseCase,
   type AccessTokenIssuer,
   type TenancyPublicApi,
 } from '@ecojotaduo/tenancy';
@@ -181,6 +187,7 @@ export interface NucleoDaPlataforma {
   /** Emissão, listagem e revogação de tokens pessoais (borda REST). */
   readonly tokensPessoais: PersonalAccessTokenUseCase;
   readonly tenancy: TenancyPublicApi;
+  readonly recursosExternos: RecursosExternos;
   readonly signIn: SignInUseCase;
   readonly refreshSession: RefreshSessionUseCase;
   readonly serviceToken: IssueServiceTokenUseCase;
@@ -199,6 +206,22 @@ export interface NucleoDaPlataforma {
 }
 
 /** Registry de plugins e a borda do plugin de exemplo. */
+/**
+ * Registro dos recursos que existem FORA desta plataforma e pertencem a uma
+ * empresa daqui (ADR-0017): o grupo no Studio, a chave no OmniRoute, o perfil
+ * no Hermes, o workspace no CRM, os slots do WhatsApp.
+ *
+ * É por aqui que `tenant_id` vira o identificador de cada sistema — e
+ * `listar` é a consulta que responde "esta empresa está inteira?".
+ */
+export interface RecursosExternos {
+  readonly registrar: RegistrarRecursoExternoUseCase;
+  readonly confirmar: ConfirmarRecursoExternoUseCase;
+  readonly falhar: FalharRecursoExternoUseCase;
+  readonly revogar: RevogarRecursoExternoUseCase;
+  readonly listar: ListarRecursosExternosUseCase;
+}
+
 export interface PluginsCompleto {
   readonly catalogo: PluginCatalog;
   readonly instalar: InstallPluginUseCase;
@@ -361,6 +384,18 @@ export function criarNucleo(
       },
     ],
   );
+
+  // Registro dos recursos que existem FORA desta plataforma e pertencem a uma
+  // empresa daqui (ADR-0017). Mora no tenancy porque é o dono do ciclo de vida
+  // do tenant; vira módulo próprio quando o provisionamento trouxer fluxo.
+  const recursosExternosRepo = new DrizzleExternalResourceRepository(db);
+  const recursosExternos: RecursosExternos = {
+    registrar: new RegistrarRecursoExternoUseCase(recursosExternosRepo),
+    confirmar: new ConfirmarRecursoExternoUseCase(recursosExternosRepo),
+    falhar: new FalharRecursoExternoUseCase(recursosExternosRepo),
+    revogar: new RevogarRecursoExternoUseCase(recursosExternosRepo),
+    listar: new ListarRecursosExternosUseCase(recursosExternosRepo),
+  };
 
   // --- crm ----------------------------------------------------------------
   const clientesRepo = new DrizzleCustomerRepository(db);
@@ -701,6 +736,7 @@ export function criarNucleo(
       notificationsMcpContribution(notificacoes, runtimeDeNotificacoes),
     ]),
     tenancy: new TenancyService(resolverAcesso, tenantsRepo),
+    recursosExternos,
     signIn: new SignInUseCase(identity, tenantsRepo, resolverAcesso, emissor),
     refreshSession: new RefreshSessionUseCase(
       identity,

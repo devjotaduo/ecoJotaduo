@@ -243,6 +243,7 @@ const TABELAS = [
   'commercial_proposal_numbers',
   'plugin_secrets',
   'plugin_installations',
+  'tenancy_external_resources',
   'tenancy_module_entitlements',
   'tenancy_membership_roles',
   'tenancy_memberships',
